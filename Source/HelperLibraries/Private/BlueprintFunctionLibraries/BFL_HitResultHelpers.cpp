@@ -12,7 +12,7 @@ UMaterialInterface* UBFL_HitResultHelpers::GetHitMaterial(const FHitResult& InHi
 	UMaterialInterface* RetVal = nullptr;
 	if (InHitResult.FaceIndex == -1)
 	{
-		UE_LOG(HitResultHelpers, Error, TEXT("%s() failed because InHitResult.FaceIndex was -1. Make sure FCollisionQueryParams::bTraceComplex and FCollisionQueryParams::bReturnFaceIndex are set to true"), *FString(__FUNCTION__));
+		UE_LOG(HitResultHelpers, Error, TEXT("%s() failed because InHitResult.FaceIndex was -1. Make sure FCollisionQueryParams::bTraceComplex and FCollisionQueryParams::bReturnFaceIndex are set to true"), ANSI_TO_TCHAR(__FUNCTION__));
 		return RetVal;
 	}
 
@@ -36,13 +36,13 @@ void UBFL_HitResultHelpers::GetSectionLevelHitInfo(const FHitResult& InHitResult
 
 	if (InHitResult.FaceIndex == -1)
 	{
-		UE_LOG(HitResultHelpers, Error, TEXT("%s() failed because InHitResult.FaceIndex was -1. Make sure FCollisionQueryParams::bTraceComplex and FCollisionQueryParams::bReturnFaceIndex are set to true"), *FString(__FUNCTION__));
+		UE_LOG(HitResultHelpers, Error, TEXT("%s() failed because InHitResult.FaceIndex was -1. Make sure FCollisionQueryParams::bTraceComplex and FCollisionQueryParams::bReturnFaceIndex are set to true"), ANSI_TO_TCHAR(__FUNCTION__));
 		return;
 	}
 	OutHitPrimitiveComponent = InHitResult.GetComponent();
 	if (!IsValid(OutHitPrimitiveComponent))
 	{
-		UE_LOG(HitResultHelpers, Error, TEXT("%s() failed because InHitResult.HitComponent was NULL. We expected something of type UPrimitiveComponent to be hit, but doesn't look like any primitive component was hit. Either that or we were provided with a bad pointer somehow (unlikely)."), *FString(__FUNCTION__));
+		UE_LOG(HitResultHelpers, Error, TEXT("%s() failed because InHitResult.HitComponent was NULL. We expected something of type UPrimitiveComponent to be hit, but doesn't look like any primitive component was hit. Either that or we were provided with a bad pointer somehow (unlikely)."), ANSI_TO_TCHAR(__FUNCTION__));
 		return;
 	}
 

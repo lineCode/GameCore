@@ -15,7 +15,7 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(TArray<FTraceSegment>& OutTr
 
 	if (FwdBlockingHits.Num() <= 0)
 	{
-		UE_LOG(CollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Segments of. Returned and did nothing"), *FString(__FUNCTION__));
+		UE_LOG(CollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Segments of. Returned and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
 		return;
 	}
 
@@ -86,7 +86,7 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(TArray<FTraceSegment>& OutTr
 
 	if (FwdBlockingHits.Num() <= 0)
 	{
-		UE_LOG(CollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Segments of. Returned and did nothing"), *FString(__FUNCTION__));
+		UE_LOG(CollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Segments of. Returned and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
 		return;
 	}
 	OutTraceSegments.Reserve(FwdBlockingHits.Num() * 2);		// We know most of the time we will have at least double the elements from FwdBlockingHits (most of the time)
@@ -220,7 +220,7 @@ void UBFL_CollisionQueryHelpers::LineTracePenetrateBetweenPoints(TArray<FHitResu
 
 	if (Start.Equals(End, KINDA_SMALL_NUMBER + (KINDA_SMALL_NUMBER * 100)))
 	{
-		UE_LOG(CollisionQueryHelpers, Warning, TEXT("%s(): The given Start and End locations were nearly the same which would mess things up (infinite trace loop). Returned early and did nothing"), *FString(__FUNCTION__));
+		UE_LOG(CollisionQueryHelpers, Warning, TEXT("%s(): The given Start and End locations were nearly the same which would mess things up (infinite trace loop). Returned early and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
 		return;
 	}
 
