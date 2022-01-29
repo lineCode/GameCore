@@ -201,6 +201,13 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(TArray<FTraceSegment>& OutTr
 
 void UBFL_CollisionQueryHelpers::LineTracePenetrateBetweenPoints(TArray<FHitResult>& OutHitResults, const UWorld* World, const FVector& Start, const FVector& End, const ECollisionChannel TraceChannel, const FCollisionQueryParams& Params)
 {
+	if (Start.Equals(End, KINDA_SMALL_NUMBER + (KINDA_SMALL_NUMBER * 100)))
+	{
+		return;		// The given Start and End locations were nearly the same which means there is nothing to do. If we continued it would mess things up (infinite trace loop). Returned early and did nothing.
+	}
+
+
+
 	OutHitResults.Empty();
 
 
@@ -217,12 +224,6 @@ void UBFL_CollisionQueryHelpers::LineTracePenetrateBetweenPoints(TArray<FHitResu
 
 	FVector PenStart = Start + ((KINDA_SMALL_NUMBER * 100) * FwdDir);
 	FVector PenEnd = End + ((KINDA_SMALL_NUMBER * 100) * BkwdDir);
-
-	if (Start.Equals(End, KINDA_SMALL_NUMBER + (KINDA_SMALL_NUMBER * 100)))
-	{
-		UE_LOG(CollisionQueryHelpers, Warning, TEXT("%s(): The given Start and End locations were nearly the same which would mess things up (infinite trace loop). Returned early and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
-		return;
-	}
 
 
 	// Penetrate traces loop
