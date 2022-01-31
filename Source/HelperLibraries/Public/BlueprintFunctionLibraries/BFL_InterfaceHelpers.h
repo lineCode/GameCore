@@ -19,7 +19,8 @@ class HELPERLIBRARIES_API UBFL_InterfaceHelpers : public UBlueprintFunctionLibra
 	
 public:
 	/**
-	 * Traverses the outer chain searching for the next object of a certain Interface type
+	 * Traverses the outer chain searching for the next object of a certain interface type.
+	 * An alternative to UObjectBaseUtility::GetTypedOuter() that works for interfaces.
 	 */
 	template <typename InterfaceType, typename UInterfaceType, typename T>
 	static InterfaceType* GetInterfaceTypedOuter(const T* Object)
@@ -27,9 +28,8 @@ public:
 		return GetInterfaceTypedOuter<InterfaceType>(Object, UInterfaceType::StaticClass());
 	}
 
-	/**
-	 * Traverses the outer chain searching for the next object of a certain Interface type
-	 */
+protected:
+	/** Takes in UClass for the UInterfaceType */
 	template <typename InterfaceType, typename T>
 	static InterfaceType* GetInterfaceTypedOuter(const T* Object, const UClass* InterfaceClass)
 	{
