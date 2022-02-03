@@ -97,105 +97,99 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(TArray<FTraceSegment>& OutTr
 
 	TArray<UPhysicalMaterial*> CurrentEntrancePhysMaterials;		// These don't point to a specific instance of a phys material in the game (not possible with phys mats). They just point to the type.
 
-	// TODO: document
-	{
-		FCollisionQueryParams BkwdParams = TraceParams;
-		BkwdParams.bIgnoreTouches = true; // we only care about blocking hits
+	FCollisionQueryParams BkwdParams = TraceParams;
+	BkwdParams.bIgnoreTouches = true; // we only care about blocking hits
 
 		
-		for (int32 i = -1; i < FwdBlockingHits.Num(); ++i)
+	for (int32 i = -1; i < FwdBlockingHits.Num(); ++i)
+	{
+		//const FHitResult& ThisFwdBlockingHit = FwdBlockingHits[i];
+
+		FVector BkwdStart;
+		if (FwdBlockingHits.IsValidIndex(i + 1))
 		{
-			//const FHitResult& ThisFwdBlockingHit = FwdBlockingHits[i];
+			BkwdStart = FwdBlockingHits[i + 1].Location;
+		}
+		else
+		{
+			BkwdStart = FwdEndLocation;
+		}
+		FVector BkwdEnd;
+		if (i == -1)
+		{
+			BkwdEnd = FwdStartLocation;
+		}
+		else
+		{
+			BkwdEnd = FwdBlockingHits[i].ImpactPoint; // NOTE: this would be weird for collision sweeps
+		}
 
-			FVector BkwdStart;
-			if (FwdBlockingHits.IsValidIndex(i + 1))
+
+
+		if (i != -1)
+		{
+			// This stack tells us how deep we are and provides us with the Phys Materials of the entrance hits
+			CurrentEntrancePhysMaterials.Push(FwdBlockingHits[i].PhysMaterial.Get());
+		}
+
+
+		TArray<FHitResult> BkwdHitResults;
+		LineTracePenetrateBetweenPoints(BkwdHitResults, World, BkwdStart, BkwdEnd, TraceChannel, BkwdParams);
+		Algo::Reverse<TArray<FHitResult>>(BkwdHitResults);
+
+
+		// Build the Segment from this FwdBlockingHit to the BkwdHitResult (connecting a Fwd hit to a Bkwd hit)
+		{
+			FTraceSegment Segment; // the Segment we will make for this distance we just traced
+			const FVector StartPoint = (i == -1) ? BkwdEnd : FwdBlockingHits[i].ImpactPoint;
+			const FVector EndPoint = (BkwdHitResults.Num() > 0) ? BkwdHitResults[0].ImpactPoint : BkwdStart;
+			Segment.SetStartAndEndPoints(StartPoint, EndPoint);
+			Segment.SetPhysMaterials(CurrentEntrancePhysMaterials);
+
+			if (FwdBlockingHits.IsValidIndex(i + 1) && FMath::IsNearlyZero(Segment.GetSegmentDistance()) == false) // if we are the last Segment and our distance is zero don't emplace this
 			{
-				BkwdStart = FwdBlockingHits[i + 1].Location;
-			}
-			else
-			{
-				BkwdStart = FwdEndLocation;
-			}
-			FVector BkwdEnd;
-			if (i == -1)
-			{
-				BkwdEnd = FwdStartLocation;
-			}
-			else
-			{
-				BkwdEnd = FwdBlockingHits[i].ImpactPoint; // NOTE: this would be weird for collision sweeps
-			}
-
-
-
-			if (i != -1)
-			{
-				// This stack tells us how deep we are and provides us with the Phys Materials of the entrance hits
-				CurrentEntrancePhysMaterials.Push(FwdBlockingHits[i].PhysMaterial.Get());
-			}
-
-
-			TArray<FHitResult> BkwdHitResults;
-			LineTracePenetrateBetweenPoints(BkwdHitResults, World, BkwdStart, BkwdEnd, TraceChannel, BkwdParams);
-			Algo::Reverse<TArray<FHitResult>>(BkwdHitResults);
-
-
-			// Build the Segment from this FwdBlockingHit to the BkwdHitResult (connecting a Fwd hit to a Bkwd hit)
-			{
-				FTraceSegment Segment; // the Segment we will make for this distance we just traced
-				const FVector StartPoint = (i == -1) ? BkwdEnd : FwdBlockingHits[i].ImpactPoint;
-				const FVector EndPoint = (BkwdHitResults.Num() > 0) ? BkwdHitResults[0].ImpactPoint : BkwdStart;
-				Segment.SetStartAndEndPoints(StartPoint, EndPoint);
-				Segment.SetPhysMaterials(CurrentEntrancePhysMaterials);
-
-				if (FwdBlockingHits.IsValidIndex(i + 1) && FMath::IsNearlyZero(Segment.GetSegmentDistance()) == false) // if we are the last Segment and our distance is zero don't emplace this
-				{
-					OutTraceSegments.Emplace(Segment);
-				}
-			}
-
-			// Build the rest of the BkwdHitResults Segments (connecting Bkwd hits to Bkwd hits)
-			for (const FHitResult& BkwdHit : BkwdHitResults)
-			{
-
-				// Remove this Phys Mat from the Phys Mat stack because we are exiting it
-				UPhysicalMaterial* PhysMatThatWeAreExiting = BkwdHit.PhysMaterial.Get();
-				int32 IndexOfPhysMatThatWeAreExiting = CurrentEntrancePhysMaterials.FindLast(PhysMatThatWeAreExiting); // the inner-most (last) occurrence of this Phys Mat is the one that we are exiting
-				if (IndexOfPhysMatThatWeAreExiting != INDEX_NONE)
-				{
-					CurrentEntrancePhysMaterials.RemoveAt(IndexOfPhysMatThatWeAreExiting); // remove this Phys Mat that we are exiting from the Phys Mat stack
-				}
-				else
-				{
-					// We've just realized that we have been inside of something from the start (because we just exited something that we've never entered).
-					// Add this something to all of the Segments we have made so far
-					for (FTraceSegment& TraceSegmentToAddTo : OutTraceSegments)
-					{
-						TArray<UPhysicalMaterial*> CorrectedPhysMats = TraceSegmentToAddTo.GetPhysMaterials();
-						CorrectedPhysMats.Insert(PhysMatThatWeAreExiting, 0); // insert at the bottom of the stack
-
-						TraceSegmentToAddTo.SetPhysMaterials(CorrectedPhysMats);
-					}
-				}
-
-
-				FTraceSegment Segment; // the Segment we will make for this distance we just traced
-				Segment.SetStartAndEndPoints(BkwdHit.ImpactPoint, BkwdHit.TraceStart);
-				Segment.SetPhysMaterials(CurrentEntrancePhysMaterials);
-
-
 				OutTraceSegments.Emplace(Segment);
-
-
-
 			}
+		}
+
+		// Build the rest of the BkwdHitResults Segments (connecting Bkwd hits to Bkwd hits)
+		for (const FHitResult& BkwdHit : BkwdHitResults)
+		{
+
+			// Remove this Phys Mat from the Phys Mat stack because we are exiting it
+			UPhysicalMaterial* PhysMatThatWeAreExiting = BkwdHit.PhysMaterial.Get();
+			int32 IndexOfPhysMatThatWeAreExiting = CurrentEntrancePhysMaterials.FindLast(PhysMatThatWeAreExiting); // the inner-most (last) occurrence of this Phys Mat is the one that we are exiting
+			if (IndexOfPhysMatThatWeAreExiting != INDEX_NONE)
+			{
+				CurrentEntrancePhysMaterials.RemoveAt(IndexOfPhysMatThatWeAreExiting); // remove this Phys Mat that we are exiting from the Phys Mat stack
+			}
+			else
+			{
+				// We've just realized that we have been inside of something from the start (because we just exited something that we've never entered).
+				// Add this something to all of the Segments we have made so far
+				for (FTraceSegment& TraceSegmentToAddTo : OutTraceSegments)
+				{
+					TArray<UPhysicalMaterial*> CorrectedPhysMats = TraceSegmentToAddTo.GetPhysMaterials();
+					CorrectedPhysMats.Insert(PhysMatThatWeAreExiting, 0); // insert at the bottom of the stack
+
+					TraceSegmentToAddTo.SetPhysMaterials(CorrectedPhysMats);
+				}
+			}
+
+
+			FTraceSegment Segment; // the Segment we will make for this distance we just traced
+			Segment.SetStartAndEndPoints(BkwdHit.ImpactPoint, BkwdHit.TraceStart);
+			Segment.SetPhysMaterials(CurrentEntrancePhysMaterials);
+
+
+			OutTraceSegments.Emplace(Segment);
+
 
 
 		}
 
+
 	}
-
-
 
 }
 
