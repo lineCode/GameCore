@@ -9,13 +9,13 @@
 
 
 
-void UBFL_CollisionQueryHelpers::BuildTraceSegments(TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
+void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
 {
 	OutTraceSegments.Empty();
 
 	if (FwdBlockingHits.Num() <= 0)
 	{
-		UE_LOG(CollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Segments of. Returned and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
+		UE_LOG(LogCollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Segments of. Returned and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
 		return;
 	}
 
@@ -28,7 +28,7 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(TArray<FTraceSegment>& OutTr
 	{
 		const FVector TracedDir = UKismetMathLibrary::GetDirectionUnitVector(FwdBlockingHits[0].TraceStart, FwdBlockingHits[0].TraceEnd);
 		
-		float currentFurthestPossibleSize = 0.f;
+		float CurrentFurthestPossibleSize = 0.f;
 		for (const FHitResult& Hit : FwdBlockingHits)
 		{
 			if (Hit.Component.IsValid() == false)
@@ -41,10 +41,10 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(TArray<FTraceSegment>& OutTr
 
 			// If this ThisHitFurthestPossibleEnd is further than our current FurthestPossibleEnd then update FurthestPossibleEnd
 			const float thisHitFurthestPossibleSize = (ThisHitFurthestPossibleEnd - FwdBlockingHits[0].TraceStart).SizeSquared();
-			if (thisHitFurthestPossibleSize > currentFurthestPossibleSize)
+			if (thisHitFurthestPossibleSize > CurrentFurthestPossibleSize)
 			{
 				FurthestPossibleEnd = ThisHitFurthestPossibleEnd;
-				currentFurthestPossibleSize = thisHitFurthestPossibleSize;
+				CurrentFurthestPossibleSize = thisHitFurthestPossibleSize;
 			}
 
 		}
@@ -58,7 +58,7 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(TArray<FTraceSegment>& OutTr
 	BuildTraceSegments(OutTraceSegments, FwdBlockingHits, FurthestPossibleEnd, World, TraceParams, TraceChannel);
 }
 
-void UBFL_CollisionQueryHelpers::BuildTraceSegments(TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const FVector& FwdEndLocation, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
+void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const FVector& FwdEndLocation, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
 {
 	OutTraceSegments.Empty();
 
@@ -86,7 +86,7 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(TArray<FTraceSegment>& OutTr
 
 	if (FwdBlockingHits.Num() <= 0)
 	{
-		UE_LOG(CollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Segments of. Returned and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
+		UE_LOG(LogCollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Segments of. Returned and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
 		return;
 	}
 	OutTraceSegments.Reserve(FwdBlockingHits.Num() * 2);		// We know most of the time we will have at least double the elements from FwdBlockingHits (most of the time)
@@ -193,7 +193,7 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(TArray<FTraceSegment>& OutTr
 
 }
 
-void UBFL_CollisionQueryHelpers::LineTracePenetrateBetweenPoints(TArray<FHitResult>& OutHitResults, const UWorld* World, const FVector& Start, const FVector& End, const ECollisionChannel TraceChannel, const FCollisionQueryParams& Params)
+void UBFL_CollisionQueryHelpers::LineTracePenetrateBetweenPoints(OUT TArray<FHitResult>& OutHitResults, const UWorld* World, const FVector& Start, const FVector& End, const ECollisionChannel TraceChannel, const FCollisionQueryParams& Params)
 {
 	if (Start.Equals(End, KINDA_SMALL_NUMBER + (KINDA_SMALL_NUMBER * 100)))
 	{
@@ -231,12 +231,12 @@ void UBFL_CollisionQueryHelpers::LineTracePenetrateBetweenPoints(TArray<FHitResu
 
 			// Fallback method...........
 			// Try again with this component (collider) ignored so we can move on
-			uint8 amtOfFallbackTracesToTry = 5;
-			if (amtOfFallbackTracesToTry > 0)
+			const int32 AmtOfFallbackTracesToTry = 5;
+			if (AmtOfFallbackTracesToTry > 0)
 			{
 				bool bFallbackMethodReachedBkwdEnd = false;
 				FCollisionQueryParams FallbackQueryParams = Params;
-				for (uint8 j = 0; j < amtOfFallbackTracesToTry; j++)
+				for (int32 j = 0; j < AmtOfFallbackTracesToTry; j++)
 				{
 					FallbackQueryParams.AddIgnoredComponent(PenHitResult.GetComponent());	// ignore our last trace's blocking hit
 					if (!World->LineTraceSingleByChannel(PenHitResult, PenStart, PenEnd, TraceChannel, FallbackQueryParams))

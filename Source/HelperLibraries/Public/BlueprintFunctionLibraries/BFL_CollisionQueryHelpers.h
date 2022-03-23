@@ -18,10 +18,11 @@
 struct FTraceSegment
 {
 	FTraceSegment()
+		: StartPoint(FVector::ZeroVector)
+		, EndPoint(FVector::ZeroVector)
+		, SegmentDistance(-1.f)
 	{
-		StartPoint = FVector::ZeroVector;
-		EndPoint = FVector::ZeroVector;
-		SegmentDistance = -1;
+
 	}
 	FTraceSegment(const FVector& InStartPoint, const FVector& InEndPoint, const TArray<UPhysicalMaterial*>& InPhysMaterials)
 		: FTraceSegment()
@@ -90,13 +91,13 @@ public:
 	 * So when using this against skeletal meshes, only one bone will be hit.
 	 * Another thing is if the first fwd hit result it already inside some geometry, then the function won't be aware of that and the stack of physical materials won't be fully accurate.
 	*/
-	static void BuildTraceSegments(TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel);
-	static void BuildTraceSegments(TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const FVector& FwdEndLocation, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel);
+	static void BuildTraceSegments(OUT TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel);
+	static void BuildTraceSegments(OUT TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const FVector& FwdEndLocation, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel);
 	
 	
 	/**
 	 * 
 	 */
-	static void LineTracePenetrateBetweenPoints(TArray<FHitResult>& OutHitResults, const UWorld* World, const FVector& Start, const FVector& End, const ECollisionChannel TraceChannel, const FCollisionQueryParams& Params);
+	static void LineTracePenetrateBetweenPoints(OUT TArray<FHitResult>& OutHitResults, const UWorld* World, const FVector& Start, const FVector& End, const ECollisionChannel TraceChannel, const FCollisionQueryParams& Params);
 
 };

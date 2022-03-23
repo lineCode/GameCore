@@ -20,7 +20,7 @@ class HELPERLIBRARIES_API UBFL_MathHelpers : public UBlueprintFunctionLibrary
 public:
 	/**
 	 * Given a segment and a point, does that point lie on that segment?
-	 * Note: Does 3 distance calculations (3 sqrts), may not be great to make frequent calls
+	 * NOTE: Does 3 distance calculations (3 sqrts), may not be great to make frequent calls
 	 */
 	UFUNCTION(BlueprintPure, Category = "MathHelpers|VectorMath")
 		static bool PointLiesOnSegment(const FVector& Start, const FVector& End, const FVector& Point);
