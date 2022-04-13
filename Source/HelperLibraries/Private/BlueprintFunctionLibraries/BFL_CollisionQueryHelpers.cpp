@@ -146,9 +146,9 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& O
 			Segment.SetStartAndEndPoints(StartPoint, EndPoint);
 			Segment.SetPhysMaterials(CurrentEntrancePhysMaterials);
 
-			if (FwdBlockingHits.IsValidIndex(i + 1) && FMath::IsNearlyZero(Segment.GetSegmentDistance()) == false) // if we are the last Segment and our distance is zero don't emplace this
+			if (FwdBlockingHits.IsValidIndex(i + 1) && FMath::IsNearlyZero(Segment.GetSegmentDistance()) == false) // if we are the last Segment and our distance is zero don't add this
 			{
-				OutTraceSegments.Emplace(Segment);
+				OutTraceSegments.Add(Segment);
 			}
 		}
 
@@ -182,7 +182,7 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& O
 			Segment.SetPhysMaterials(CurrentEntrancePhysMaterials);
 
 
-			OutTraceSegments.Emplace(Segment);
+			OutTraceSegments.Add(Segment);
 
 
 
@@ -270,7 +270,7 @@ void UBFL_CollisionQueryHelpers::LineTracePenetrateBetweenPoints(OUT TArray<FHit
 
 
 
-		OutHitResults.Emplace(PenHitResult);
+		OutHitResults.Add(PenHitResult);
 
 
 	}
