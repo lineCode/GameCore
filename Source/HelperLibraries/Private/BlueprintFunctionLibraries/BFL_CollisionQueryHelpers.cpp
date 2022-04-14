@@ -278,7 +278,7 @@ void UBFL_CollisionQueryHelpers::LineTracePenetrateBetweenPoints(OUT TArray<FHit
 }
 
 
-FVector UBFL_CollisionQueryHelpers::GetMuzzleAimDirection(const UWorld* InWorld, const AActor* SourceActor, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& MuzzlePoint)
+FVector UBFL_CollisionQueryHelpers::GetLocationAimDirection(const UWorld* InWorld, const FCollisionQueryParams& Params, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& MuzzlePoint)
 {
 	if (MuzzlePoint.Equals(AimPoint))
 	{
@@ -287,9 +287,8 @@ FVector UBFL_CollisionQueryHelpers::GetMuzzleAimDirection(const UWorld* InWorld,
 	}
 
 	// Line trace from the MuzzlePoint to the point that AimDir is looking at
-	FCollisionQueryParams CollisionQueryParams;
+	FCollisionQueryParams CollisionQueryParams = Params;
 	CollisionQueryParams.bIgnoreTouches = true;
-	CollisionQueryParams.AddIgnoredActor(SourceActor);
 
 	FVector TraceEnd = AimPoint + (AimDir * MaxRange);
 

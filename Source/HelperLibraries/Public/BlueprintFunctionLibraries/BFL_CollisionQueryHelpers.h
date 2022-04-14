@@ -104,5 +104,5 @@ public:
 	 * Gets the direction from the MuzzlePoint to the point that AimDir is looking at.
 	 * Useful for having a weapon's muzzle aim towards the Player's look point.
 	 */
-	static FVector GetMuzzleAimDirection(const UWorld* InWorld, const AActor* SourceActor, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& MuzzlePoint);
+	static FVector GetLocationAimDirection(const UWorld* InWorld, const FCollisionQueryParams& Params, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& MuzzlePoint);
 };
