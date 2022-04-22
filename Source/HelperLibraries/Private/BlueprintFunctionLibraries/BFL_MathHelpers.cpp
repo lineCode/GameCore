@@ -5,15 +5,18 @@
 
 
 
-bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& Start, const FVector& End, const FVector& Point)
+bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& SegmentStart, const FVector& SegmentEnd, const FVector& Point)
 {
-    const float SegmentDistance = FVector::Distance(Start, End);
-    const float StartToPointDistance = FVector::Distance(Start, Point);
-    const float PointToEndDistance = FVector::Distance(Point, End);
+    const float SegmentDistance = FVector::Distance(SegmentStart, SegmentEnd);
+    const float SegmentStartToPointDistance = FVector::Distance(SegmentStart, Point);
+    const float PointToSegmentEndDistance = FVector::Distance(Point, SegmentEnd);
 
-    if (FMath::IsNearlyEqual(StartToPointDistance + PointToEndDistance, SegmentDistance)) // if we are not a triangle
+    // If SegmentEnd, SegmentEnd, and Point do not form a triangle, then Point is on the segment
+    if (FMath::IsNearlyEqual(SegmentStartToPointDistance + PointToSegmentEndDistance, SegmentDistance))
     {
         return true;
     }
+
+    // Point is not on the segment
     return false;
 }

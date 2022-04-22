@@ -11,14 +11,11 @@
 
 void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
 {
-	OutTraceSegments.Empty();
-
 	if (FwdBlockingHits.Num() <= 0)
 	{
 		UE_LOG(LogCollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Segments of. Returned and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
 		return;
 	}
-
 
 
 	// This is the furthest possible FwdEndLocation for the given FwdBlockingHits
@@ -53,43 +50,41 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& O
 		FurthestPossibleEnd += (TracedDir * ((KINDA_SMALL_NUMBER * 100) * 2));
 	}
 
-
 	// Use this FurthestPossibleEnd as a Bkwd trace start location
 	BuildTraceSegments(OutTraceSegments, FwdBlockingHits, FurthestPossibleEnd, World, TraceParams, TraceChannel);
 }
 
 void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const FVector& FwdEndLocation, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
 {
-	OutTraceSegments.Empty();
-
-	/**
-	 *						GENERAL GOAL
-	 *
-	 *
-	 *			OutTraceSegments[0]	OutTraceSegments[1]
-	 *				|-------|				|-------|
-	 *
-	 *
-	 *				_________				_________
-	 *				|		|				|		|
-	 *	------------O-------|---------------O-------|---------------> // forward traces
-	 *				|		|				|		|
-	 *	<-----------|-------O---------------|-------O---------------- // backwards traces
-	 *				|		|				|		|
-	 *				|		|				|		|
-	 *				|		|				|		|
-	 *				|		|				|		|
-	 *				_________				_________
-	 *
-	 *		We can simplify this concept by visualizing it in 2d
-	 */
+	// 
+	// 						GENERAL GOAL
+	// 
+	// 
+	// 		OutTraceSegments[0]		OutTraceSegments[1]
+	// 			|-------|				|-------|
+	// 
+	// 
+	// 			_________				_________
+	// 			|		|				|		|
+	// ---------O-------|---------------O-------|------------------> // forward traces
+	// 			|		|				|		|
+	// <--------|-------O---------------|-------O------------------- // backwards traces
+	// 			|		|				|		|
+	// 			|		|				|		|
+	// 			|		|				|		|
+	// 			|		|				|		|
+	// 			_________				_________
+	// 
+	// We can simplify this concept by visualizing it in 2d
+	// 
 
 	if (FwdBlockingHits.Num() <= 0)
 	{
 		UE_LOG(LogCollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Segments of. Returned and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
 		return;
 	}
-	OutTraceSegments.Reserve(FwdBlockingHits.Num() * 2);		// We know most of the time we will have at least double the elements from FwdBlockingHits (most of the time)
+
+	OutTraceSegments.Empty(FwdBlockingHits.Num() * 2); // we know, most of the time, that we will have at least double the elements from FwdBlockingHits (most of the time) so reserve this much
 
 
 	const FVector FwdStartLocation = FwdBlockingHits[0].TraceStart; // maybe make this a parameter since FwdEndLocation is one
@@ -278,29 +273,29 @@ void UBFL_CollisionQueryHelpers::LineTracePenetrateBetweenPoints(OUT TArray<FHit
 }
 
 
-FVector UBFL_CollisionQueryHelpers::GetLocationAimDirection(const UWorld* InWorld, const FCollisionQueryParams& Params, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& MuzzlePoint)
+FVector UBFL_CollisionQueryHelpers::GetLocationAimDirection(const UWorld* World, const FCollisionQueryParams& QueryParams, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location)
 {
-	if (MuzzlePoint.Equals(AimPoint))
+	if (Location.Equals(AimPoint))
 	{
-		// The MuzzlePoint is the same as the AimPoint so we can skip the camera trace and just return the AimDir as the muzzle's direction
+		// The Location is the same as the AimPoint so we can skip the camera trace and just return the AimDir as the muzzle's direction
 		return AimDir;
 	}
 
-	// Line trace from the MuzzlePoint to the point that AimDir is looking at
-	FCollisionQueryParams CollisionQueryParams = Params;
+	// Line trace from the Location to the point that AimDir is looking at
+	FCollisionQueryParams CollisionQueryParams = QueryParams;
 	CollisionQueryParams.bIgnoreTouches = true;
 
 	FVector TraceEnd = AimPoint + (AimDir * MaxRange);
 
 	FHitResult HitResult;
-	const bool bSuccess = InWorld->LineTraceSingleByChannel(HitResult, AimPoint, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionQueryParams);
+	const bool bSuccess = World->LineTraceSingleByChannel(HitResult, AimPoint, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionQueryParams);
 
 	if (!bSuccess)
 	{
-		// AimDir is not looking at anything for our MuzzlePoint to point to
-		return (TraceEnd - MuzzlePoint).GetSafeNormal();
+		// AimDir is not looking at anything for our Location to point to
+		return (TraceEnd - Location).GetSafeNormal();
 	}
 
-	// Return the direction from the MuzzlePoint to the point that the Player is looking at
-	return (HitResult.Location - MuzzlePoint).GetSafeNormal();
+	// Return the direction from the Location to the point that the Player is looking at
+	return (HitResult.Location - Location).GetSafeNormal();
 }

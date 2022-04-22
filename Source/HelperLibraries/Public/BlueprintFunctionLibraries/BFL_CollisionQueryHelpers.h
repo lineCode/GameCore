@@ -101,8 +101,8 @@ public:
 	static void LineTracePenetrateBetweenPoints(OUT TArray<FHitResult>& OutHitResults, const UWorld* World, const FVector& Start, const FVector& End, const ECollisionChannel TraceChannel, const FCollisionQueryParams& Params);
 
 	/**
-	 * Gets the direction from the MuzzlePoint to the point that AimDir is looking at.
+	 * Gets the direction from the Location to the point that AimDir is looking at.
 	 * Useful for having a weapon's muzzle aim towards the Player's look point.
 	 */
-	static FVector GetLocationAimDirection(const UWorld* InWorld, const FCollisionQueryParams& Params, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& MuzzlePoint);
+	static FVector GetLocationAimDirection(const UWorld* InWorld, const FCollisionQueryParams& Params, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location);
 };
