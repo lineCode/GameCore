@@ -13,30 +13,22 @@
 
 /**
  * Represents a segment in the World and holds a stack of Phys Mats that are within the two end points.
- * (The top of the stack is the most significant of the Phys Mats to this Segment)
  */
 struct FTraceSegment
 {
-	FTraceSegment()
-		: StartPoint(FVector::ZeroVector)
-		, EndPoint(FVector::ZeroVector)
-		, SegmentDistance(-1.f)
+	FTraceSegment(const FVector& InStartPoint, const FVector& InEndPoint)
 	{
+		// Set points
+		StartPoint = InStartPoint;
+		EndPoint = InEndPoint;
 
-	}
-	FTraceSegment(const FVector& InStartPoint, const FVector& InEndPoint, const TArray<UPhysicalMaterial*>& InPhysMaterials)
-		: FTraceSegment()
-	{
-		SetStartAndEndPoints(InStartPoint, InEndPoint);
-		SetPhysMaterials(InPhysMaterials);
+		// Cache our calculations
+		SegmentDistance = FVector::Distance(StartPoint, EndPoint);
+		TraceDir = (EndPoint - StartPoint).GetSafeNormal();
 	}
 
-
-	const TArray<UPhysicalMaterial*>& GetPhysMaterials() const { return PhysMaterials; }
-	void SetPhysMaterials(const TArray<UPhysicalMaterial*>& InPhysMaterials)
-	{
-		PhysMaterials = InPhysMaterials;
-	}
+	/** This is the stack of Physical Materials that are enclosed in this Segment. Top of the stack is the most inner (most recent) Phys Mat */
+	TArray<UPhysicalMaterial*> PhysMaterials;
 
 	FVector GetStartPoint() const { return StartPoint; }
 	FVector GetEndPoint() const { return EndPoint; }
@@ -44,29 +36,14 @@ struct FTraceSegment
 	float GetSegmentDistance() const { return SegmentDistance; }
 	FVector GetTraceDir() const { return TraceDir; }
 
-	void SetStartAndEndPoints(const FVector& InStartPoint, const FVector& InEndPoint)
-	{
-		// Set points
-		StartPoint = InStartPoint;
-		EndPoint = InEndPoint;
-
-		// Reevaluate calculations
-		SegmentDistance = FVector::Distance(StartPoint, EndPoint);
-		TraceDir = UKismetMathLibrary::GetDirectionUnitVector(StartPoint, EndPoint);
-	}
-
 private:
-	/**
-	 * This is the stack of Phys Mats that are enclosed in this Segment. Top of the stack is the most inner (most recent) Phys Mat
-	 */
-	TArray<UPhysicalMaterial*> PhysMaterials;
-
+	// Our segment points
 	FVector StartPoint;
 	FVector EndPoint;
 
+	// Cached calculations of our segment
 	float SegmentDistance;
 	FVector TraceDir;
-
 };
 
 

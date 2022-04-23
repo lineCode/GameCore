@@ -135,11 +135,10 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& O
 
 		// Build the Segment from this FwdBlockingHit to the BkwdHitResult (connecting a Fwd hit to a Bkwd hit)
 		{
-			FTraceSegment Segment; // the Segment we will make for this distance we just traced
 			const FVector StartPoint = (i == -1) ? BkwdEnd : FwdBlockingHits[i].ImpactPoint;
 			const FVector EndPoint = (BkwdHitResults.Num() > 0) ? BkwdHitResults[0].ImpactPoint : BkwdStart;
-			Segment.SetStartAndEndPoints(StartPoint, EndPoint);
-			Segment.SetPhysMaterials(CurrentEntrancePhysMaterials);
+			FTraceSegment Segment = FTraceSegment(StartPoint, EndPoint); // the Segment we will make for this distance we just traced
+			Segment.PhysMaterials = CurrentEntrancePhysMaterials;
 
 			if (FwdBlockingHits.IsValidIndex(i + 1) && FMath::IsNearlyZero(Segment.GetSegmentDistance()) == false) // if we are the last Segment and our distance is zero don't add this
 			{
@@ -156,7 +155,7 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& O
 			int32 IndexOfPhysMatThatWeAreExiting = CurrentEntrancePhysMaterials.FindLast(PhysMatThatWeAreExiting); // the inner-most (last) occurrence of this Phys Mat is the one that we are exiting
 			if (IndexOfPhysMatThatWeAreExiting != INDEX_NONE)
 			{
-				CurrentEntrancePhysMaterials.RemoveAt(IndexOfPhysMatThatWeAreExiting); // remove this Phys Mat that we are exiting from the Phys Mat stack
+				CurrentEntrancePhysMaterials.RemoveAt(IndexOfPhysMatThatWeAreExiting); // remove this Phys Mat that we are exiting from the stack
 			}
 			else
 			{
@@ -164,23 +163,16 @@ void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& O
 				// Add this something to all of the Segments we have made so far
 				for (FTraceSegment& TraceSegmentToAddTo : OutTraceSegments)
 				{
-					TArray<UPhysicalMaterial*> CorrectedPhysMats = TraceSegmentToAddTo.GetPhysMaterials();
-					CorrectedPhysMats.Insert(PhysMatThatWeAreExiting, 0); // insert at the bottom of the stack
-
-					TraceSegmentToAddTo.SetPhysMaterials(CorrectedPhysMats);
+					// Insert this newly discovered Phys Mat at the bottom of the stack because it was here the whole time
+					TraceSegmentToAddTo.PhysMaterials.Insert(PhysMatThatWeAreExiting, 0);
 				}
 			}
 
-
-			FTraceSegment Segment; // the Segment we will make for this distance we just traced
-			Segment.SetStartAndEndPoints(BkwdHit.ImpactPoint, BkwdHit.TraceStart);
-			Segment.SetPhysMaterials(CurrentEntrancePhysMaterials);
-
+			// Add a Segment for this distance that we just traced
+			FTraceSegment Segment = FTraceSegment(BkwdHit.ImpactPoint, BkwdHit.TraceStart);
+			Segment.PhysMaterials = CurrentEntrancePhysMaterials;
 
 			OutTraceSegments.Add(Segment);
-
-
-
 		}
 
 
