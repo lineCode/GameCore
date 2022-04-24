@@ -57,9 +57,16 @@ class HELPERLIBRARIES_API UBFL_CollisionQueryHelpers : public UBlueprintFunction
 	
 public:
 	/**
-	 * Line trace that penetrates through blocking hits.
+	 * Line trace multi that penetrates through blocking hits.
+	 * OutHitResults may contain a number of blocking hits.
 	 */
 	static void LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams);
+
+	/**
+	 * Line trace multi that overlaps all collision channels
+	 */
+	static void LineTraceMultiOverlapAll(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const FCollisionQueryParams& InCollisionQueryParams);
+
 
 	/**
 	 * BuildTraceSegments Important notes:
