@@ -57,6 +57,11 @@ class HELPERLIBRARIES_API UBFL_CollisionQueryHelpers : public UBlueprintFunction
 	
 public:
 	/**
+	 * Line trace that penetrates through blocking hits.
+	 */
+	static void LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams);
+
+	/**
 	 * BuildTraceSegments Important notes:
 	 * This gathers data on the geometry level. If there are faces with normals pointing at an incomming trace, it will hit. This can get really (pointlessly) expensive if a model has lots of faces not visible and inside the mesh
 	 * since it will penetrate those as well. I think in most cases it's pointless to do penetrations on those inner geometry parts, but we are just doing that for now. We could make an implementation that runs on the section level

@@ -9,6 +9,64 @@
 
 
 
+void UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams)
+{
+	// Configure our TraceCollisionQueryParams
+	FCollisionQueryParams TraceCollisionQueryParams = InCollisionQueryParams;
+	TraceCollisionQueryParams.bIgnoreTouches = false; // do NOT ignore overlaps because we are tracing as an ECR_Overlap (otherwise we won't get any Hit Results)
+
+	// Configure our TraceCollisionResponseParams
+	const FCollisionResponseParams TraceCollisionResponseParams = FCollisionResponseParams(ECollisionResponse::ECR_Overlap); // make this trace overlap through everything
+
+	// Perform the trace
+	InWorld->LineTraceMultiByChannel(OutHitResults, InTraceStart, InTraceEnd, InTraceChannel, TraceCollisionQueryParams, TraceCollisionResponseParams); // it is kind of weird how InTraceChannel is passed in here because I want to make sure that this trace overlaps everything and I don't want InTraceChannel to affect that - maybe just hard code ECC_Visibility here instead because InTraceChannel shouldn't do anything to this trace? Also will FHitResult::bBlockingHit have the correct value since we are just using ECR_Overlap for our response params? or will passing in the InTraceChannel make this work?
+
+
+	// Remove the hits that are ignored by our InTraceChannel
+	for (int32 i = OutHitResults.Num() - 1; i >= 0; --i)
+	{
+		if (const UPrimitiveComponent* Component = OutHitResults[i].Component.Get())
+		{
+			// Get the response params of this hit's component
+			ECollisionChannel ComponentCollisionChannel;
+			FCollisionResponseParams ComponentResponseParams;
+			UCollisionProfile::GetChannelAndResponseParams(Component->GetCollisionProfileName(), ComponentCollisionChannel, ComponentResponseParams);
+
+
+			// If this hit component is ignored by our InTraceChannel
+			if (ComponentResponseParams.CollisionResponse.GetResponse(InTraceChannel) == ECollisionResponse::ECR_Ignore)
+			{
+				// Ignore this hit
+				OutHitResults.RemoveAt(i);
+				continue;
+			}
+
+			if (InCollisionQueryParams.bIgnoreTouches)
+			{
+				// If this hit component overlaps our InTraceChannel
+				if (ComponentResponseParams.CollisionResponse.GetResponse(InTraceChannel) == ECollisionResponse::ECR_Overlap)
+				{
+					// Ignore touch
+					OutHitResults.RemoveAt(i);
+					continue;
+				}
+			}
+
+			if (InCollisionQueryParams.bIgnoreBlocks)
+			{
+				// If this hit component blocks our InTraceChannel
+				if (ComponentResponseParams.CollisionResponse.GetResponse(InTraceChannel) == ECollisionResponse::ECR_Block)
+				{
+					// Ignore block
+					OutHitResults.RemoveAt(i);
+					continue;
+				}
+			}
+		}
+	}
+}
+
+
 void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
 {
 	if (FwdBlockingHits.Num() <= 0)
