@@ -74,6 +74,43 @@ void UBFL_CollisionQueryHelpers::LineTraceMultiOverlapAll(const UWorld* InWorld,
 	InWorld->LineTraceMultiByChannel(OutHitResults, InTraceStart, InTraceEnd, ECollisionChannel::ECC_Visibility, TraceCollisionQueryParams, FCollisionResponseParams(ECollisionResponse::ECR_Overlap));
 }
 
+void UBFL_CollisionQueryHelpers::BuildTracePhysMatStackPoints(OUT TArray<FTracePhysMatStackPoint>& OutTracePhysMatStackPoints, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
+{
+
+}
+void UBFL_CollisionQueryHelpers::BuildTracePhysMatStackPoints(OUT TArray<FTracePhysMatStackPoint>& OutTracePhysMatStackPoints, const TArray<FHitResult>& FwdBlockingHits, const FVector& FwdEndLocation, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
+{
+
+}
+
+
+FVector UBFL_CollisionQueryHelpers::GetLocationAimDirection(const UWorld* World, const FCollisionQueryParams& QueryParams, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location)
+{
+	if (Location.Equals(AimPoint))
+	{
+		// The Location is the same as the AimPoint so we can skip the camera trace and just return the AimDir as the muzzle's direction
+		return AimDir;
+	}
+
+	// Line trace from the Location to the point that AimDir is looking at
+	FCollisionQueryParams CollisionQueryParams = QueryParams;
+	CollisionQueryParams.bIgnoreTouches = true;
+
+	FVector TraceEnd = AimPoint + (AimDir * MaxRange);
+
+	FHitResult HitResult;
+	const bool bSuccess = World->LineTraceSingleByChannel(HitResult, AimPoint, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionQueryParams);
+
+	if (!bSuccess)
+	{
+		// AimDir is not looking at anything for our Location to point to
+		return (TraceEnd - Location).GetSafeNormal();
+	}
+
+	// Return the direction from the Location to the point that the Player is looking at
+	return (HitResult.Location - Location).GetSafeNormal();
+}
+
 
 void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
 {
@@ -328,32 +365,4 @@ void UBFL_CollisionQueryHelpers::LineTracePenetrateBetweenPoints(OUT TArray<FHit
 
 	}
 
-}
-
-
-FVector UBFL_CollisionQueryHelpers::GetLocationAimDirection(const UWorld* World, const FCollisionQueryParams& QueryParams, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location)
-{
-	if (Location.Equals(AimPoint))
-	{
-		// The Location is the same as the AimPoint so we can skip the camera trace and just return the AimDir as the muzzle's direction
-		return AimDir;
-	}
-
-	// Line trace from the Location to the point that AimDir is looking at
-	FCollisionQueryParams CollisionQueryParams = QueryParams;
-	CollisionQueryParams.bIgnoreTouches = true;
-
-	FVector TraceEnd = AimPoint + (AimDir * MaxRange);
-
-	FHitResult HitResult;
-	const bool bSuccess = World->LineTraceSingleByChannel(HitResult, AimPoint, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionQueryParams);
-
-	if (!bSuccess)
-	{
-		// AimDir is not looking at anything for our Location to point to
-		return (TraceEnd - Location).GetSafeNormal();
-	}
-
-	// Return the direction from the Location to the point that the Player is looking at
-	return (HitResult.Location - Location).GetSafeNormal();
 }

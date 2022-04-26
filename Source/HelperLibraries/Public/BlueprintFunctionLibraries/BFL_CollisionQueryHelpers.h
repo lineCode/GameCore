@@ -48,6 +48,17 @@ private:
 
 
 /**
+ * Progress in a line trace that tells us the location where we are entering or exiting a Physical Material.
+ */
+struct FTracePhysMatStackPoint
+{
+	FVector LocationAlongTrace;
+
+	/** This is the stack of Physical Materials inside of the point. Top of the stack is the Phys Mat that we are entering into (most recent Phys Mat) */
+	TArray<UPhysicalMaterial*> PhysMaterials;
+};
+
+/**
  * A collection of our custom collision queries
  */
 UCLASS()
@@ -66,6 +77,19 @@ public:
 	 * Line trace multi that overlaps all collision channels
 	 */
 	static void LineTraceMultiOverlapAll(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const FCollisionQueryParams& InCollisionQueryParams);
+
+
+	/**
+	 * 
+	 */
+	static void BuildTracePhysMatStackPoints(OUT TArray<FTracePhysMatStackPoint>& OutTracePhysMatStackPoints, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel);
+	static void BuildTracePhysMatStackPoints(OUT TArray<FTracePhysMatStackPoint>& OutTracePhysMatStackPoints, const TArray<FHitResult>& FwdBlockingHits, const FVector& FwdEndLocation, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel);
+
+	/**
+	 * Gets the direction from the Location to the point that AimDir is looking at.
+	 * Useful for having a weapon's muzzle aim towards the Player's look point.
+	 */
+	static FVector GetLocationAimDirection(const UWorld* InWorld, const FCollisionQueryParams& Params, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location);
 
 
 	/**
@@ -88,10 +112,4 @@ public:
 	 * 
 	 */
 	static void LineTracePenetrateBetweenPoints(OUT TArray<FHitResult>& OutHitResults, const UWorld* World, const FVector& Start, const FVector& End, const ECollisionChannel TraceChannel, const FCollisionQueryParams& Params);
-
-	/**
-	 * Gets the direction from the Location to the point that AimDir is looking at.
-	 * Useful for having a weapon's muzzle aim towards the Player's look point.
-	 */
-	static FVector GetLocationAimDirection(const UWorld* InWorld, const FCollisionQueryParams& Params, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location);
 };
