@@ -70,13 +70,11 @@ public:
 	/**
 	 * Line trace multi that penetrates through blocking hits.
 	 * OutHitResults may contain a number of blocking hits.
+	 * 
+	 * Takes an optional bool callback, StopAtHitResult, for checking if we should stop at a given hit result. Returning true for a Hit Result keeps
+	 * that Hit Result and removes the rest of the Hit Results.
 	 */
-	static void LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams);
-
-	/**
-	 * Line trace multi that overlaps all collision channels
-	 */
-	static void LineTraceMultiOverlapAll(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const FCollisionQueryParams& InCollisionQueryParams);
+	static void LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>&& StopAtHitResult = nullptr);
 
 
 	/**
