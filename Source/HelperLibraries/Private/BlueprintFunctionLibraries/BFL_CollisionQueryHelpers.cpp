@@ -9,11 +9,11 @@
 
 
 
-void UBFL_CollisionQueryHelpers::BuildTracePoints(OUT TArray<FTracePoint>& OutTracePoints, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
+void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
 {
 	if (FwdBlockingHits.Num() <= 0)
 	{
-		UE_LOG(LogCollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Points of. Returned and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
+		UE_LOG(LogCollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Segments of. Returned and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
 		return;
 	}
 
@@ -24,7 +24,7 @@ void UBFL_CollisionQueryHelpers::BuildTracePoints(OUT TArray<FTracePoint>& OutTr
 	// Calculate the FurthestPossibleEnd point out of these FwdBlockingHits
 	{
 		const FVector TracedDir = UKismetMathLibrary::GetDirectionUnitVector(FwdBlockingHits[0].TraceStart, FwdBlockingHits[0].TraceEnd);
-
+		
 		float CurrentFurthestPossibleSize = 0.f;
 		for (const FHitResult& Hit : FwdBlockingHits)
 		{
@@ -46,15 +46,15 @@ void UBFL_CollisionQueryHelpers::BuildTracePoints(OUT TArray<FTracePoint>& OutTr
 
 		}
 
-		// Bump out a little because the BuildTracePoints() will bump us in a little
+		// Bump out a little because the BuildTraceSegments() will bump us in a little
 		FurthestPossibleEnd += (TracedDir * ((KINDA_SMALL_NUMBER * 100) * 2));
 	}
 
 	// Use this FurthestPossibleEnd as a Bkwd trace start location
-	BuildTracePoints(OutTracePoints, FwdBlockingHits, FurthestPossibleEnd, World, TraceParams, TraceChannel);
+	BuildTraceSegments(OutTraceSegments, FwdBlockingHits, FurthestPossibleEnd, World, TraceParams, TraceChannel);
 }
 
-void UBFL_CollisionQueryHelpers::BuildTracePoints(OUT TArray<FTracePoint>& OutTracePoints, const TArray<FHitResult>& FwdBlockingHits, const FVector& FwdEndLocation, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
+void UBFL_CollisionQueryHelpers::BuildTraceSegments(OUT TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const FVector& FwdEndLocation, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
 {
 	// 
 	// 						GENERAL GOAL
@@ -80,11 +80,11 @@ void UBFL_CollisionQueryHelpers::BuildTracePoints(OUT TArray<FTracePoint>& OutTr
 
 	if (FwdBlockingHits.Num() <= 0)
 	{
-		UE_LOG(LogCollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Points of. Returned and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
+		UE_LOG(LogCollisionQueryHelpers, Warning, TEXT("%s(): Wasn't given any FwdBlockingHits to build any Trace Segments of. Returned and did nothing"), ANSI_TO_TCHAR(__FUNCTION__));
 		return;
 	}
 
-	OutTracePoints.Empty(FwdBlockingHits.Num() * 2); // we know, most of the time, that we will have at least double the elements from FwdBlockingHits (most of the time) so reserve this much
+	OutTraceSegments.Empty(FwdBlockingHits.Num() * 2); // we know, most of the time, that we will have at least double the elements from FwdBlockingHits (most of the time) so reserve this much
 
 
 	const FVector FwdStartLocation = FwdBlockingHits[0].TraceStart; // maybe make this a parameter since FwdEndLocation is one
@@ -95,7 +95,7 @@ void UBFL_CollisionQueryHelpers::BuildTracePoints(OUT TArray<FTracePoint>& OutTr
 	FCollisionQueryParams BkwdParams = TraceParams;
 	BkwdParams.bIgnoreTouches = true; // we only care about blocking hits
 
-
+		
 	for (int32 i = -1; i < FwdBlockingHits.Num(); ++i)
 	{
 		//const FHitResult& ThisFwdBlockingHit = FwdBlockingHits[i];
@@ -133,21 +133,20 @@ void UBFL_CollisionQueryHelpers::BuildTracePoints(OUT TArray<FTracePoint>& OutTr
 		Algo::Reverse<TArray<FHitResult>>(BkwdHitResults);
 
 
-		// Build the trace point from this FwdBlockingHit to the BkwdHitResult (connecting a Fwd hit to a Bkwd hit)
+		// Build the Segment from this FwdBlockingHit to the BkwdHitResult (connecting a Fwd hit to a Bkwd hit)
 		{
-			FTracePoint TracePoint;
-			TracePoint.LocationAlongTrace = (i == -1) ? BkwdEnd : FwdBlockingHits[i].ImpactPoint; // the point for this distance we just traced
-			TracePoint.PhysMaterials = CurrentEntrancePhysMaterials;
+			const FVector StartPoint = (i == -1) ? BkwdEnd : FwdBlockingHits[i].ImpactPoint;
+			const FVector EndPoint = (BkwdHitResults.Num() > 0) ? BkwdHitResults[0].ImpactPoint : BkwdStart;
+			FTraceSegment Segment = FTraceSegment(StartPoint, EndPoint); // the Segment we will make for this distance we just traced
+			Segment.PhysMaterials = CurrentEntrancePhysMaterials;
 
-			// TODO: we deleted EndPoint code here. figure out what we broke
-
-			if (FwdBlockingHits.IsValidIndex(i + 1) && TracePoint.LocationAlongTrace.Equals(OutTracePoints.Last().LocationAlongTrace) == false) // if we are the last point and we are the same as the previous point
+			if (FwdBlockingHits.IsValidIndex(i + 1) && FMath::IsNearlyZero(Segment.GetSegmentDistance()) == false) // if we are the last Segment and our distance is zero don't add this
 			{
-				OutTracePoints.Add(TracePoint);
+				OutTraceSegments.Add(Segment);
 			}
 		}
 
-		// Build the rest of the BkwdHitResults points (connecting Bkwd hits to Bkwd hits)
+		// Build the rest of the BkwdHitResults Segments (connecting Bkwd hits to Bkwd hits)
 		for (const FHitResult& BkwdHit : BkwdHitResults)
 		{
 
@@ -161,20 +160,19 @@ void UBFL_CollisionQueryHelpers::BuildTracePoints(OUT TArray<FTracePoint>& OutTr
 			else
 			{
 				// We've just realized that we have been inside of something from the start (because we just exited something that we've never entered).
-				// Add this something to all of the points that we have made so far
-				for (FTracePoint& TracePointToAddPhysMatTo : OutTracePoints)
+				// Add this something to all of the Segments we have made so far
+				for (FTraceSegment& TraceSegmentToAddTo : OutTraceSegments)
 				{
 					// Insert this newly discovered Phys Mat at the bottom of the stack because it was here the whole time
-					TracePointToAddPhysMatTo.PhysMaterials.Insert(PhysMatThatWeAreExiting, 0);
+					TraceSegmentToAddTo.PhysMaterials.Insert(PhysMatThatWeAreExiting, 0);
 				}
 			}
 
-			// Add a trace point for this distance that we just traced
-			FTracePoint TracePoint;
-			TracePoint.LocationAlongTrace = BkwdHit.ImpactPoint;
-			TracePoint.PhysMaterials = CurrentEntrancePhysMaterials;
+			// Add a Segment for this distance that we just traced
+			FTraceSegment Segment = FTraceSegment(BkwdHit.ImpactPoint, BkwdHit.TraceStart);
+			Segment.PhysMaterials = CurrentEntrancePhysMaterials;
 
-			OutTracePoints.Add(TracePoint);
+			OutTraceSegments.Add(Segment);
 		}
 
 

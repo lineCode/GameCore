@@ -12,15 +12,40 @@
 
 
 /**
- * Progress in a line trace that tells us the location where we are entering or exiting a Physical Material.
+ * Represents a segment in the World and holds a stack of Phys Mats that are within the two end points.
  */
-struct FTracePoint
+struct FTraceSegment
 {
-	FVector LocationAlongTrace;
+	FTraceSegment(const FVector& InStartPoint, const FVector& InEndPoint)
+	{
+		// Set points
+		StartPoint = InStartPoint;
+		EndPoint = InEndPoint;
 
-	/** This is the stack of Physical Materials inside of the point. Top of the stack is the Phys Mat that we are entering into (most recent Phys Mat) */
+		// Cache our calculations
+		SegmentDistance = FVector::Distance(StartPoint, EndPoint);
+		TraceDir = (EndPoint - StartPoint).GetSafeNormal();
+	}
+
+	/** This is the stack of Physical Materials that are enclosed in this Segment. Top of the stack is the most inner (most recent) Phys Mat */
 	TArray<UPhysicalMaterial*> PhysMaterials;
+
+	FVector GetStartPoint() const { return StartPoint; }
+	FVector GetEndPoint() const { return EndPoint; }
+
+	float GetSegmentDistance() const { return SegmentDistance; }
+	FVector GetTraceDir() const { return TraceDir; }
+
+private:
+	// Our segment points
+	FVector StartPoint;
+	FVector EndPoint;
+
+	// Cached calculations of our segment
+	float SegmentDistance;
+	FVector TraceDir;
 };
+
 
 /**
  * A collection of our custom collision queries
@@ -32,7 +57,7 @@ class HELPERLIBRARIES_API UBFL_CollisionQueryHelpers : public UBlueprintFunction
 	
 public:
 	/**
-	 * BuildTracePoints Important notes:
+	 * BuildTraceSegments Important notes:
 	 * This gathers data on the geometry level. If there are faces with normals pointing at an incomming trace, it will hit. This can get really (pointlessly) expensive if a model has lots of faces not visible and inside the mesh
 	 * since it will penetrate those as well. I think in most cases it's pointless to do penetrations on those inner geometry parts, but we are just doing that for now. We could make an implementation that runs on the section level
 	 * instead of the geometry level (using HitResult.GetComponent()->GetMaterialFromCollisionFaceIndex(HitResult.FaceIndex); ). We were just kinda too lazy to do this. We did this in a pervious commit but changed the system.
@@ -43,8 +68,8 @@ public:
 	 * So when using this against skeletal meshes, only one bone will be hit.
 	 * Another thing is if the first fwd hit result it already inside some geometry, then the function won't be aware of that and the stack of physical materials won't be fully accurate.
 	*/
-	static void BuildTracePoints(OUT TArray<FTracePoint>& OutTracePoints, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel);
-	static void BuildTracePoints(OUT TArray<FTracePoint>& OutTracePoints, const TArray<FHitResult>& FwdBlockingHits, const FVector& FwdEndLocation, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel);
+	static void BuildTraceSegments(OUT TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel);
+	static void BuildTraceSegments(OUT TArray<FTraceSegment>& OutTraceSegments, const TArray<FHitResult>& FwdBlockingHits, const FVector& FwdEndLocation, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel);
 	
 	
 	/**
