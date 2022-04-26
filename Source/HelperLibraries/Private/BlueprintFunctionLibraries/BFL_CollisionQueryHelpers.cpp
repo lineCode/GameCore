@@ -9,7 +9,7 @@
 
 
 
-void UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>&& StopAtHitResult)
+void UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>&& ShouldNotPenetrate)
 {
 	// Ensure our collision query params do NOT ignore overlaps because we are tracing as an ECR_Overlap (otherwise we won't get any Hit Results)
 	FCollisionQueryParams TraceCollisionQueryParams = InCollisionQueryParams;
@@ -20,6 +20,8 @@ void UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 	// Also hardcode ECC_Visibility as our trace channel because it doesn't affect anything
 	InWorld->LineTraceMultiByChannel(OutHitResults, InTraceStart, InTraceEnd, ECollisionChannel::ECC_Visibility, TraceCollisionQueryParams, FCollisionResponseParams(ECollisionResponse::ECR_Overlap));
 
+
+	bool bHitImpenetrableHit = false;
 
 	for (int32 i = 0; i < OutHitResults.Num(); ++i)
 	{
@@ -71,10 +73,12 @@ void UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 			}
 		}
 
-		// Give our caller an opportunity to let this be the last hit
-		if (StopAtHitResult != nullptr && StopAtHitResult(OutHitResults[i]))
+
+		if (ShouldNotPenetrate != nullptr && ShouldNotPenetrate(OutHitResults[i])) // run caller's function to see if they want this hit result to be the last one
 		{
-			// Remove all of the Hit Results proceeding this stopped at hit
+			bHitImpenetrableHit = true;
+
+			// Remove the rest if there are any
 			if (OutHitResults.IsValidIndex(i + 1))
 			{
 				OutHitResults.RemoveAt(i + 1, (OutHitResults.Num() - 1) - i);
@@ -82,6 +86,52 @@ void UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 			}
 		}
 	}
+	if (OutHitResults.Num() <= 0)
+	{
+		return;
+	}
+
+
+
+	FVector BackwardsTraceStart;
+	const FVector ForwardsTraceDir = (InTraceEnd - InTraceStart);
+
+
+	if (bHitImpenetrableHit)
+	{
+		// We hit an impenetrable hit, so we don't want to start the backwards trace past that hit's location
+		BackwardsTraceStart = OutHitResults.Last().Location;
+
+		// Bump us away from the hit location a little so that the backwards trace doesn't get stuck
+		const float TraceStartWallAvoidancePadding = .01f;
+		BackwardsTraceStart = ((ForwardsTraceDir * -1) * TraceStartWallAvoidancePadding);
+	}
+	else
+	{
+		// Optimization where instead of using the foward trace's end, we use the bounding sphere of each hit object and compare them to get the largest one. Then we add this distance with our last hit location along the fwd trace direction so that we can mimimize the trace length by finding the furthest possible point that goes passed all of our hit components
+		// This optimization is good, BUT there is 1 case that this doesn't cover and that is if the forwards trace starts from within an object and it leaves that object passed our optimized backwards trace start location (this is absurdly unlikely however)
+		
+		// Get the largest bounding diameter out of all the hit components
+		float LargestHitComponentBoundingDiameter = 0.f;
+		for (const FHitResult& HitResult : OutHitResults)
+		{
+			if (HitResult.Component.IsValid() == false)
+			{
+				const float HitComponentBoundingDiameter = (HitResult.Component->Bounds.SphereRadius * 2);
+				if (HitComponentBoundingDiameter > LargestHitComponentBoundingDiameter)
+				{
+					LargestHitComponentBoundingDiameter = HitComponentBoundingDiameter;
+				}
+			}
+		}
+
+		// Furthest possible exit point of the penetration
+		BackwardsTraceStart = OutHitResults.Last().Location + (ForwardsTraceDir * LargestHitComponentBoundingDiameter);
+	}
+
+	TArray<FHitResult> BackwardsHitResults;
+	InWorld->LineTraceMultiByChannel(BackwardsHitResults, BackwardsTraceStart, InTraceStart, ECollisionChannel::ECC_Visibility, TraceCollisionQueryParams, FCollisionResponseParams(ECollisionResponse::ECR_Overlap));
+
 }
 
 void UBFL_CollisionQueryHelpers::BuildTracePhysMatStackPoints(OUT TArray<FTracePhysMatStackPoint>& OutTracePhysMatStackPoints, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)

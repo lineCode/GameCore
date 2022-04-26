@@ -68,13 +68,15 @@ class HELPERLIBRARIES_API UBFL_CollisionQueryHelpers : public UBlueprintFunction
 	
 public:
 	/**
-	 * Line trace multi that penetrates through blocking hits.
-	 * OutHitResults may contain a number of blocking hits.
+	 * Line trace multi that penetrates everything except for what the caller says in ShouldNotPenetrate() TFunction
 	 * 
-	 * Takes an optional bool callback, StopAtHitResult, for checking if we should stop at a given hit result. Returning true for a Hit Result keeps
-	 * that Hit Result and removes the rest of the Hit Results.
+	 * Takes an optional bool callback, HitStopsPenetrations, for giving the caller an opportunity to determine impenetrable hits. When returned true, we keep
+	 * that Hit Result and remove the rest of the Hit Results.
+	 * 
+	 * This trace basically allows for a customizable (third) ECollisionResponse. This is useful for when you want to be able to define how a trace should respond to
+	 * an object with certain characteristics (e.g. ricocheting). However it seams the only time this becomes useful is when you don't want blocking hits to stop a trace query from giving the rest of the hit results back.
 	 */
-	static void LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>&& StopAtHitResult = nullptr);
+	static void LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>&& ShouldNotPenetrate = nullptr);
 
 
 	/**
