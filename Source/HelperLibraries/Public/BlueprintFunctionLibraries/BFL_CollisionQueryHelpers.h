@@ -82,10 +82,10 @@ public:
 	 *  @param  InTraceEnd                End location of the ray
 	 *  @param  InTraceChannel            The 'channel' that this ray is in, used to determine which components to hit. Unlike standard UE traces, blocking hits for this channel don't stop the trace, but is instead only used for preserving the CollisionResponse of each hit.
 	 *  @param  InCollisionQueryParams    Additional parameters used for the trace
-	 *  @param  ShouldStopAtHit	          TFunction where caller indicates whether provided HitResult should stop the trace
+	 *  @param  ShouldStopAtHit           TFunction where caller indicates whether provided HitResult should stop the trace
 	 *  @return TRUE if hit and stopped at an impenetrable hit.
 	 */
-	static bool LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& ShouldStopAtHit = nullptr);
+	static bool LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunctionRef<bool(const FHitResult&)>& ShouldStopAtHit = [](const FHitResult&) { return false; });
 
 	/**
 	 * Line trace multi with penetrations but also collects exit Hit Results.
@@ -95,7 +95,7 @@ public:
 	 * 
 	 * Returns true if hit and stopped at an impenetrable hit.
 	 */
-	static bool DoubleSidedLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& ShouldNotPenetrate = nullptr);
+	static bool DoubleSidedLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunctionRef<bool(const FHitResult&)>& ShouldStopAtHit = [](const FHitResult&) { return false; });
 
 
 	/**
