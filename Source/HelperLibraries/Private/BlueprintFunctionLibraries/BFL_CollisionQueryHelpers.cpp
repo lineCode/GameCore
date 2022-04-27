@@ -113,26 +113,39 @@ bool UBFL_CollisionQueryHelpers::DoubleSidedLineTraceMultiByChannelWithPenetrati
 	}
 	else
 	{
-		// Start backwards trace at the end of the forwards trace, BUT there is actually an optimization we can do instead
-		// We use the bounding sphere of each hit object and compare their diameters to get the largest one. Then we add this distance with our last hit location along the fwd trace direction so that we can mimimize the trace length by finding the furthest possible point that goes passed all of our hit components
-		// This optimization is good, BUT there is 1 case that this doesn't cover and that is if the forwards trace starts from within an object and it leaves that object passed our optimized backwards trace start location (this is absurdly unlikely however)
+		// Start the backwards trace from the end of the forwards trace, BUT that is an unecessarily large distance to query. Ideally, we would start the backwards trace at
+		// the last exit point but of course we don't have our exit points yet. But we CAN calculate the furthest possible exit point for each of our entrance points and choose the largest among them.
+		// 
+		// This allows us to shave off lots of that unnecessary distance while guaranteeing accuracy.
 
-		// Get the largest bounding diameter out of all the hit components
-		float LargestHitComponentBoundingDiameter = 0.f;
+		// Find the furthest exit point that could possibly happen for each entrance hit and choose the largest among them
+		FVector TheFurthestPossibleExitPoint = InTraceStart;
 		for (const FHitResult& HitResult : EntranceHitResults)
 		{
-			if (HitResult.Component.IsValid())
+			if (const UPrimitiveComponent* HitComponent = HitResult.Component.Get())
 			{
-				const float HitComponentBoundingDiameter = (HitResult.Component->Bounds.SphereRadius * 2);
-				if (HitComponentBoundingDiameter > LargestHitComponentBoundingDiameter)
+				const float MyBoundingDiameter = (HitComponent->Bounds.SphereRadius * 2);
+				const FVector MyFurthestPossibleExitPoint = HitResult.Location + (ForwardsTraceDir * MyBoundingDiameter);
+
+				// If my point is after the currently believed furthest point
+				const bool bMyPointIsFurther = FVector::DotProduct(ForwardsTraceDir, (MyFurthestPossibleExitPoint - TheFurthestPossibleExitPoint)) > 0;
+				if (bMyPointIsFurther)
 				{
-					LargestHitComponentBoundingDiameter = HitComponentBoundingDiameter;
+					TheFurthestPossibleExitPoint = MyFurthestPossibleExitPoint;
 				}
 			}
 		}
 
+		// Edge case: Our optimization turned out to make our backwards trace distance larger. Cap it
+		const bool bOptimizationWentPastTraceEnd = FVector::DotProduct(ForwardsTraceDir, (TheFurthestPossibleExitPoint - InTraceEnd)) > 0;
+		if (bOptimizationWentPastTraceEnd)
+		{
+			// Cap our backwards trace start
+			TheFurthestPossibleExitPoint = InTraceEnd;
+		}
+
 		// Furthest possible exit point of the penetration
-		BackwardsTraceStart = EntranceHitResults.Last().Location + (ForwardsTraceDir * (LargestHitComponentBoundingDiameter + TraceStartWallAvoidancePadding));	// we use TraceStartWallAvoidancePadding here not to ensure that we don't hit the wall (b/c we do want the trace to hit it), but to just ensure we don't start inside it to remove possibility for unpredictable results. Very unlikely we hit a case where this padding is actually helpful here, but doing it to cover all cases.
+		BackwardsTraceStart = TheFurthestPossibleExitPoint + (ForwardsTraceDir * TraceStartWallAvoidancePadding); // we use TraceStartWallAvoidancePadding here not to ensure that we don't hit the wall (b/c we do want the trace to hit it), but to just ensure we don't start inside it to remove possibility for unpredictable results. Very unlikely we hit a case where this padding is actually helpful here, but doing it to cover all cases.
 	}
 
 
