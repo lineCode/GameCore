@@ -85,8 +85,10 @@ public:
 	 * 
 	 * OutHitResults contains both entrance and exit Hit Results in order of the forward tracing direction.
 	 * To distinguish the entrance hits from the exit hits, use FHitResult::TraceStart and FHitResult::TraceEnd to determine their tracing directions.
+	 * 
+	 * Returns true if hit and stopped at an impenetrable hit.
 	 */
-	static void DoubleSidedLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& ShouldNotPenetrate = nullptr);
+	static bool DoubleSidedLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& ShouldNotPenetrate = nullptr);
 
 
 	/**

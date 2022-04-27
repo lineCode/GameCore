@@ -88,26 +88,27 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 	// No impenetrable hits to stop us
 	return false;
 }
-void UBFL_CollisionQueryHelpers::DoubleSidedLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& ShouldNotPenetrate)
+bool UBFL_CollisionQueryHelpers::DoubleSidedLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& ShouldNotPenetrate)
 {
 	TArray<FHitResult> EntranceHitResults;
 	const bool bHitImpenetrableHit = LineTraceMultiByChannelWithPenetrations(InWorld, EntranceHitResults, InTraceStart, InTraceEnd, InTraceChannel, InCollisionQueryParams, ShouldNotPenetrate);
 	if (EntranceHitResults.Num() <= 0)
 	{
-		return;
+		return bHitImpenetrableHit; // nothing to work with. Also this will always returns false
 	}
+
 
 	FVector BackwardsTraceStart;
 	const FVector ForwardsTraceDir = (InTraceEnd - InTraceStart).GetSafeNormal();
 
-
+	// Good number for ensuring we don't start a trace on top of the object
+	const float TraceStartWallAvoidancePadding = .01f;
 	if (bHitImpenetrableHit)
 	{
 		// We hit an impenetrable hit, so we don't want to start the backwards trace past that hit's location
 		BackwardsTraceStart = EntranceHitResults.Last().Location;
 
 		// Bump us away from the hit location a little so that the backwards trace doesn't get stuck
-		const float TraceStartWallAvoidancePadding = .01f;
 		BackwardsTraceStart += ((ForwardsTraceDir * -1) * TraceStartWallAvoidancePadding);
 	}
 	else
@@ -131,7 +132,7 @@ void UBFL_CollisionQueryHelpers::DoubleSidedLineTraceMultiByChannelWithPenetrati
 		}
 
 		// Furthest possible exit point of the penetration
-		BackwardsTraceStart = EntranceHitResults.Last().Location + (ForwardsTraceDir * LargestHitComponentBoundingDiameter);
+		BackwardsTraceStart = EntranceHitResults.Last().Location + (ForwardsTraceDir * (LargestHitComponentBoundingDiameter + TraceStartWallAvoidancePadding));	// we use TraceStartWallAvoidancePadding here not to ensure that we don't hit the wall (b/c we do want the trace to hit it), but to just ensure we don't start inside it to remove possibility for unpredictable results. Very unlikely we hit a case where this padding is actually helpful here, but doing it to cover all cases.
 	}
 
 
@@ -173,6 +174,8 @@ void UBFL_CollisionQueryHelpers::DoubleSidedLineTraceMultiByChannelWithPenetrati
 			OutHitResults.Add(ExitHitResults[i]);
 		}
 	}
+
+	return bHitImpenetrableHit;
 }
 
 
