@@ -9,7 +9,7 @@
 
 
 
-bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& ShouldStopAtHit)
+bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunctionRef<bool(const FHitResult&)>& ShouldStopAtHit)
 {
 	// Ensure our collision query params do NOT ignore overlaps because we are tracing as an ECR_Overlap (otherwise we won't get any Hit Results)
 	FCollisionQueryParams TraceCollisionQueryParams = InCollisionQueryParams;
@@ -73,7 +73,7 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 
 		UE_CLOG((OutHits[i].Distance == 0.f), LogCollisionQueryHelpers, Warning, TEXT("%s() OutHitResults[%d] has a distance of 0! This could be due to starting the trace inside of geometry when using simple collision"), ANSI_TO_TCHAR(__FUNCTION__), i);
 
-		if (ShouldStopAtHit != nullptr && ShouldStopAtHit(OutHits[i])) // run caller's function to see if they want this hit result to be the last one
+		if (ShouldStopAtHit(OutHits[i])) // run caller's function to see if they want this hit result to be the last one
 		{
 			// Remove the rest if there are any
 			if (OutHits.IsValidIndex(i + 1))
@@ -88,7 +88,7 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 	// No impenetrable hits to stop us
 	return false;
 }
-bool UBFL_CollisionQueryHelpers::DoubleSidedLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& ShouldNotPenetrate)
+bool UBFL_CollisionQueryHelpers::DoubleSidedLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunctionRef<bool(const FHitResult&)>& ShouldNotPenetrate)
 {
 	TArray<FHitResult> EntranceHitResults;
 	const bool bHitImpenetrableHit = LineTraceMultiByChannelWithPenetrations(InWorld, EntranceHitResults, InTraceStart, InTraceEnd, InTraceChannel, InCollisionQueryParams, ShouldNotPenetrate);
