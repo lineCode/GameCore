@@ -73,8 +73,9 @@ public:
 	 *  The engine's way of handling collisions is good, but is limiting in some situations. We want to run a trace where
 	 *  blocking hits don't actually block the trace, creating a sort of "penetration" feature. The reason we can't just use
 	 *  a collision trace channel who'se default response is overlap is because doing so removes the distinction between overlaps
-	 *  and blocking hits (e.g. no way to know what is a triggerbox and what is a physical wall).
-	 *  This line trace is effectively a LineTraceMultiByChannel() that doesn't get stopped by blocking hits and instead gets stopped by whatever condition the caller desires while still preserving the hits' collision responses
+	 *  and blocking hits (e.g. no way to know what is a triggerbox and what is a physical wall). This line trace is effectively
+	 *  a LineTraceMultiByChannel() that doesn't get stopped by blocking hits and instead gets stopped by whatever condition the
+	 *  caller desires while still preserving the hits' collision responses.
 	 *  @param  InWorld                   Static functions require a world to perform anything in
 	 *  @param  OutHits                   Array of overlap and blocking hit hit results that were found until ShouldStopAtHit condition is met
 	 *  @param  InTraceStart              Start location of the ray
