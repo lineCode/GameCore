@@ -9,7 +9,7 @@
 
 
 
-bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& ShouldNotPenetrate)
+bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& ShouldStopAtHit)
 {
 	// Ensure our collision query params do NOT ignore overlaps because we are tracing as an ECR_Overlap (otherwise we won't get any Hit Results)
 	FCollisionQueryParams TraceCollisionQueryParams = InCollisionQueryParams;
@@ -18,13 +18,13 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 	// Perform the trace
 	// Use ECR_Overlap to have this trace overlap through everything
 	// Also hardcode ECC_Visibility as our trace channel because it doesn't affect anything
-	InWorld->LineTraceMultiByChannel(OutHitResults, InTraceStart, InTraceEnd, ECollisionChannel::ECC_Visibility, TraceCollisionQueryParams, FCollisionResponseParams(ECollisionResponse::ECR_Overlap));
+	InWorld->LineTraceMultiByChannel(OutHits, InTraceStart, InTraceEnd, ECollisionChannel::ECC_Visibility, TraceCollisionQueryParams, FCollisionResponseParams(ECollisionResponse::ECR_Overlap));
 
 
-	for (int32 i = 0; i < OutHitResults.Num(); ++i)
+	for (int32 i = 0; i < OutHits.Num(); ++i)
 	{
 		// Emulate the use of a trace channel by manually setting FHitResult::bBlockingHit and removing any hits that are ignored by the InTraceChannel
-		if (const UPrimitiveComponent* PrimitiveComponent = OutHitResults[i].Component.Get())
+		if (const UPrimitiveComponent* PrimitiveComponent = OutHits[i].Component.Get())
 		{
 			ECollisionChannel ComponentCollisionChannel;
 			FCollisionResponseParams ComponentResponseParams;
@@ -39,19 +39,19 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 				// This hit component is ignored by our InTraceChannel
 
 				// Ignore this hit
-				OutHitResults.RemoveAt(i);
+				OutHits.RemoveAt(i);
 				--i;
 				continue;
 			}
 			else if (CollisionResponse == ECollisionResponse::ECR_Overlap)
 			{
 				// This hit component overlaps our InTraceChannel
-				OutHitResults[i].bBlockingHit = false;
+				OutHits[i].bBlockingHit = false;
 
 				if (InCollisionQueryParams.bIgnoreTouches)
 				{
 					// Ignore touch
-					OutHitResults.RemoveAt(i);
+					OutHits.RemoveAt(i);
 					--i;
 					continue;
 				}
@@ -59,26 +59,26 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 			else if (CollisionResponse == ECollisionResponse::ECR_Block)
 			{
 				// This hit component blocks our InTraceChannel
-				OutHitResults[i].bBlockingHit = true;
+				OutHits[i].bBlockingHit = true;
 
 				if (InCollisionQueryParams.bIgnoreBlocks)
 				{
 					// Ignore block
-					OutHitResults.RemoveAt(i);
+					OutHits.RemoveAt(i);
 					--i;
 					continue;
 				}
 			}
 		}
 
-		UE_CLOG((OutHitResults[i].Distance == 0.f), LogCollisionQueryHelpers, Warning, TEXT("%s() OutHitResults[%d] has a distance of 0! This could be due to starting the trace inside of geometry when using simple collision"), ANSI_TO_TCHAR(__FUNCTION__), i);
+		UE_CLOG((OutHits[i].Distance == 0.f), LogCollisionQueryHelpers, Warning, TEXT("%s() OutHitResults[%d] has a distance of 0! This could be due to starting the trace inside of geometry when using simple collision"), ANSI_TO_TCHAR(__FUNCTION__), i);
 
-		if (ShouldNotPenetrate != nullptr && ShouldNotPenetrate(OutHitResults[i])) // run caller's function to see if they want this hit result to be the last one
+		if (ShouldStopAtHit != nullptr && ShouldStopAtHit(OutHits[i])) // run caller's function to see if they want this hit result to be the last one
 		{
 			// Remove the rest if there are any
-			if (OutHitResults.IsValidIndex(i + 1))
+			if (OutHits.IsValidIndex(i + 1))
 			{
-				OutHitResults.RemoveAt(i + 1, (OutHitResults.Num() - 1) - i);
+				OutHits.RemoveAt(i + 1, (OutHits.Num() - 1) - i);
 			}
 
 			return true;
