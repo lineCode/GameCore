@@ -46,16 +46,15 @@ private:
 	FVector TraceDir;
 };
 
-
-/**
- * Progress in a line trace that tells us the location where we are entering or exiting a Physical Material.
- */
-struct FTracePhysMatStackPoint
+struct FExitAwareHitResult : FHitResult
 {
-	FVector LocationAlongTrace;
+	FExitAwareHitResult(const FHitResult& HitResult)
+		: FHitResult(HitResult)
+	{
 
-	/** This is the stack of Physical Materials inside of the point. Top of the stack is the Phys Mat that we are entering into (most recent Phys Mat) */
-	TArray<UPhysicalMaterial*> PhysMaterials;
+	}
+
+	uint8 bIsExitHit : 1;
 };
 
 /**
@@ -77,7 +76,7 @@ public:
 	 *  a LineTraceMultiByChannel() that doesn't get stopped by blocking hits and instead gets stopped by whatever condition the
 	 *  caller desires while still preserving the hits' collision responses.
 	 *  @param  InWorld                   Static functions require a world to perform anything in
-	 *  @param  OutHits                   Array of overlap and blocking hit hit results that were found until ShouldStopAtHit condition is met
+	 *  @param  OutHits                   Array of hits (overlap and blocking) that were found until ShouldStopAtHit condition is met
 	 *  @param  InTraceStart              Start location of the ray
 	 *  @param  InTraceEnd                End location of the ray
 	 *  @param  InTraceChannel            The 'channel' that this ray is in, used to determine which components to hit. Unlike standard UE traces, blocking hits for this channel don't stop the trace, but is instead only used for preserving the CollisionResponse of each hit.
@@ -88,21 +87,14 @@ public:
 	static bool LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunctionRef<bool(const FHitResult&)>& ShouldStopAtHit = [](const FHitResult&) { return false; });
 
 	/**
-	 * Line trace multi with penetrations but also collects exit Hit Results.
-	 * 
-	 * OutHitResults contains both entrance and exit Hit Results in order of the forward tracing direction.
-	 * To distinguish the entrance hits from the exit hits, use FHitResult::TraceStart and FHitResult::TraceEnd to determine their tracing directions.
-	 * 
-	 * Returns true if hit and stopped at an impenetrable hit.
+	 *  Line trace multi with penetrations that outputs entrance and exit hits in order of the forward tracing direction
+	 *  
+	 *  @param  OutHits                          Array of entrance and exit hits (overlap and blocking) that were found until ShouldStopAtHit condition is met
+	 *  @param  bUseBackwardsTraceOptimization   Only use this if you're not starting the trace inside of geometry, otherwise the exits of any gemometry you're starting inside of may not be found. However, you could possibly still get away with this optimization if you are doing a very lengthy trace, because you are more likely to hit an entrance past the exit of the geometry that you started in. If true, will minimize the backwards tracing distance to go no further than the exit of the furthest entrance.
+	 *  @return TRUE if hit and stopped at an impenetrable hit.
 	 */
-	static bool DoubleSidedLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunctionRef<bool(const FHitResult&)>& ShouldStopAtHit = [](const FHitResult&) { return false; });
+	static bool ExitAwareLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunctionRef<bool(const FHitResult&)>& ShouldStopAtHit = [](const FHitResult&) { return false; }, const bool bUseBackwardsTraceOptimization = false);
 
-
-	/**
-	 * 
-	 */
-	static void BuildTracePhysMatStackPoints(OUT TArray<FTracePhysMatStackPoint>& OutTracePhysMatStackPoints, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel);
-	static void BuildTracePhysMatStackPoints(OUT TArray<FTracePhysMatStackPoint>& OutTracePhysMatStackPoints, const TArray<FHitResult>& FwdBlockingHits, const FVector& FwdEndLocation, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel);
 
 	/**
 	 * Gets the direction from the Location to the point that AimDir is looking at.
@@ -131,4 +123,5 @@ public:
 	 * 
 	 */
 	static void LineTracePenetrateBetweenPoints(OUT TArray<FHitResult>& OutHitResults, const UWorld* World, const FVector& Start, const FVector& End, const ECollisionChannel TraceChannel, const FCollisionQueryParams& Params);
+
 };

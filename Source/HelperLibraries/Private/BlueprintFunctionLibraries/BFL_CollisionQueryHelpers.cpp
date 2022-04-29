@@ -86,21 +86,23 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 	// No impenetrable hits to stop us
 	return false;
 }
-bool UBFL_CollisionQueryHelpers::DoubleSidedLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHitResults, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunctionRef<bool(const FHitResult&)>& ShouldNotPenetrate)
+
+bool UBFL_CollisionQueryHelpers::ExitAwareLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunctionRef<bool(const FHitResult&)>& ShouldNotPenetrate, const bool bUseBackwardsTraceOptimization)
 {
+	// Forwards trace to get our entrance hits
 	TArray<FHitResult> EntranceHitResults;
 	const bool bHitImpenetrableHit = LineTraceMultiByChannelWithPenetrations(InWorld, EntranceHitResults, InTraceStart, InTraceEnd, InTraceChannel, InCollisionQueryParams, ShouldNotPenetrate);
-	if (EntranceHitResults.Num() <= 0)
+
+	if (bUseBackwardsTraceOptimization && EntranceHitResults.Num() <= 0)
 	{
-		return bHitImpenetrableHit; // nothing to work with. Also this will always returns false
+		return bHitImpenetrableHit; // no entrance hits for our optimization to work with. Also this will always return false here
 	}
 
 
-	FVector BackwardsTraceStart;
+	// Calculate BackwardsTraceStart
 	const FVector ForwardsTraceDir = (InTraceEnd - InTraceStart).GetSafeNormal();
-
-	// Good number for ensuring we don't start a trace on top of the object
-	const float TraceStartWallAvoidancePadding = .01f;
+	FVector BackwardsTraceStart;
+	const float TraceStartWallAvoidancePadding = .01f; // good number for ensuring we don't start a trace on top of the object
 	if (bHitImpenetrableHit)
 	{
 		// We hit an impenetrable hit, so we don't want to start the backwards trace past that hit's location
@@ -111,93 +113,125 @@ bool UBFL_CollisionQueryHelpers::DoubleSidedLineTraceMultiByChannelWithPenetrati
 	}
 	else
 	{
-		// Start the backwards trace from the end of the forwards trace, BUT that is an unecessarily large distance to query. Ideally, we would start the backwards trace at
-		// the last exit point but of course we don't have our exit points yet. But we CAN calculate the furthest possible exit point for each of our entrance points and choose the largest among them.
-		// 
-		// This allows us to shave off lots of that unnecessary distance while guaranteeing accuracy.
-
-		// Find the furthest exit point that could possibly happen for each entrance hit and choose the largest among them
-		FVector TheFurthestPossibleExitPoint = InTraceStart;
-		for (const FHitResult& HitResult : EntranceHitResults)
+		if (!bUseBackwardsTraceOptimization)
 		{
-			if (const UPrimitiveComponent* HitComponent = HitResult.Component.Get())
-			{
-				const float MyBoundingDiameter = (HitComponent->Bounds.SphereRadius * 2);
-				const FVector MyFurthestPossibleExitPoint = HitResult.Location + (ForwardsTraceDir * MyBoundingDiameter);
+			// Start the backwards trace from the end of the forwards trace
+			BackwardsTraceStart = InTraceEnd + (ForwardsTraceDir * TraceStartWallAvoidancePadding);
+		}
+		else
+		{
+			// Instead of starting the backwards trace from the end of the forwards trace we can use an optimization to trim down the length. Ideally, we would start the backwards trace at
+			// the last exit point but of course we don't have our exit points yet. But we CAN calculate the furthest possible exit point for each of our entrance points and choose the largest among them.
 
-				// If my point is after the currently believed furthest point
-				const bool bMyPointIsFurther = FVector::DotProduct(ForwardsTraceDir, (MyFurthestPossibleExitPoint - TheFurthestPossibleExitPoint)) > 0;
-				if (bMyPointIsFurther)
+			// Find the furthest exit point that could possibly happen for each entrance hit and choose the largest among them
+			FVector TheFurthestPossibleExitPoint = InTraceStart;
+			for (const FHitResult& HitResult : EntranceHitResults)
+			{
+				if (const UPrimitiveComponent* HitComponent = HitResult.Component.Get())
 				{
-					TheFurthestPossibleExitPoint = MyFurthestPossibleExitPoint;
+					const float MyBoundingDiameter = (HitComponent->Bounds.SphereRadius * 2);
+					const FVector MyFurthestPossibleExitPoint = HitResult.Location + (ForwardsTraceDir * MyBoundingDiameter);
+
+					// If my point is after the currently believed furthest point
+					const bool bMyPointIsFurther = FVector::DotProduct(ForwardsTraceDir, (MyFurthestPossibleExitPoint - TheFurthestPossibleExitPoint)) > 0;
+					if (bMyPointIsFurther)
+					{
+						TheFurthestPossibleExitPoint = MyFurthestPossibleExitPoint;
+					}
 				}
 			}
-		}
 
-		// Edge case: Our optimization turned out to make our backwards trace distance larger. Cap it
-		const bool bOptimizationWentPastTraceEnd = FVector::DotProduct(ForwardsTraceDir, (TheFurthestPossibleExitPoint - InTraceEnd)) > 0;
-		if (bOptimizationWentPastTraceEnd)
-		{
-			// Cap our backwards trace start
-			TheFurthestPossibleExitPoint = InTraceEnd;
-		}
+			// Edge case: Our optimization turned out to make our backwards trace distance larger. Cap it.
+			const bool bOptimizationWentPastTraceEnd = FVector::DotProduct(ForwardsTraceDir, (TheFurthestPossibleExitPoint - InTraceEnd)) > 0;
+			if (bOptimizationWentPastTraceEnd)
+			{
+				// Cap our backwards trace start
+				TheFurthestPossibleExitPoint = InTraceEnd;
+			}
 
-		// Furthest possible exit point of the penetration
-		BackwardsTraceStart = TheFurthestPossibleExitPoint + (ForwardsTraceDir * TraceStartWallAvoidancePadding); // we use TraceStartWallAvoidancePadding here not to ensure that we don't hit the wall (b/c we do want the trace to hit it), but to just ensure we don't start inside it to remove possibility for unpredictable results. Very unlikely we hit a case where this padding is actually helpful here, but doing it to cover all cases.
+			// Furthest possible exit point of the penetration
+			BackwardsTraceStart = TheFurthestPossibleExitPoint + (ForwardsTraceDir * TraceStartWallAvoidancePadding); // we use TraceStartWallAvoidancePadding here not to ensure that we don't hit the wall (b/c we do want the trace to hit it), but to just ensure we don't start inside it to remove possibility for unpredictable results. Very unlikely we hit a case where this padding is actually helpful here, but doing it to cover all cases.
+		}
 	}
 
-
+	// Backwards trace to get our exit hits
 	TArray<FHitResult> ExitHitResults;
 	ExitHitResults.Reserve(EntranceHitResults.Num());
 	LineTraceMultiByChannelWithPenetrations(InWorld, ExitHitResults, BackwardsTraceStart, InTraceStart, InTraceChannel, InCollisionQueryParams, ShouldNotPenetrate);
 
-	// Fill out OutHitResults with both entrance and exit Hit Results
-	OutHitResults.Reserve(EntranceHitResults.Num() + ExitHitResults.Num());
-	for (const FHitResult& EntranceHitResult : EntranceHitResults)
+	// Make our exit hits relative to the forward trace
 	{
-		for (int32 i = ExitHitResults.Num() - 1; i >= 0; --i) // iterate backwards because exits were traced in the opposite direction
+		const float ForwardsTraceDistance = FVector::Distance(InTraceStart, InTraceEnd); // same as our pre-optimized backwards trace distance
+		float BackwardsTraceDistance = ForwardsTraceDistance;
+		if (bUseBackwardsTraceOptimization)
 		{
-			const FHitResult& ExitHitResult = ExitHitResults[i];
-
-			const bool EntranceHitIsFirst = FVector::DotProduct(ForwardsTraceDir, (ExitHitResult.Location - EntranceHitResult.Location)) > 0;
-			if (EntranceHitIsFirst)
-			{
-				// Break out of here to add the entrance hit first
-				break;
-			}
-			else // this exit is first
-			{
-				OutHitResults.Add(ExitHitResult);
-				ExitHitResults.RemoveAt(i); // make sure we don't come across this exit again
-				continue;
-			}
+			BackwardsTraceDistance = FVector::Distance(BackwardsTraceStart, InTraceStart);
 		}
 
-		OutHitResults.Add(EntranceHitResult);
+		for (FHitResult& HitResult : ExitHitResults)
+		{
+			// Assign expected values in our exit hit result
+			HitResult.TraceStart = InTraceStart;
+			HitResult.TraceEnd = InTraceEnd;
+
+			// Remove/re-add our padding from this hit's distance
+			HitResult.Distance += bHitImpenetrableHit ? TraceStartWallAvoidancePadding : -TraceStartWallAvoidancePadding;
+
+			if (bUseBackwardsTraceOptimization)
+			{
+				// Account for the distance that was optimized out in the backwards trace
+				HitResult.Distance += (ForwardsTraceDistance - BackwardsTraceDistance);
+			}
+
+			// Make the distance relative to the forwards direction
+			HitResult.Distance = (ForwardsTraceDistance - HitResult.Distance); // a oneminus-like operation
+
+			// Now that we have corrected Distance, recalculate Time to be correct
+			HitResult.Time = FMath::GetRangePct(FVector2D(0.f, ForwardsTraceDistance), HitResult.Distance);
+		}
 	}
 
-	if (ExitHitResults.Num() > 0)
+
+	// Lastly build our return value with the entrance and exit hits in order
+	OutHits.Reserve(EntranceHitResults.Num() + ExitHitResults.Num());
+	int32 EntranceIndex = 0;
+	while (EntranceIndex < EntranceHitResults.Num() || ExitHitResults.Num() > 0) // build our return value
 	{
-		// Since we have added all of our entrance hits, we know that the rest of the exit hits come after them.
-		// Add the rest of the exit hits.
-		for (int32 i = ExitHitResults.Num() - 1; i >= 0; --i)
+		bool bEntranceIsNext = true;
+		if (EntranceIndex < EntranceHitResults.Num() && ExitHitResults.Num() > 0) // if we have both entrance and exit hits to choose from
 		{
-			OutHitResults.Add(ExitHitResults[i]);
+			bEntranceIsNext = FVector::DotProduct(ForwardsTraceDir, (ExitHitResults.Last().Location - EntranceHitResults[EntranceIndex].Location)) > 0; // figure out which hit to add to return value first
+		}
+		else if (EntranceIndex < EntranceHitResults.Num())	// if we only have entrances left
+		{
+			bEntranceIsNext = true;
+		}
+		else if (ExitHitResults.Num() > 0)					// if we only have exits left
+		{
+			bEntranceIsNext = false;
+		}
+
+		if (bEntranceIsNext)
+		{
+			// Add this entrance hit
+			FExitAwareHitResult HitResult = EntranceHitResults[EntranceIndex];
+			HitResult.bIsExitHit = false;
+			OutHits.Add(HitResult);
+			++EntranceIndex; // don't consider this entrance anymore because we added it to return value
+			continue;
+		}
+		else
+		{
+			// Add this exit hit
+			FExitAwareHitResult HitResult = ExitHitResults.Last();
+			HitResult.bIsExitHit = true;
+			OutHits.Add(HitResult);
+			ExitHitResults.RemoveAt(ExitHitResults.Num() - 1); // don't consider this exit anymore because we added it to return value
+			continue;
 		}
 	}
 
 	return bHitImpenetrableHit;
-}
-
-
-
-void UBFL_CollisionQueryHelpers::BuildTracePhysMatStackPoints(OUT TArray<FTracePhysMatStackPoint>& OutTracePhysMatStackPoints, const TArray<FHitResult>& FwdBlockingHits, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
-{
-
-}
-void UBFL_CollisionQueryHelpers::BuildTracePhysMatStackPoints(OUT TArray<FTracePhysMatStackPoint>& OutTracePhysMatStackPoints, const TArray<FHitResult>& FwdBlockingHits, const FVector& FwdEndLocation, const UWorld* World, const FCollisionQueryParams& TraceParams, const TEnumAsByte<ECollisionChannel> TraceChannel)
-{
-
 }
 
 
