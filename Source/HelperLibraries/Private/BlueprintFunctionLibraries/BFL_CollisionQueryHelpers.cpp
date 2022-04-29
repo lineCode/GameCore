@@ -71,8 +71,6 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 			}
 		}
 
-		UE_CLOG((OutHits[i].Distance == 0.f), LogCollisionQueryHelpers, Warning, TEXT("%s() OutHitResults[%d] has a distance of 0! This could be due to starting the trace inside of geometry when using simple collision"), ANSI_TO_TCHAR(__FUNCTION__), i);
-
 		if (ShouldStopAtHit(OutHits[i])) // run caller's function to see if they want this hit result to be the last one
 		{
 			// Remove the rest if there are any

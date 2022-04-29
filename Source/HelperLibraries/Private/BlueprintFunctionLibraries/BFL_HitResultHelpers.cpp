@@ -55,8 +55,7 @@ bool UBFL_HitResultHelpers::AreHitsFromSameTrace(const FHitResult& HitA, const F
 {
 	const bool bSameStart = (HitA.TraceStart == HitB.TraceStart);
 	const bool bSameEnd = (HitA.TraceEnd == HitB.TraceEnd);
-	//const bool bSamePenetration = (HitA.bStartPenetrating == HitB.bStartPenetrating);
 
-	const bool bSameTrace = (bSameStart && bSameEnd/* && bSamePenetration*/);
+	const bool bSameTrace = (bSameStart && bSameEnd);
 	return bSameTrace;
 }
