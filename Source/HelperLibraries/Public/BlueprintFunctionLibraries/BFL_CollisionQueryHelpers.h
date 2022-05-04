@@ -46,12 +46,12 @@ private:
 	FVector TraceDir;
 };
 
-struct FExitAwareHitResult : FHitResult
+struct FExitAwareHitResult : public FHitResult
 {
 	FExitAwareHitResult(const FHitResult& HitResult)
 		: FHitResult(HitResult)
+		, bIsExitHit(false)
 	{
-
 	}
 
 	uint8 bIsExitHit : 1;
@@ -79,7 +79,7 @@ public:
 	 *  @param  OutHits                   Array of hits (overlap and blocking) that were found until ShouldStopAtHit condition is met
 	 *  @param  InTraceStart              Start location of the ray
 	 *  @param  InTraceEnd                End location of the ray
-	 *  @param  InTraceChannel            The 'channel' that this ray is in, used to determine which components to hit. Unlike standard UE traces, blocking hits for this channel don't stop the trace, but is instead only used for preserving the CollisionResponse of each hit.
+	 *  @param  InTraceChannel            The 'channel' that this ray is in, used to determine which components to hit. Unlike the default UWorld traces, blocking hits for this channel don't stop the trace, but is instead only used for preserving the CollisionResponse of each hit.
 	 *  @param  InCollisionQueryParams    Additional parameters used for the trace
 	 *  @param  ShouldStopAtHit           TFunction where caller indicates whether provided HitResult should stop the trace
 	 *  @return TRUE if hit and stopped at an impenetrable hit.
