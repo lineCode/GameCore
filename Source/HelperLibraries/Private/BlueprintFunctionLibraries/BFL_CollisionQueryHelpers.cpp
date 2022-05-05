@@ -16,10 +16,9 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 	TraceCollisionQueryParams.bIgnoreTouches = false;
 
 	// Perform the trace
-	// Use ECR_Overlap to have this trace overlap through everything
-	// Also hardcode ECC_Visibility as our trace channel because it doesn't affect anything
-	InWorld->LineTraceMultiByChannel(OutHits, InTraceStart, InTraceEnd, ECollisionChannel::ECC_Visibility, TraceCollisionQueryParams, FCollisionResponseParams(ECollisionResponse::ECR_Overlap));
-
+	// Use ECR_Overlap to have this trace overlap through everything. Our CollisionResponseParams overrides all responses to the Trace Channel to overlap everything.
+	// Also use their InTraceChannel to ensure that their ignored hits are ignored (because FCollisionResponseParams don't affect ECR_Ignore).
+	InWorld->LineTraceMultiByChannel(OutHits, InTraceStart, InTraceEnd, InTraceChannel, TraceCollisionQueryParams, FCollisionResponseParams(ECollisionResponse::ECR_Overlap));
 
 	for (int32 i = 0; i < OutHits.Num(); ++i)
 	{
@@ -33,15 +32,18 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 			// The hit component's response to our InTraceChannel
 			const ECollisionResponse CollisionResponse = ComponentResponseParams.CollisionResponse.GetResponse(InTraceChannel);
 
-
-			if (CollisionResponse == ECollisionResponse::ECR_Ignore)
+			if (CollisionResponse == ECollisionResponse::ECR_Block)
 			{
-				// This hit component is ignored by our InTraceChannel
+				// This hit component blocks our InTraceChannel
+				OutHits[i].bBlockingHit = true;
 
-				// Ignore this hit
-				OutHits.RemoveAt(i);
-				--i;
-				continue;
+				if (InCollisionQueryParams.bIgnoreBlocks)
+				{
+					// Ignore block
+					OutHits.RemoveAt(i);
+					--i;
+					continue;
+				}
 			}
 			else if (CollisionResponse == ECollisionResponse::ECR_Overlap)
 			{
@@ -56,18 +58,15 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 					continue;
 				}
 			}
-			else if (CollisionResponse == ECollisionResponse::ECR_Block)
+			else if (CollisionResponse == ECollisionResponse::ECR_Ignore)
 			{
-				// This hit component blocks our InTraceChannel
-				OutHits[i].bBlockingHit = true;
+				// This hit component is ignored by our InTraceChannel
+				UE_LOG(LogCollisionQueryHelpers, Warning, TEXT("%s() We got an ignored hit some how from our line trace. Removing it. This is weird because line traces should never return ignored hits as far as I know. This ocurred on Trace Channel: [%d]."), ANSI_TO_TCHAR(__FUNCTION__), static_cast<int32>(InTraceChannel));
 
-				if (InCollisionQueryParams.bIgnoreBlocks)
-				{
-					// Ignore block
-					OutHits.RemoveAt(i);
-					--i;
-					continue;
-				}
+				// Ignore this hit
+				OutHits.RemoveAt(i);
+				--i;
+				continue;
 			}
 		}
 
