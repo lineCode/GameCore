@@ -3,7 +3,7 @@
 
 #include "BlueprintFunctionLibraries/BFL_HitResultHelpers.h"
 
-#include "Utilities/HLLogCategories.h"
+
 
 bool UBFL_HitResultHelpers::AreHitsFromSameTrace(const FHitResult& HitA, const FHitResult& HitB)
 {

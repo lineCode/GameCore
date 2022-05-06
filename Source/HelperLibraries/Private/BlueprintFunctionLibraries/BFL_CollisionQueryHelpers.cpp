@@ -3,8 +3,6 @@
 
 #include "BlueprintFunctionLibraries/BFL_CollisionQueryHelpers.h"
 
-#include "Utilities/HLLogCategories.h"
-
 
 
 bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunctionRef<bool(const FHitResult&)>& ShouldStopAtHit)
