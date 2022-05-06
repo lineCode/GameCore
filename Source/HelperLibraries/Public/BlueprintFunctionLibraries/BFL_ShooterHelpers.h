@@ -31,7 +31,7 @@ struct HELPERLIBRARIES_API FBulletHit : public FExitAwareHitResult
 		, Speed(0.f)
 	{
 	}
-
+	float BulletHitDistance;
 	int32 RicochetNumber;
 	uint8 bIsRicochet : 1;
 	float Speed;

@@ -85,6 +85,7 @@ void UBFL_ShooterHelpers::ScanWithLineTracesUsingSpeed(FScanResult& OutScanResul
 			AddedBulletHit.RicochetNumber = RicochetNumber;
 			AddedBulletHit.bIsRicochet = ShouldRicochetOffOf(AddedBulletHit);
 			AddedBulletHit.Speed = BulletSpeed;
+			AddedBulletHit.BulletHitDistance = (InDistanceCap - RemainingScanDistance) + AddedBulletHit.Distance; // RemainingScanDistance is the distance of the current trace and all traces after TODO: Make this more understandable by creating a DistanceTraveled float. Every trace, add the distance from the start of the trace to the point the bullet stopped at or ricocheted at
 
 			// Handle ricochet hit
 			if (AddedBulletHit.bIsRicochet)
