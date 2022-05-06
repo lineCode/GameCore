@@ -70,6 +70,8 @@ class HELPERLIBRARIES_API UBFL_ShooterHelpers : public UBlueprintFunctionLibrary
 public:
 	/**
 	 * Performs traces from a given ScanStart into a given ScanDirection with ricochets and penetrations.
+	 * Implements the concept of bullet speed. Each ricochet and penetration applies speed nerfs implemented
+	 * by optional TFunction parameters.
 	 * May want to re-use an array for OutHitResults when calling multiple times to avoid useless allocations and deallocations.
 	 *
 	 * @param OutScanResult              Output of this function. Includes bullet hit results and scan information.
