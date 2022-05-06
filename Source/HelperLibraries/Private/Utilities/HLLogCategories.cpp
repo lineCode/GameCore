@@ -7,3 +7,4 @@
 
 DEFINE_LOG_CATEGORY(LogCollisionQueryHelpers)
 DEFINE_LOG_CATEGORY(LogHitResultHelpers)
+DEFINE_LOG_CATEGORY(LogShooterHelpers)

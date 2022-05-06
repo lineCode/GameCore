@@ -8,3 +8,4 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCollisionQueryHelpers, Log, All)
 DECLARE_LOG_CATEGORY_EXTERN(LogHitResultHelpers, Log, All)
+DECLARE_LOG_CATEGORY_EXTERN(LogShooterHelpers, Log, All)

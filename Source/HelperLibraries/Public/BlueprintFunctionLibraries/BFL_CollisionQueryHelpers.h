@@ -12,8 +12,16 @@
 /**
  * Extension of FHitResult for indicating if it's an exit
  */
-struct FExitAwareHitResult : public FHitResult
+USTRUCT()
+struct HELPERLIBRARIES_API FExitAwareHitResult : public FHitResult
 {
+	GENERATED_BODY()
+
+	FExitAwareHitResult()
+		: FHitResult()
+		, bIsExitHit(false)
+	{
+	}
 	FExitAwareHitResult(const FHitResult& HitResult)
 		: FHitResult(HitResult)
 		, bIsExitHit(false)
