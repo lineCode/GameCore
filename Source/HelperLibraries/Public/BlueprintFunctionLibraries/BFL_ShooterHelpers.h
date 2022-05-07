@@ -9,8 +9,9 @@
 #include "BFL_ShooterHelpers.generated.h"
 
 
+
 /**
- *
+ * 
  */
 USTRUCT()
 struct HELPERLIBRARIES_API FBulletHit : public FExitAwareHitResult
@@ -31,6 +32,7 @@ struct HELPERLIBRARIES_API FBulletHit : public FExitAwareHitResult
 		, Speed(0.f)
 	{
 	}
+
 	float BulletHitDistance;
 	int32 RicochetNumber;
 	uint8 bIsRicochet : 1;
@@ -38,7 +40,7 @@ struct HELPERLIBRARIES_API FBulletHit : public FExitAwareHitResult
 };
 
 /**
- *
+ * 
  */
 USTRUCT()
 struct HELPERLIBRARIES_API FScanResult
@@ -49,15 +51,18 @@ struct HELPERLIBRARIES_API FScanResult
 		: BulletHits(TArray<FBulletHit>())
 		, BulletStart(FVector::ZeroVector)
 		, BulletEnd(FVector::ZeroVector)
+		, InitialBulletSpeed(0.f)
 	{
 	}
 
 	TArray<FBulletHit> BulletHits;
 	FVector BulletStart;
 	FVector BulletEnd;
+	float InitialBulletSpeed;
 
 	void DebugScan(const UWorld* InWorld) const;
 };
+
 
 /**
  * Useful shooter related functionality

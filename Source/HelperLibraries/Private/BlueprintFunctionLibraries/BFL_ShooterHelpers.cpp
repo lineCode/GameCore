@@ -17,6 +17,7 @@ void UBFL_ShooterHelpers::ScanWithLineTracesUsingSpeed(FScanResult& OutScanResul
 	const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf)
 {
 	OutScanResult.BulletStart = InScanStart;
+	OutScanResult.InitialBulletSpeed = InInitialBulletSpeed;
 
 	float BulletSpeed = InInitialBulletSpeed;
 	TArray<float> PenetrationNerfStack;
@@ -234,6 +235,3 @@ void FScanResult::DebugScan(const UWorld* InWorld) const
 	}
 #endif // ENABLE_DRAW_DEBUG
 }
-
-
-
