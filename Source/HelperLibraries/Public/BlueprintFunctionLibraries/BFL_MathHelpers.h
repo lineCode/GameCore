@@ -25,4 +25,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "MathHelpers|VectorMath")
 		static bool PointLiesOnSegment(const FVector& Start, const FVector& End, const FVector& Point);
 
+	/**
+	 * Gets the direction from the Location to the point that AimDir is looking at.
+	 * E.g. having a weapon's muzzle aim towards the Player's look point.
+	 */
+	static FVector GetLocationAimDirection(const UWorld* InWorld, const FCollisionQueryParams& Params, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location);
 };

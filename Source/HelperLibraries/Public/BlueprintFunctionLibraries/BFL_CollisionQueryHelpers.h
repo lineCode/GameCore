@@ -75,12 +75,6 @@ public:
 	static bool ExitAwarePenetrationLineTrace(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& ShouldStopAtHit = nullptr, const bool bUseBackwardsTraceOptimization = false);
 
 
-	/**
-	 * Gets the direction from the Location to the point that AimDir is looking at.
-	 * Useful for having a weapon's muzzle aim towards the Player's look point.
-	 */
-	static FVector GetLocationAimDirection(const UWorld* InWorld, const FCollisionQueryParams& Params, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location);
-
 private:
 	/**
 	 * Modifies existing HitResults to respond appropriately to the caller's ECollisionChannel and FCollisionQueryParams.
