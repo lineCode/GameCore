@@ -71,7 +71,7 @@ bool UBFL_CollisionQueryHelpers::PenetrationSweep(const UWorld* InWorld, TArray<
 	return false;
 }
 
-bool UBFL_CollisionQueryHelpers::ExitAwareLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& ShouldNotPenetrate, const bool bUseBackwardsTraceOptimization)
+bool UBFL_CollisionQueryHelpers::ExitAwarePenetrationLineTrace(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& ShouldNotPenetrate, const bool bUseBackwardsTraceOptimization)
 {
 	// Forwards trace to get our entrance hits
 	TArray<FHitResult> EntranceHitResults;

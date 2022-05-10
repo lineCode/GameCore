@@ -34,7 +34,7 @@ void UBFL_ShooterHelpers::ScanWithLineTracesUsingSpeed(FScanResult& OutScanResul
 		const FVector TraceEnd = TraceStart + (TraceDirection * RemainingScanDistance);
 
 		// Penetration line trace that stops at a user defined ricochetable surface
-		const bool bHitRicochetableSurface = UBFL_CollisionQueryHelpers::ExitAwareLineTraceMultiByChannelWithPenetrations(InWorld, TraceHitResults, TraceStart, TraceEnd, InTraceChannel, CollisionQueryParams, ShouldRicochetOffOf, true);
+		const bool bHitRicochetableSurface = UBFL_CollisionQueryHelpers::ExitAwarePenetrationLineTrace(InWorld, TraceHitResults, TraceStart, TraceEnd, InTraceChannel, CollisionQueryParams, ShouldRicochetOffOf, true);
 
 		// If the caller is using speed, apply speed nerfs and see if we stopped (from TraceStart to the first hit)
 		if (InInitialBulletSpeed != -1)
