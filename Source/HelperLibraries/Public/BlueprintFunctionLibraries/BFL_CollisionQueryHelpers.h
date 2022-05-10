@@ -58,12 +58,12 @@ public:
 	 *  @param  IsHitImpenetrable         TFunction where caller indicates whether provided HitResult should stop the trace
 	 *  @return TRUE if hit and stopped at an impenetrable hit.
 	 */
-	static bool LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
+	static bool PenetrationLineTrace(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
 
 	/**
 	 * Refer to LineTraceMultiByChannelWithPenetrations() for documentation
 	 */
-	static bool SweepMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
+	static bool PenetrationSweep(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
 
 	/**
 	 *  Line trace multi with penetrations that outputs entrance and exit hits in order of the forward tracing direction
@@ -90,6 +90,6 @@ private:
 	 * @param  InTraceChannel				The collision channel in which the hits will conform to (e.g. setting FHitResult::bBlockingHit to true because of the hit component's response to our trace channel)
 	 * @param  InCollisionQueryParams		The collision query params in which the hits will conform to (e.g. removing blocking hits because of FCollisionQueryParams::bIgnoreBlocks)
 	 */
-	static void HaveHitResultsRespondToTraceChannel(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam);
+	static void ChangeHitsResponseData(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam);
 
 };

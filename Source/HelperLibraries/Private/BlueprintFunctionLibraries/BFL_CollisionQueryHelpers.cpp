@@ -5,7 +5,7 @@
 
 
 
-bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
+bool UBFL_CollisionQueryHelpers::PenetrationLineTrace(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
 {
 	// Ensure our collision query params do NOT ignore overlaps because we are tracing as an ECR_Overlap (otherwise we won't get any Hit Results)
 	FCollisionQueryParams TraceCollisionQueryParams = InCollisionQueryParams;
@@ -18,7 +18,7 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 
 	// Using ECollisionResponse::ECR_Overlap to trace was nice since we can get all hits (both overlap and blocking) in the segment without being stopped, but as a result, all of these hits have bBlockingHit as false.
 	// So lets modify these hits to have the correct responses for the caller's trace channel.
-	HaveHitResultsRespondToTraceChannel(OutHits, InTraceChannel, InCollisionQueryParams);
+	ChangeHitsResponseData(OutHits, InTraceChannel, InCollisionQueryParams);
 
 	// Stop at any impenetrable hits
 	if (IsHitImpenetrable != nullptr)
@@ -43,14 +43,14 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 	return false;
 }
 
-bool UBFL_CollisionQueryHelpers::SweepMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
+bool UBFL_CollisionQueryHelpers::PenetrationSweep(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
 {
 	FCollisionQueryParams TraceCollisionQueryParams = InCollisionQueryParams;
 	TraceCollisionQueryParams.bIgnoreTouches = false;
 
 	InWorld->SweepMultiByChannel(OutHits, InSweepStart, InSweepEnd, InRotation, InTraceChannel, InCollisionShape, TraceCollisionQueryParams, FCollisionResponseParams(ECollisionResponse::ECR_Overlap));
 
-	HaveHitResultsRespondToTraceChannel(OutHits, InTraceChannel, InCollisionQueryParams);
+	ChangeHitsResponseData(OutHits, InTraceChannel, InCollisionQueryParams);
 
 	if (IsHitImpenetrable != nullptr)
 	{
@@ -75,7 +75,7 @@ bool UBFL_CollisionQueryHelpers::ExitAwareLineTraceMultiByChannelWithPenetration
 {
 	// Forwards trace to get our entrance hits
 	TArray<FHitResult> EntranceHitResults;
-	const bool bHitImpenetrableHit = LineTraceMultiByChannelWithPenetrations(InWorld, EntranceHitResults, InTraceStart, InTraceEnd, InTraceChannel, InCollisionQueryParams, ShouldNotPenetrate);
+	const bool bHitImpenetrableHit = PenetrationLineTrace(InWorld, EntranceHitResults, InTraceStart, InTraceEnd, InTraceChannel, InCollisionQueryParams, ShouldNotPenetrate);
 
 	if (bUseBackwardsTraceOptimization && EntranceHitResults.Num() <= 0)
 	{
@@ -141,7 +141,7 @@ bool UBFL_CollisionQueryHelpers::ExitAwareLineTraceMultiByChannelWithPenetration
 	// Backwards trace to get our exit hits
 	TArray<FHitResult> ExitHitResults;
 	ExitHitResults.Reserve(EntranceHitResults.Num());
-	LineTraceMultiByChannelWithPenetrations(InWorld, ExitHitResults, BackwardsTraceStart, InTraceStart, InTraceChannel, InCollisionQueryParams, ShouldNotPenetrate);
+	PenetrationLineTrace(InWorld, ExitHitResults, BackwardsTraceStart, InTraceStart, InTraceChannel, InCollisionQueryParams, ShouldNotPenetrate);
 
 	// Make our exit hits relative to the forward trace
 	{
@@ -218,7 +218,7 @@ bool UBFL_CollisionQueryHelpers::ExitAwareLineTraceMultiByChannelWithPenetration
 	return bHitImpenetrableHit;
 }
 
-void UBFL_CollisionQueryHelpers::HaveHitResultsRespondToTraceChannel(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams)
+void UBFL_CollisionQueryHelpers::ChangeHitsResponseData(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams)
 {
 	for (int32 i = 0; i < InOutHits.Num(); ++i)
 	{
