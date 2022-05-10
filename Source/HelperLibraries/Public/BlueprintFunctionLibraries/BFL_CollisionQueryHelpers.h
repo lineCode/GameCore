@@ -61,6 +61,11 @@ public:
 	static bool LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
 
 	/**
+	 * Refer to LineTraceMultiByChannelWithPenetrations() for documentation
+	 */
+	static bool SweepMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
+
+	/**
 	 *  Line trace multi with penetrations that outputs entrance and exit hits in order of the forward tracing direction
 	 *  
 	 *  @param  OutHits                          Array of entrance and exit hits (overlap and blocking) that were found until ShouldStopAtHit condition is met

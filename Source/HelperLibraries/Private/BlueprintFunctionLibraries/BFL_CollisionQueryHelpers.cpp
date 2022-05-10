@@ -39,8 +39,35 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 		}
 	}
 
-
 	// No impenetrable hits to stop us
+	return false;
+}
+
+bool UBFL_CollisionQueryHelpers::SweepMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
+{
+	FCollisionQueryParams TraceCollisionQueryParams = InCollisionQueryParams;
+	TraceCollisionQueryParams.bIgnoreTouches = false;
+
+	InWorld->SweepMultiByChannel(OutHits, InSweepStart, InSweepEnd, InRotation, InTraceChannel, InCollisionShape, TraceCollisionQueryParams, FCollisionResponseParams(ECollisionResponse::ECR_Overlap));
+
+	HaveHitResultsRespondToTraceChannel(OutHits, InTraceChannel, InCollisionQueryParams);
+
+	if (IsHitImpenetrable != nullptr)
+	{
+		for (int32 i = 0; i < OutHits.Num(); ++i)
+		{
+			if (IsHitImpenetrable(OutHits[i]))
+			{
+				if (OutHits.IsValidIndex(i + 1))
+				{
+					OutHits.RemoveAt(i + 1, (OutHits.Num() - 1) - i);
+				}
+
+				return true;
+			}
+		}
+	}
+
 	return false;
 }
 
