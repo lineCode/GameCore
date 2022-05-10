@@ -12,7 +12,7 @@
 const float UBFL_ShooterHelpers::TraceStartWallAvoidancePadding = .01f;
 
 void UBFL_ShooterHelpers::ScanWithLineTracesUsingSpeed(FScanResult& OutScanResult, const FVector& InScanStart, const FVector& InScanDirection, const float InDistanceCap, const UWorld* InWorld, const ECollisionChannel InTraceChannel, FCollisionQueryParams CollisionQueryParams, const int32 InMaxPenetrations, const int32 InMaxRicochets, const float InInitialBulletSpeed, const float InRangeFalloffNerf,
-	const TFunctionRef<bool(const FHitResult&)>& ShouldRicochetOffOf,
+	const TFunction<bool(const FHitResult&)>& ShouldRicochetOffOf,
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
 	const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf)
 {

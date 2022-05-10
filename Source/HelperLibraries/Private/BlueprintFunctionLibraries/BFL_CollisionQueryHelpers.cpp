@@ -5,7 +5,7 @@
 
 
 
-bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunctionRef<bool(const FHitResult&)>& ShouldStopAtHit)
+bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
 {
 	// Ensure our collision query params do NOT ignore overlaps because we are tracing as an ECR_Overlap (otherwise we won't get any Hit Results)
 	FCollisionQueryParams TraceCollisionQueryParams = InCollisionQueryParams;
@@ -16,73 +16,35 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiByChannelWithPenetrations(const U
 	// Also use their InTraceChannel to ensure that their ignored hits are ignored (because FCollisionResponseParams don't affect ECR_Ignore).
 	InWorld->LineTraceMultiByChannel(OutHits, InTraceStart, InTraceEnd, InTraceChannel, TraceCollisionQueryParams, FCollisionResponseParams(ECollisionResponse::ECR_Overlap));
 
-	for (int32 i = 0; i < OutHits.Num(); ++i)
+	// Using ECollisionResponse::ECR_Overlap to trace was nice since we can get all hits (both overlap and blocking) in the segment without being stopped, but as a result, all of these hits have bBlockingHit as false.
+	// So lets modify these hits to have the correct responses for the caller's trace channel.
+	HaveHitResultsRespondToTraceChannel(OutHits, InTraceChannel, InCollisionQueryParams);
+
+	// Stop at any impenetrable hits
+	if (IsHitImpenetrable != nullptr)
 	{
-		// Emulate the use of a trace channel by manually setting FHitResult::bBlockingHit and removing any hits that are ignored by the InTraceChannel
-		if (const UPrimitiveComponent* PrimitiveComponent = OutHits[i].Component.Get())
+		for (int32 i = 0; i < OutHits.Num(); ++i)
 		{
-			ECollisionChannel ComponentCollisionChannel;
-			FCollisionResponseParams ComponentResponseParams;
-			UCollisionProfile::GetChannelAndResponseParams(PrimitiveComponent->GetCollisionProfileName(), ComponentCollisionChannel, ComponentResponseParams);
-
-			// The hit component's response to our InTraceChannel
-			const ECollisionResponse CollisionResponse = ComponentResponseParams.CollisionResponse.GetResponse(InTraceChannel);
-
-			if (CollisionResponse == ECollisionResponse::ECR_Block)
+			// Check the caller's stop condition for this hit
+			if (IsHitImpenetrable(OutHits[i]))
 			{
-				// This hit component blocks our InTraceChannel
-				OutHits[i].bBlockingHit = true;
-
-				if (InCollisionQueryParams.bIgnoreBlocks)
+				// Remove the rest if there are any
+				if (OutHits.IsValidIndex(i + 1))
 				{
-					// Ignore block
-					OutHits.RemoveAt(i);
-					--i;
-					continue;
+					OutHits.RemoveAt(i + 1, (OutHits.Num() - 1) - i);
 				}
-			}
-			else if (CollisionResponse == ECollisionResponse::ECR_Overlap)
-			{
-				// This hit component overlaps our InTraceChannel
-				OutHits[i].bBlockingHit = false;
 
-				if (InCollisionQueryParams.bIgnoreTouches)
-				{
-					// Ignore touch
-					OutHits.RemoveAt(i);
-					--i;
-					continue;
-				}
+				return true;
 			}
-			else if (CollisionResponse == ECollisionResponse::ECR_Ignore)
-			{
-				// This hit component is ignored by our InTraceChannel
-				UE_LOG(LogCollisionQueryHelpers, Warning, TEXT("%s() We got an ignored hit some how from our line trace. Removing it. This is weird because line traces should never return ignored hits as far as I know. This ocurred on Trace Channel: [%d]."), ANSI_TO_TCHAR(__FUNCTION__), static_cast<int32>(InTraceChannel));
-
-				// Ignore this hit
-				OutHits.RemoveAt(i);
-				--i;
-				continue;
-			}
-		}
-
-		if (ShouldStopAtHit(OutHits[i])) // run caller's function to see if they want this hit result to be the last one
-		{
-			// Remove the rest if there are any
-			if (OutHits.IsValidIndex(i + 1))
-			{
-				OutHits.RemoveAt(i + 1, (OutHits.Num() - 1) - i);
-			}
-
-			return true;
 		}
 	}
+
 
 	// No impenetrable hits to stop us
 	return false;
 }
 
-bool UBFL_CollisionQueryHelpers::ExitAwareLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunctionRef<bool(const FHitResult&)>& ShouldNotPenetrate, const bool bUseBackwardsTraceOptimization)
+bool UBFL_CollisionQueryHelpers::ExitAwareLineTraceMultiByChannelWithPenetrations(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& ShouldNotPenetrate, const bool bUseBackwardsTraceOptimization)
 {
 	// Forwards trace to get our entrance hits
 	TArray<FHitResult> EntranceHitResults;
@@ -227,6 +189,60 @@ bool UBFL_CollisionQueryHelpers::ExitAwareLineTraceMultiByChannelWithPenetration
 	}
 
 	return bHitImpenetrableHit;
+}
+
+void UBFL_CollisionQueryHelpers::HaveHitResultsRespondToTraceChannel(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams)
+{
+	for (int32 i = 0; i < InOutHits.Num(); ++i)
+	{
+		// Emulate the use of a trace channel by manually setting FHitResult::bBlockingHit and removing any hits that are ignored by the InTraceChannel
+		if (const UPrimitiveComponent* PrimitiveComponent = InOutHits[i].Component.Get())
+		{
+			ECollisionChannel ComponentCollisionChannel;
+			FCollisionResponseParams ComponentResponseParams;
+			UCollisionProfile::GetChannelAndResponseParams(PrimitiveComponent->GetCollisionProfileName(), ComponentCollisionChannel, ComponentResponseParams);
+
+			// The hit component's response to our InTraceChannel
+			const ECollisionResponse CollisionResponse = ComponentResponseParams.CollisionResponse.GetResponse(InTraceChannel);
+
+			if (CollisionResponse == ECollisionResponse::ECR_Block)
+			{
+				// This hit component blocks our InTraceChannel
+				InOutHits[i].bBlockingHit = true;
+
+				if (InCollisionQueryParams.bIgnoreBlocks)
+				{
+					// Ignore block
+					InOutHits.RemoveAt(i);
+					--i;
+					continue;
+				}
+			}
+			else if (CollisionResponse == ECollisionResponse::ECR_Overlap)
+			{
+				// This hit component overlaps our InTraceChannel
+				InOutHits[i].bBlockingHit = false;
+
+				if (InCollisionQueryParams.bIgnoreTouches)
+				{
+					// Ignore touch
+					InOutHits.RemoveAt(i);
+					--i;
+					continue;
+				}
+			}
+			else if (CollisionResponse == ECollisionResponse::ECR_Ignore)
+			{
+				// This hit component is ignored by our InTraceChannel
+				UE_LOG(LogCollisionQueryHelpers, Warning, TEXT("%s() We got an ignored hit some how from our line trace. Removing it. This is weird because line traces should never return ignored hits as far as I know. This ocurred on Trace Channel: [%d]."), ANSI_TO_TCHAR(__FUNCTION__), static_cast<int32>(InTraceChannel));
+
+				// Ignore this hit
+				InOutHits.RemoveAt(i);
+				--i;
+				continue;
+			}
+		}
+	}
 }
 
 
