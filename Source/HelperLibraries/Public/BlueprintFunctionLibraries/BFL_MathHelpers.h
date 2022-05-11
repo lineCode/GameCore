@@ -19,15 +19,15 @@ class HELPERLIBRARIES_API UBFL_MathHelpers : public UBlueprintFunctionLibrary
 	
 public:
 	/**
-	 * Gets the diameter of a collision shape's bounding sphere
+	 * Gets the radius of a collision shape's bounding sphere
 	 */
-	static float GetCollisionShapeBoundingDiameter(const FCollisionShape& CollisionShape);
+	static float GetCollisionShapeBoundingSphereRadius(const FCollisionShape& CollisionShape);
 
 	/**
-	 * Gets the diameter of a box's bounding sphere
+	 * Gets the radius of a box's bounding sphere
 	 */
 	UFUNCTION(BlueprintPure, Category = "MathHelpers|GeometryMath")
-		static float GetBoxBoundingDiameter(const FVector& BoxExtent);
+		static float GetBoxBoundingSphereRadius(const FVector& BoxExtent);
 
 
 	/**

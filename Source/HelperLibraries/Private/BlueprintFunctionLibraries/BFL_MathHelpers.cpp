@@ -5,38 +5,40 @@
 
 
 
-float UBFL_MathHelpers::GetCollisionShapeBoundingDiameter(const FCollisionShape& CollisionShape)
+float UBFL_MathHelpers::GetCollisionShapeBoundingSphereRadius(const FCollisionShape& CollisionShape)
 {
 	switch (CollisionShape.ShapeType)
 	{
 		case ECollisionShape::Box:
 		{
 			const FVector BoxExtent = FVector(CollisionShape.Box.HalfExtentX * 2, CollisionShape.Box.HalfExtentY * 2, CollisionShape.Box.HalfExtentZ * 2);
-			return GetBoxBoundingDiameter(BoxExtent);
+			return GetBoxBoundingSphereRadius(BoxExtent);
 		}
 		case  ECollisionShape::Sphere:
 		{
-			return CollisionShape.Sphere.Radius * 2;
+			return CollisionShape.Sphere.Radius;
 		}
 		case ECollisionShape::Capsule:
 		{
-			return CollisionShape.Capsule.HalfHeight * 2;
+			return CollisionShape.Capsule.HalfHeight;
 		}
 	}
 
 	return 0.f;
 }
 
-float UBFL_MathHelpers::GetBoxBoundingDiameter(const FVector& BoxExtent)
+float UBFL_MathHelpers::GetBoxBoundingSphereRadius(const FVector& BoxExtent)
 {
 	const float LengthSquared = (BoxExtent.X * BoxExtent.X);
 	const float WidthSquared  = (BoxExtent.Y * BoxExtent.Y);
 	const float HeightSquared = (BoxExtent.Z * BoxExtent.Z);
 
-	return FMath::Sqrt(LengthSquared + WidthSquared + HeightSquared); // 3d pythagorean theorem
+	float Diameter = FMath::Sqrt(LengthSquared + WidthSquared + HeightSquared); // 3d pythagorean theorem
 
 	// Or you can get the distance across opposite corners
-	// FVector::Distance(FVector(0.f, 0.f, 0.f), BoxExtent)
+	// float Diameter = FVector::Distance(FVector(0.f, 0.f, 0.f), BoxExtent)
+
+	return Diameter / 2;
 }
 
 bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& SegmentStart, const FVector& SegmentEnd, const FVector& Point)
