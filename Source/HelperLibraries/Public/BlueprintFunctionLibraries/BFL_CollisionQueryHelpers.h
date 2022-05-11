@@ -10,7 +10,7 @@
 
 
 /**
- * Extension of FHitResult for indicating if it's an exit
+ * Extension of FHitResult indicating whether it's an entrance or an exit
  */
 USTRUCT()
 struct HELPERLIBRARIES_API FExitAwareHitResult : public FHitResult
@@ -74,7 +74,7 @@ public:
 	 *  @param  bUseBackwardsTraceOptimization   Only use this if you're not starting the trace inside of geometry, otherwise the exits of any gemometry you're starting inside of may not be found. However, you could possibly still get away with this optimization if you are doing a very lengthy trace, because you are more likely to hit an entrance past the exit of the geometry that you started in. If true, will minimize the backwards tracing distance to go no further than the exit of the furthest entrance.
 	 *  @return TRUE if hit and stopped at an impenetrable hit.
 	 */
-	static bool ExitAwarePenetrationLineTrace(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& ShouldStopAtHit = nullptr, const bool bUseBackwardsTraceOptimization = false);
+	static bool PenetrationLineTraceWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& ShouldStopAtHit = nullptr, const bool bUseBackwardsTraceOptimization = false);
 
 
 
