@@ -40,7 +40,7 @@ class HELPERLIBRARIES_API UBFL_CollisionQueryHelpers : public UBlueprintFunction
 	GENERATED_BODY()
 	
 public:
-	static const float TraceStartWallAvoidancePadding;
+	static const float SceneCastStartWallAvoidancePadding;
 
 	/**
 	 *  Line trace multi that penetrates everything except for what the caller says in ShouldNotPenetrate() TFunction
@@ -71,11 +71,15 @@ public:
 	 *  Line trace multi with penetrations that outputs entrance and exit hits in order of the forward tracing direction
 	 *  
 	 *  @param  OutHits                          Array of entrance and exit hits (overlap and blocking) that were found until ShouldStopAtHit condition is met
-	 *  @param  bUseBackwardsTraceOptimization   Only use this if you're not starting the trace inside of geometry, otherwise the exits of any gemometry you're starting inside of may not be found. However, you could possibly still get away with this optimization if you are doing a very lengthy trace, because you are more likely to hit an entrance past the exit of the geometry that you started in. If true, will minimize the backwards tracing distance to go no further than the exit of the furthest entrance.
+	 *  @param  bOptimizeBackwardsSceneCastLength   Only use this if you're not starting the trace inside of geometry, otherwise the exits of any gemometry you're starting inside of may not be found. However, you could possibly still get away with this optimization if you are doing a very lengthy trace, because you are more likely to hit an entrance past the exit of the geometry that you started in. If true, will minimize the backwards tracing distance to go no further than the exit of the furthest entrance.
 	 *  @return TRUE if hit and stopped at an impenetrable hit.
 	 */
-	static bool PenetrationLineTraceWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& ShouldStopAtHit = nullptr, const bool bUseBackwardsTraceOptimization = false);
+	static bool PenetrationLineTraceWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr, const bool bOptimizeBackwardsSceneCastLength = false);
 
+	/**
+	 * Refer to PenetrationLineTraceWithExitHits() for documentation
+	 */
+	static bool PenetrationSweepWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr, const bool bOptimizeBackwardsSceneCastLength = false);
 
 
 
@@ -98,13 +102,13 @@ private:
 	/**
 	 * 
 	 */
-	static FVector DetermineBackwardsTraceStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const bool bStoppedByHit, const bool bUseBackwardsTraceOptimization = false);
-	
+	static FVector DetermineBackwardsSceneCastStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const bool bStoppedByHit, const bool bOptimizeBackwardsSceneCastLength = false);
+
 	/**
 	 * 
 	 */
-	static void MakeBackwardsHitsDataRelativeToForwadsTrace(TArray<FHitResult>& InOutBackwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FVector& InBackwardsStart, const bool bStoppedByHit, const bool bUseBackwardsTraceOptimization = false);
-	
+	static void MakeBackwardsHitsDataRelativeToForwadsSceneCast(TArray<FHitResult>& InOutBackwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FVector& InBackwardsStart, const bool bStoppedByHit, const bool bOptimizeBackwardsSceneCastLength = false);
+
 	/**
 	 * 
 	 */

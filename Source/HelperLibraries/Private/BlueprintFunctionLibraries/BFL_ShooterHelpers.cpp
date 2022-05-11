@@ -196,7 +196,7 @@ void UBFL_ShooterHelpers::ScanWithLineTracesUsingSpeed(FScanResult& OutScanResul
 
 		// Reflect our TraceDirection off of the ricochetable surface and calculate TraceStart for next ricochet trace
 		TraceDirection = TraceDirection.MirrorByVector(OutScanResult.BulletHits.Last().ImpactNormal);
-		TraceStart = OutScanResult.BulletHits.Last().Location + (TraceDirection * UBFL_CollisionQueryHelpers::TraceStartWallAvoidancePadding);
+		TraceStart = OutScanResult.BulletHits.Last().Location + (TraceDirection * UBFL_CollisionQueryHelpers::SceneCastStartWallAvoidancePadding);
 	}
 }
 
