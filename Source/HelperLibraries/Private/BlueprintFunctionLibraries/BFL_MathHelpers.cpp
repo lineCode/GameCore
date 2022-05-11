@@ -22,6 +22,12 @@ float UBFL_MathHelpers::GetCollisionShapeBoundingSphereRadius(const FCollisionSh
 		{
 			return CollisionShape.Capsule.HalfHeight;
 		}
+		case ECollisionShape::Line:
+		{
+			UE_LOG(LogMathHelpers, Error, TEXT("%s() not implemented exception"), ANSI_TO_TCHAR(__FUNCTION__));
+			check(0);
+			return 0.f;
+		}
 	}
 
 	return 0.f;
