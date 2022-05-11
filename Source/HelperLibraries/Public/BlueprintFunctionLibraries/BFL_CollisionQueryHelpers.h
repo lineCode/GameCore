@@ -97,6 +97,13 @@ public:
 
 private:
 	/**
+	 * FCollisionShape scene cast.
+	 * This keeps the scene cast generic to sweeps and linetraces, allowing our custom queries to support both sweeps and linetraces without duplicate code.
+	 */
+	static bool SceneCastMultiByChannel(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam);
+
+
+	/**
 	 * Modifies existing HitResults to respond appropriately to the caller's ECollisionChannel and FCollisionQueryParams.
 	 * Outputs modified hits and potentially removes some.
 	 * 

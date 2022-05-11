@@ -20,14 +20,7 @@ bool UBFL_CollisionQueryHelpers::PenetrationSceneCast(const UWorld* InWorld, TAr
 	// Perform the trace/sweep
 	// Use ECR_Overlap to have this scene cast overlap through everything. Our CollisionResponseParams overrides all responses to the Trace Channel to overlap everything.
 	// Also use their InTraceChannel to ensure that their ignored hits are ignored (because FCollisionResponseParams don't affect ECR_Ignore).
-	if (InCollisionShape.ShapeType == ECollisionShape::Line)
-	{
-		InWorld->LineTraceMultiByChannel(OutHits, InStart, InEnd, InTraceChannel, CollisionQueryParams, FCollisionResponseParams(ECollisionResponse::ECR_Overlap));
-	}
-	else
-	{
-		InWorld->SweepMultiByChannel(OutHits, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, CollisionQueryParams, FCollisionResponseParams(ECollisionResponse::ECR_Overlap));
-	}
+	SceneCastMultiByChannel(InWorld, OutHits, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, CollisionQueryParams, FCollisionResponseParams(ECollisionResponse::ECR_Overlap));
 
 	// Using ECollisionResponse::ECR_Overlap to scene cast was nice since we can get all hits (both overlap and blocking) in the segment without being stopped, but as a result, all of these hits have bBlockingHit as false.
 	// So lets modify these hits to have the correct responses for the caller's trace channel.
@@ -65,38 +58,26 @@ bool UBFL_CollisionQueryHelpers::PenetrationLineTrace(const UWorld* InWorld, TAr
 // BEGIN queries with exit hits
 bool UBFL_CollisionQueryHelpers::SceneCastWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const bool bOptimizeBackwardsSceneCastLength)
 {
+	// FORWARDS SCENE CAST to get our entrance hits
 	TArray<FHitResult> EntranceHitResults;
-	bool bHitBlockingHit;
-	if (InCollisionShape.ShapeType == ECollisionShape::Line)
-	{
-		bHitBlockingHit = InWorld->LineTraceMultiByChannel(EntranceHitResults, InStart, InEnd, InTraceChannel, InCollisionQueryParams);
-	}
-	else
-	{
-		bHitBlockingHit = InWorld->SweepMultiByChannel(EntranceHitResults, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams);
-	}
-
+	const bool bHitBlockingHit = SceneCastMultiByChannel(InWorld, EntranceHitResults, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams);
 	if (bOptimizeBackwardsSceneCastLength && EntranceHitResults.Num() <= 0)
 	{
-		return bHitBlockingHit;
+		return bHitBlockingHit; // no entrance hits for our optimization to work with. Also this will always return false here
 	}
 
 
+	// BACKWARDS SCENE CAST to get our exit hits
 	const FVector BackwardsStart = DetermineBackwardsSceneCastStart(EntranceHitResults, InStart, InEnd, bHitBlockingHit, bOptimizeBackwardsSceneCastLength, UBFL_MathHelpers::GetCollisionShapeBoundingSphereRadius(InCollisionShape));
 	TArray<FHitResult> ExitHitResults;
 	ExitHitResults.Reserve(EntranceHitResults.Num());
-	if (InCollisionShape.ShapeType == ECollisionShape::Line)
-	{
-		InWorld->LineTraceMultiByChannel(ExitHitResults, BackwardsStart, InStart, InTraceChannel, InCollisionQueryParams);
-	}
-	else
-	{
-		InWorld->SweepMultiByChannel(ExitHitResults, BackwardsStart, InStart, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams);
-	}
+	SceneCastMultiByChannel(InWorld, ExitHitResults, BackwardsStart, InStart, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams);
 
 
+	// Make our exit hits relative to the forwards cast
 	MakeBackwardsHitsDataRelativeToForwadsSceneCast(ExitHitResults, InStart, InEnd, BackwardsStart, bHitBlockingHit, bOptimizeBackwardsSceneCastLength);
 
+	// Lastly combine these hits together into our output value with the entrance and exit hits in order
 	const FVector ForwardsDir = (InEnd - InStart).GetSafeNormal();
 	OrderHitResultsInForwardsDirection(OutHits, EntranceHitResults, ExitHitResults, ForwardsDir);
 
@@ -110,27 +91,22 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiWithExitHits(const UWorld* InWorl
 
 bool UBFL_CollisionQueryHelpers::PenetrationSceneCastWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable, const bool bOptimizeBackwardsSceneCastLength)
 {
-	// FORWARDS SCENE CAST to get our entrance hits
 	TArray<FHitResult> EntranceHitResults;
 	const bool bHitImpenetrableHit = PenetrationSceneCast(InWorld, EntranceHitResults, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, IsHitImpenetrable);
-
 	if (bOptimizeBackwardsSceneCastLength && EntranceHitResults.Num() <= 0)
 	{
-		return bHitImpenetrableHit; // no entrance hits for our optimization to work with. Also this will always return false here
+		return bHitImpenetrableHit;
 	}
 
 
-	// BACKWARDS SCENE CAST to get our exit hits
 	const FVector BackwardsStart = DetermineBackwardsSceneCastStart(EntranceHitResults, InStart, InEnd, bHitImpenetrableHit, bOptimizeBackwardsSceneCastLength, UBFL_MathHelpers::GetCollisionShapeBoundingSphereRadius(InCollisionShape));
 	TArray<FHitResult> ExitHitResults;
 	ExitHitResults.Reserve(EntranceHitResults.Num());
 	PenetrationSceneCast(InWorld, ExitHitResults, BackwardsStart, InStart, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, IsHitImpenetrable);
 
 
-	// Make our exit hits relative to the forwards cast
 	MakeBackwardsHitsDataRelativeToForwadsSceneCast(ExitHitResults, InStart, InEnd, BackwardsStart, bHitImpenetrableHit, bOptimizeBackwardsSceneCastLength);
 
-	// Lastly combine these hits together into our output value with the entrance and exit hits in order
 	const FVector ForwardsDir = (InEnd - InStart).GetSafeNormal();
 	OrderHitResultsInForwardsDirection(OutHits, EntranceHitResults, ExitHitResults, ForwardsDir);
 
@@ -145,6 +121,19 @@ bool UBFL_CollisionQueryHelpers::PenetrationLineTraceWithExitHits(const UWorld* 
 
 
 // BEGIN private functions
+bool UBFL_CollisionQueryHelpers::SceneCastMultiByChannel(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams)
+{
+	// UWorld has SweepMultiByChannel() which already checks for zero extent shapes, but it doesn't explicitly check for ECollisionChannel::LineShape and its name can lead you to think that it doesn't support line traces
+	if (InCollisionShape.ShapeType == ECollisionShape::Line)
+	{
+		return InWorld->LineTraceMultiByChannel(OutHits, InStart, InEnd, InTraceChannel, InCollisionQueryParams, InCollisionResponseParams);
+	}
+	else
+	{
+		return InWorld->SweepMultiByChannel(OutHits, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InCollisionResponseParams);
+	}
+}
+
 void UBFL_CollisionQueryHelpers::ChangeHitsResponseData(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams)
 {
 	for (int32 i = 0; i < InOutHits.Num(); ++i)
