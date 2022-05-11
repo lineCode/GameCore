@@ -3,9 +3,11 @@
 
 #include "BlueprintFunctionLibraries/BFL_CollisionQueryHelpers.h"
 
+#include "BlueprintFunctionLibraries/BFL_MathHelpers.h"
 
 
-const float UBFL_CollisionQueryHelpers::SceneCastStartWallAvoidancePadding = .01f; // good number for ensuring we don't start a scene cast on top of the object
+
+const float UBFL_CollisionQueryHelpers::SceneCastStartWallAvoidancePadding = .01f; // good number for bumping a scene cast start location away from the surface of geometry
 
 
 // BEGIN penetration queries
@@ -115,7 +117,7 @@ bool UBFL_CollisionQueryHelpers::PenetrationSweepWithExitHits(const UWorld* InWo
 	}
 
 
-	const FVector BackwardsSweepStart = DetermineBackwardsSceneCastStart(EntranceHitResults, InSweepStart, InSweepEnd, bHitImpenetrableHit, bOptimizeBackwardsSceneCastLength);
+	const FVector BackwardsSweepStart = DetermineBackwardsSceneCastStart(EntranceHitResults, InSweepStart, InSweepEnd, bHitImpenetrableHit, bOptimizeBackwardsSceneCastLength, UBFL_MathHelpers::GetCollisionShapeBoundingSphereRadius(InCollisionShape));
 	TArray<FHitResult> ExitHitResults;
 	ExitHitResults.Reserve(EntranceHitResults.Num());
 	PenetrationSweep(InWorld, ExitHitResults, BackwardsSweepStart, InSweepStart, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, IsHitImpenetrable);
@@ -163,7 +165,7 @@ bool UBFL_CollisionQueryHelpers::SweepMultiWithExitHits(const UWorld* InWorld, T
 	}
 
 
-	const FVector BackwardsSweepStart = DetermineBackwardsSceneCastStart(EntranceHitResults, InSweepStart, InSweepEnd, bHitBlockingHit, bOptimizeBackwardsSceneCastLength);
+	const FVector BackwardsSweepStart = DetermineBackwardsSceneCastStart(EntranceHitResults, InSweepStart, InSweepEnd, bHitBlockingHit, bOptimizeBackwardsSceneCastLength, UBFL_MathHelpers::GetCollisionShapeBoundingSphereRadius(InCollisionShape));
 	TArray<FHitResult> ExitHitResults;
 	ExitHitResults.Reserve(EntranceHitResults.Num());
 	InWorld->SweepMultiByChannel(ExitHitResults, BackwardsSweepStart, InSweepStart, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams);
@@ -234,7 +236,7 @@ void UBFL_CollisionQueryHelpers::ChangeHitsResponseData(TArray<FHitResult>& InOu
 	}
 }
 
-FVector UBFL_CollisionQueryHelpers::DetermineBackwardsSceneCastStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const bool bStoppedByHit, const bool bOptimizeBackwardsSceneCastLength)
+FVector UBFL_CollisionQueryHelpers::DetermineBackwardsSceneCastStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const bool bStoppedByHit, const bool bOptimizeBackwardsSceneCastLength, const float SweepShapeBoundingSphereRadius)
 {
 	const FVector ForwardDir = (InForwardsEnd - InForwardsStart).GetSafeNormal();
 	
@@ -252,41 +254,46 @@ FVector UBFL_CollisionQueryHelpers::DetermineBackwardsSceneCastStart(const TArra
 	if (!bOptimizeBackwardsSceneCastLength)
 	{
 		// Start the backwards scene cast from the end of the forwards scene cast
-		return InForwardsEnd + (ForwardDir * SceneCastStartWallAvoidancePadding);
+		return InForwardsEnd;
 	}
 
 
 	// Instead of starting the backwards scene cast from the end of the forwards scene cast we can use an optimization to trim down the length. Ideally, we would start the backwards scene cast at
-	// the last exit point but of course we don't have our exit points yet. But we CAN calculate the furthest possible exit point for each of our entrance points and choose the largest among them.
+	// the last exit location but of course we don't have our exit locations yet. But we CAN calculate the furthest possible exit location for each of our entrance points and choose the largest among them.
 
-	// Find the furthest exit point that could possibly happen for each entrance hit and choose the largest among them
-	FVector TheFurthestPossibleExitPoint = InForwardsStart;
+	// Find the furthest exit location that could possibly happen for each entrance hit and choose the furthest among them
+	FVector TheFurthestPossibleExitLocation = InForwardsStart;
 	for (const FHitResult& HitResult : InForwardsHitResults)
 	{
 		if (const UPrimitiveComponent* HitComponent = HitResult.Component.Get())
 		{
 			const float MyBoundingDiameter = (HitComponent->Bounds.SphereRadius * 2);
-			const FVector MyFurthestPossibleExitPoint = HitResult.Location + (ForwardDir * MyBoundingDiameter);
+			const FVector MyFurthestPossibleExitLocation = HitResult.Location + (ForwardDir * MyBoundingDiameter);
 
 			// If my point is after the currently believed furthest point
-			const bool bMyPointIsFurther = FVector::DotProduct(ForwardDir, (MyFurthestPossibleExitPoint - TheFurthestPossibleExitPoint)) > 0;
+			const bool bMyPointIsFurther = FVector::DotProduct(ForwardDir, (MyFurthestPossibleExitLocation - TheFurthestPossibleExitLocation)) > 0;
 			if (bMyPointIsFurther)
 			{
-				TheFurthestPossibleExitPoint = MyFurthestPossibleExitPoint;
+				TheFurthestPossibleExitLocation = MyFurthestPossibleExitLocation;
 			}
 		}
 	}
 
+	// The optimal backwards start gives a minimal scene cast distance that can still cover the furthest possible exit location
+	FVector OptimizedBackwardsSceneCastStart = TheFurthestPossibleExitLocation;
+	// Bump us forwards to ensure a potential exit at the furthest possible exit location can get hit properly
+	OptimizedBackwardsSceneCastStart += (ForwardDir * SweepShapeBoundingSphereRadius); // bump us forwards by any sweep shapes' bounding sphere radius so that the sweep geometry starts past TheFurthestPossibleExitLocation
+	OptimizedBackwardsSceneCastStart += (ForwardDir * SceneCastStartWallAvoidancePadding); // bump us forwards by the SceneCastStartWallAvoidancePadding so that backwards scene cast does not start on top of TheFurthestPossibleExitLocation
+
 	// Edge case: Our optimization turned out to make our backwards scene cast distance larger. Cap it.
-	const bool bOptimizationWentPastForwardEnd = FVector::DotProduct(ForwardDir, (TheFurthestPossibleExitPoint - InForwardsEnd)) > 0;
+	const bool bOptimizationWentPastForwardEnd = FVector::DotProduct(ForwardDir, (OptimizedBackwardsSceneCastStart - InForwardsEnd)) > 0;
 	if (bOptimizationWentPastForwardEnd)
 	{
 		// Cap our backwards scene cast start
-		TheFurthestPossibleExitPoint = InForwardsEnd;
+		return InForwardsEnd;
 	}
 
-	// Furthest possible exit point of the penetration
-	return TheFurthestPossibleExitPoint + (ForwardDir * SceneCastStartWallAvoidancePadding); // we use SceneCastStartWallAvoidancePadding here not to ensure that we don't hit the wall (b/c we do want the scene cast to hit it), but to just ensure we don't start inside it to remove possibility for unpredictable results. Very unlikely we hit a case where this padding is actually helpful here, but doing it to cover all cases.
+	return OptimizedBackwardsSceneCastStart;
 }
 
 void UBFL_CollisionQueryHelpers::MakeBackwardsHitsDataRelativeToForwadsSceneCast(TArray<FHitResult>& InOutBackwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FVector& InBackwardsStart, const bool bStoppedByHit, const bool bOptimizeBackwardsSceneCastLength)
