@@ -40,6 +40,8 @@ class HELPERLIBRARIES_API UBFL_CollisionQueryHelpers : public UBlueprintFunction
 	GENERATED_BODY()
 	
 public:
+	static const float TraceStartWallAvoidancePadding;
+
 	/**
 	 *  Line trace multi that penetrates everything except for what the caller says in ShouldNotPenetrate() TFunction
 	 *
@@ -75,6 +77,10 @@ public:
 	static bool ExitAwarePenetrationLineTrace(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& ShouldStopAtHit = nullptr, const bool bUseBackwardsTraceOptimization = false);
 
 
+
+
+
+
 private:
 	/**
 	 * Modifies existing HitResults to respond appropriately to the caller's ECollisionChannel and FCollisionQueryParams.
@@ -85,5 +91,23 @@ private:
 	 * @param  InCollisionQueryParams		The collision query params in which the hits will conform to (e.g. removing blocking hits because of FCollisionQueryParams::bIgnoreBlocks)
 	 */
 	static void ChangeHitsResponseData(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam);
+
+
+
+
+	/**
+	 * 
+	 */
+	static FVector DetermineBackwardsTraceStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const bool bStoppedByHit, const bool bUseBackwardsTraceOptimization = false);
+	
+	/**
+	 * 
+	 */
+	static void MakeBackwardsHitsDataRelativeToForwadsTrace(TArray<FHitResult>& InOutBackwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FVector& InBackwardsStart, const bool bStoppedByHit, const bool bUseBackwardsTraceOptimization = false);
+	
+	/**
+	 * 
+	 */
+	static void OrderHitResultsInForwardsDirection(TArray<FExitAwareHitResult>& OutOrderedHitResults, const TArray<FHitResult>& InEntranceHitResults, const TArray<FHitResult>& InExitHitResults, const FVector& InForwardsDirection);
 
 };

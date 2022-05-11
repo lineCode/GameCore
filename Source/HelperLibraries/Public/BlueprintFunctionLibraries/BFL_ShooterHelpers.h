@@ -94,8 +94,5 @@ public:
 		const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf = [](const FHitResult&) { return 0.f; });
 
 private:
-	/** Moves our traces' start points in the trace direction by a small amount to ensure we don't get stuck hitting the same object over and over again. This allows us to avoid ignoring the component so that we can hit the same component's geometry again */
-	static const float TraceStartWallAvoidancePadding;
-
 	static float NerfSpeedPerCm(float& InOutSpeed, const float InDistanceToTravel, const float InNerfPerCm);
 };

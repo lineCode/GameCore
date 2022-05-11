@@ -9,8 +9,6 @@
 
 
 
-const float UBFL_ShooterHelpers::TraceStartWallAvoidancePadding = .01f;
-
 void UBFL_ShooterHelpers::ScanWithLineTracesUsingSpeed(FScanResult& OutScanResult, const FVector& InScanStart, const FVector& InScanDirection, const float InDistanceCap, const UWorld* InWorld, const ECollisionChannel InTraceChannel, FCollisionQueryParams CollisionQueryParams, const int32 InMaxPenetrations, const int32 InMaxRicochets, const float InInitialBulletSpeed, const float InRangeFalloffNerf,
 	const TFunction<bool(const FHitResult&)>& ShouldRicochetOffOf,
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
@@ -198,7 +196,7 @@ void UBFL_ShooterHelpers::ScanWithLineTracesUsingSpeed(FScanResult& OutScanResul
 
 		// Reflect our TraceDirection off of the ricochetable surface and calculate TraceStart for next ricochet trace
 		TraceDirection = TraceDirection.MirrorByVector(OutScanResult.BulletHits.Last().ImpactNormal);
-		TraceStart = OutScanResult.BulletHits.Last().Location + (TraceDirection * TraceStartWallAvoidancePadding);
+		TraceStart = OutScanResult.BulletHits.Last().Location + (TraceDirection * UBFL_CollisionQueryHelpers::TraceStartWallAvoidancePadding);
 	}
 }
 
