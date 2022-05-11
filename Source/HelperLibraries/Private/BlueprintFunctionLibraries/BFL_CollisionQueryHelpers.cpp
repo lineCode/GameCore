@@ -7,6 +7,8 @@
 
 const float UBFL_CollisionQueryHelpers::SceneCastStartWallAvoidancePadding = .01f; // good number for ensuring we don't start a scene cast on top of the object
 
+
+// BEGIN penetration queries
 bool UBFL_CollisionQueryHelpers::PenetrationLineTrace(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
 {
 	// Ensure our collision query params do NOT ignore overlaps because we are tracing as an ECR_Overlap (otherwise we won't get any Hit Results)
@@ -72,7 +74,9 @@ bool UBFL_CollisionQueryHelpers::PenetrationSweep(const UWorld* InWorld, TArray<
 
 	return false;
 }
+// END penetration queries
 
+// BEGIN queries with exit hits
 bool UBFL_CollisionQueryHelpers::PenetrationLineTraceWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable, const bool bOptimizeBackwardsSceneCastLength)
 {
 	// FORWARDS TRACE to get our entrance hits
@@ -125,9 +129,54 @@ bool UBFL_CollisionQueryHelpers::PenetrationSweepWithExitHits(const UWorld* InWo
 	return bHitImpenetrableHit;
 }
 
+bool UBFL_CollisionQueryHelpers::LineTraceMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const bool bOptimizeBackwardsSceneCastLength)
+{
+	TArray<FHitResult> EntranceHitResults;
+	const bool bHitBlockingHit = InWorld->LineTraceMultiByChannel(EntranceHitResults, InTraceStart, InTraceEnd, InTraceChannel, InCollisionQueryParams);
+	if (bOptimizeBackwardsSceneCastLength && EntranceHitResults.Num() <= 0)
+	{
+		return bHitBlockingHit;
+	}
 
 
+	const FVector BackwardsTraceStart = DetermineBackwardsSceneCastStart(EntranceHitResults, InTraceStart, InTraceEnd, bHitBlockingHit, bOptimizeBackwardsSceneCastLength);
+	TArray<FHitResult> ExitHitResults;
+	ExitHitResults.Reserve(EntranceHitResults.Num());
+	InWorld->LineTraceMultiByChannel(ExitHitResults, BackwardsTraceStart, InTraceStart, InTraceChannel, InCollisionQueryParams);
 
+
+	MakeBackwardsHitsDataRelativeToForwadsSceneCast(ExitHitResults, InTraceStart, InTraceEnd, BackwardsTraceStart, bHitBlockingHit, bOptimizeBackwardsSceneCastLength);
+
+	const FVector ForwardsTraceDir = (InTraceEnd - InTraceStart).GetSafeNormal();
+	OrderHitResultsInForwardsDirection(OutHits, EntranceHitResults, ExitHitResults, ForwardsTraceDir);
+
+	return bHitBlockingHit;
+}
+
+bool UBFL_CollisionQueryHelpers::SweepMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const bool bOptimizeBackwardsSceneCastLength)
+{
+	TArray<FHitResult> EntranceHitResults;
+	const bool bHitBlockingHit = InWorld->SweepMultiByChannel(EntranceHitResults, InSweepStart, InSweepEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams);
+	if (bOptimizeBackwardsSceneCastLength && EntranceHitResults.Num() <= 0)
+	{
+		return bHitBlockingHit;
+	}
+
+
+	const FVector BackwardsSweepStart = DetermineBackwardsSceneCastStart(EntranceHitResults, InSweepStart, InSweepEnd, bHitBlockingHit, bOptimizeBackwardsSceneCastLength);
+	TArray<FHitResult> ExitHitResults;
+	ExitHitResults.Reserve(EntranceHitResults.Num());
+	InWorld->SweepMultiByChannel(ExitHitResults, BackwardsSweepStart, InSweepStart, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams);
+
+
+	MakeBackwardsHitsDataRelativeToForwadsSceneCast(ExitHitResults, InSweepStart, InSweepEnd, BackwardsSweepStart, bHitBlockingHit, bOptimizeBackwardsSceneCastLength);
+
+	const FVector ForwardsSweepDir = (InSweepEnd - InSweepStart).GetSafeNormal();
+	OrderHitResultsInForwardsDirection(OutHits, EntranceHitResults, ExitHitResults, ForwardsSweepDir);
+
+	return bHitBlockingHit;
+}
+// END queries with exit hits
 
 
 // BEGIN private functions
