@@ -55,6 +55,7 @@ bool UBFL_CollisionQueryHelpers::PenetrationLineTrace(const UWorld* InWorld, TAr
 }
 bool UBFL_CollisionQueryHelpers::PenetrationSweep(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
 {
+	UE_CLOG(InCollisionShape.IsLine(), LogCollisionQueryHelpers, Warning, TEXT("%s() was used with a FCollisionShape::LineShape. Use the linetrace version if you want a line traces."), ANSI_TO_TCHAR(__FUNCTION__));
 	return PenetrationSceneCast(InWorld, OutHits, InSweepStart, InSweepEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, IsHitImpenetrable);
 }
 //  END Custom query
@@ -94,6 +95,7 @@ bool UBFL_CollisionQueryHelpers::LineTraceMultiWithExitHits(const UWorld* InWorl
 }
 bool UBFL_CollisionQueryHelpers::SweepMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const bool bOptimizeBackwardsSceneCastLength)
 {
+	UE_CLOG(InCollisionShape.IsLine(), LogCollisionQueryHelpers, Warning, TEXT("%s() was used with a FCollisionShape::LineShape. Use the linetrace version if you want a line traces."), ANSI_TO_TCHAR(__FUNCTION__));
 	return SceneCastWithExitHits(InWorld, OutHits, InSweepStart, InSweepEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, bOptimizeBackwardsSceneCastLength);
 }
 //  END Custom query
@@ -129,6 +131,7 @@ bool UBFL_CollisionQueryHelpers::PenetrationLineTraceWithExitHits(const UWorld* 
 }
 bool UBFL_CollisionQueryHelpers::PenetrationSweepWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable, const bool bOptimizeBackwardsSceneCastLength)
 {
+	UE_CLOG(InCollisionShape.IsLine(), LogCollisionQueryHelpers, Warning, TEXT("%s() was used with a FCollisionShape::LineShape. Use the linetrace version if you want a line traces."), ANSI_TO_TCHAR(__FUNCTION__));
 	return PenetrationSceneCastWithExitHits(InWorld, OutHits, InSweepStart, InSweepEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, IsHitImpenetrable, bOptimizeBackwardsSceneCastLength);
 }
 //  END Custom query
@@ -138,7 +141,7 @@ bool UBFL_CollisionQueryHelpers::PenetrationSweepWithExitHits(const UWorld* InWo
 bool UBFL_CollisionQueryHelpers::SceneCastMultiByChannel(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams)
 {
 	// UWorld has SweepMultiByChannel() which already checks for zero extent shapes, but it doesn't explicitly check for ECollisionChannel::LineShape and its name can lead you to think that it doesn't support line traces
-	if (InCollisionShape.ShapeType == ECollisionShape::Line)
+	if (InCollisionShape.IsLine())
 	{
 		return InWorld->LineTraceMultiByChannel(OutHits, InStart, InEnd, InTraceChannel, InCollisionQueryParams, InCollisionResponseParams);
 	}
