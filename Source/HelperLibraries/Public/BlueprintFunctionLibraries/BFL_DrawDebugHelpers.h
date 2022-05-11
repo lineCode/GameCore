@@ -18,5 +18,5 @@ class HELPERLIBRARIES_API UBFL_DrawDebugHelpers : public UBlueprintFunctionLibra
 	
 public:
 	/** Accepts a generic FCollisionShape to draw */
-	static void DrawDebugCollisionShape(const FCollisionShape& CollisionShape, const UWorld* InWorld, const FVector& Center, int32 Segments, const FColor& Color, bool bPersistentLines = false, float LifeTime = -1.f, uint8 DepthPriority = 0, float Thickness = 0.f, const FQuat& Rotation = FQuat::Identity);
+	static void DrawDebugCollisionShape(const UWorld* InWorld, const FVector& Center, const FCollisionShape& CollisionShape, const FQuat& Rotation, const FColor& Color, const int32 Segments = 16, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f);
 };

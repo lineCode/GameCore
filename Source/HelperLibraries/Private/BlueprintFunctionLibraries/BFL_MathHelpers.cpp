@@ -24,8 +24,7 @@ float UBFL_MathHelpers::GetCollisionShapeBoundingSphereRadius(const FCollisionSh
 		}
 		case ECollisionShape::Line:
 		{
-			UE_LOG(LogMathHelpers, Error, TEXT("%s() not implemented exception"), ANSI_TO_TCHAR(__FUNCTION__));
-			check(0);
+			// A LineShape is just a point
 			return 0.f;
 		}
 	}

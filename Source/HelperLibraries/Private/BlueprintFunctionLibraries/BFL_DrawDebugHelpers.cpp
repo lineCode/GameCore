@@ -7,7 +7,7 @@
 
 
 
-void UBFL_DrawDebugHelpers::DrawDebugCollisionShape(const FCollisionShape& CollisionShape, const UWorld* InWorld, const FVector& Center, int32 Segments, const FColor& Color, bool bPersistentLines, float LifeTime, uint8 DepthPriority, float Thickness, const FQuat& Rotation)
+void UBFL_DrawDebugHelpers::DrawDebugCollisionShape(const UWorld* InWorld, const FVector& Center, const FCollisionShape& CollisionShape, const FQuat& Rotation, const FColor& Color, const int32 Segments, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness)
 {
 #if ENABLE_DRAW_DEBUG
 	switch (CollisionShape.ShapeType)
@@ -19,19 +19,18 @@ void UBFL_DrawDebugHelpers::DrawDebugCollisionShape(const FCollisionShape& Colli
 		}
 		case  ECollisionShape::Sphere:
 		{
-			UE_LOG(LogDrawDebugHelpers, Warning, TEXT("%s() Caller passed in a rotation when drawing a debug sphere, but there is no need to since debug spheres don't have rotation"), ANSI_TO_TCHAR(__FUNCTION__));
 			DrawDebugSphere(InWorld, Center, CollisionShape.GetSphereRadius(), Segments, Color, bPersistentLines, LifeTime, DepthPriority, Thickness);
 			break;
 		}
 		case ECollisionShape::Capsule:
 		{
+			// NOTE: Segments is not used here because DrawDebugCapsule() hard codes it
 			DrawDebugCapsule(InWorld, Center, CollisionShape.GetCapsuleHalfHeight(), CollisionShape.GetCapsuleRadius(), Rotation, Color, bPersistentLines, LifeTime, DepthPriority, Thickness);
 			break;
 		}
 		case ECollisionShape::Line:
 		{
-			UE_LOG(LogDrawDebugHelpers, Error, TEXT("%s() not implemented exception"), ANSI_TO_TCHAR(__FUNCTION__));
-			check(0);
+			DrawDebugPoint(InWorld, Center, Thickness, Color, bPersistentLines, LifeTime, DepthPriority);
 			break;
 		}
 	}
