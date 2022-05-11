@@ -19,6 +19,18 @@ class HELPERLIBRARIES_API UBFL_MathHelpers : public UBlueprintFunctionLibrary
 	
 public:
 	/**
+	 * Gets the diameter of a collision shape's bounding sphere
+	 */
+	static float GetCollisionShapeBoundingDiameter(const FCollisionShape& CollisionShape);
+
+	/**
+	 * Gets the diameter of a box's bounding sphere
+	 */
+	UFUNCTION(BlueprintPure, Category = "MathHelpers|GeometryMath")
+		static float GetBoxBoundingDiameter(const FVector& BoxExtent);
+
+
+	/**
 	 * Given a segment and a point, does that point lie on the segment?
 	 * NOTE: Does 3 distance calculations (3 sqrts)
 	 */
