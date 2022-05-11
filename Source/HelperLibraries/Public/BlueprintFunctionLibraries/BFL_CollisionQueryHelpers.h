@@ -42,7 +42,7 @@ class HELPERLIBRARIES_API UBFL_CollisionQueryHelpers : public UBlueprintFunction
 public:
 	static const float SceneCastStartWallAvoidancePadding;
 
-
+	//  BEGIN Custom query
 	/**
 	 *  Scene cast that penetrates everything except for what the caller says in ShouldNotPenetrate() TFunction
 	 *
@@ -63,13 +63,20 @@ public:
 	 *  @return TRUE if hit and stopped at an impenetrable hit.
 	 */
 	static bool PenetrationSceneCast(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
-
 	/**
 	 * Refer to PenetrationSceneCast() for documentation
 	 */
 	static bool PenetrationLineTrace(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
+	/**
+	 * Refer to PenetrationSceneCast() for documentation
+	 */
+	static bool PenetrationSweep(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
+	//  END Custom query
 
 
+
+
+	//  BEGIN Custom query
 	/**
 	 * Scene cast with penetrations that outputs entrance and exit hits in order of the forward tracing direction
 	 * 
@@ -82,7 +89,16 @@ public:
 	 * Refer to SceneCastWithExitHits() for documentation
 	 */
 	static bool LineTraceMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const bool bOptimizeBackwardsSceneCastLength = false);
+	/**
+	 * Refer to SceneCastWithExitHits() for documentation
+	 */
+	static bool SweepMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const bool bOptimizeBackwardsSceneCastLength = false);
+	//  END Custom query
 
+
+
+
+	//  BEGIN Custom query
 	/**
 	 * Refer to SceneCastWithExitHits() for documentation
 	 * 
@@ -94,6 +110,14 @@ public:
 	 * Refer to PenetrationSceneCastWithExitHits() for documentation
 	 */
 	static bool PenetrationLineTraceWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr, const bool bOptimizeBackwardsSceneCastLength = false);
+	/**
+	 * Refer to PenetrationSceneCastWithExitHits() for documentation
+	 */
+	static bool PenetrationSweepWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr, const bool bOptimizeBackwardsSceneCastLength = false);
+	//  END Custom query
+
+
+
 
 private:
 	/**
@@ -114,8 +138,6 @@ private:
 	static void ChangeHitsResponseData(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam);
 
 
-
-
 	/**
 	 * 
 	 */
@@ -130,5 +152,4 @@ private:
 	 * 
 	 */
 	static void OrderHitResultsInForwardsDirection(TArray<FExitAwareHitResult>& OutOrderedHitResults, const TArray<FHitResult>& InEntranceHitResults, const TArray<FHitResult>& InExitHitResults, const FVector& InForwardsDirection);
-
 };
