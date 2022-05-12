@@ -203,11 +203,11 @@ void UBFL_ShooterHelpers::ScanWithLineTracesUsingSpeed(FScanResult& OutScanResul
 float UBFL_ShooterHelpers::NerfSpeedPerCm(float& InOutSpeed, const float InDistanceToTravel, const float InNerfPerCm)
 {
 	const float SpeedToTakeAway = (InNerfPerCm * InDistanceToTravel);
-	const float TraveledRatio = (InOutSpeed / SpeedToTakeAway);
-	const float TraveledDistance = (InDistanceToTravel * TraveledRatio);
+	const float TraveledThroughRatio = (InOutSpeed / SpeedToTakeAway);
+	const float TraveledThroughDistance = (TraveledThroughRatio * InDistanceToTravel);
 	InOutSpeed -= SpeedToTakeAway;
 
-	return TraveledDistance;
+	return TraveledThroughDistance;
 }
 
 void FScanResult::DebugScan(const UWorld* InWorld) const
