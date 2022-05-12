@@ -30,7 +30,7 @@ void UBFL_DrawDebugHelpers::DrawDebugCollisionShape(const UWorld* InWorld, const
 		}
 		case ECollisionShape::Line:
 		{
-			DrawDebugPoint(InWorld, Center, Thickness, Color, bPersistentLines, LifeTime, DepthPriority);
+			DrawDebugPoint(InWorld, Center, Thickness * 10, Color, bPersistentLines, LifeTime, DepthPriority);
 			break;
 		}
 	}
