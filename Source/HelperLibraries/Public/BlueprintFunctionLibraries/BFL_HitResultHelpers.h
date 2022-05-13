@@ -22,4 +22,9 @@ public:
 	/** Returns true if the two given hits were from the same trace */
 	UFUNCTION(BlueprintPure, Category = "HitResultHelpers")
 		static bool AreHitsFromSameTrace(const FHitResult& HitA, const FHitResult& HitB);
+
+	/** Returns the total distance of the trace that this hit result was involved in */
+	UFUNCTION(BlueprintPure, Category = "HitResultHelpers")
+		static float GetTraceLengthFromHit(const FHitResult& Hit);
+
 };
