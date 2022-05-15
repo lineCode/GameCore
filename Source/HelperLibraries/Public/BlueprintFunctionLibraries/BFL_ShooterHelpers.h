@@ -73,25 +73,6 @@ class HELPERLIBRARIES_API UBFL_ShooterHelpers : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-	/**
-	 * Performs traces from a given ScanStart into a given ScanDirection with ricochets and penetrations.
-	 * Implements the concept of bullet speed. Each ricochet and penetration applies speed nerfs implemented
-	 * by optional TFunction parameters.
-	 * May want to re-use an array for OutHitResults when calling multiple times to avoid useless allocations and deallocations.
-	 *
-	 * @param OutScanResult              Output of this function. Includes bullet hit results and scan information.
-	 * @param InMaxPenetrations          Max times to penetrate through blocking hits (-1 is unlimited)
-	 * @param InMaxRicochets             Max times to ricochet off of owner defined ricochetable hits (-1 is unlimited)
-	 * @param InInitialBulletSpeed       Bullet speed that is slowed down by ricochets and penetrations. Bullet stops when we run out of bullet speed.
-	 * @param InRangeFalloffNerf         The falloff of range for this bullet per cm
-	 * @param ShouldRicochetOffOf        TFunction where caller tells us if a hit result causes a ricochet
-	 * @param GetPenetrationSpeedNerf    TFunction for caller to specify the speed nerf PER CENTIMETER of a penetration hit
-	 * @param GetRicochetSpeedNerf       TFunction for caller to specify the speed nerf of a ricochet hit
-	 */
-	static void ScanWithLineTracesUsingSpeed(FScanResult& OutScanResult, const FVector& InScanStart, const FVector& InScanDirection, const float InDistanceCap, const UWorld* InWorld, const ECollisionChannel InTraceChannel, FCollisionQueryParams CollisionQueryParams, const int32 InMaxPenetrations, const int32 InMaxRicochets, const float InInitialBulletSpeed, const float InRangeFalloffNerf,
-		const TFunction<bool(const FHitResult&)>& ShouldRicochetOffOf,
-		const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf = [](const FHitResult&) { return 0.f; },
-		const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf = [](const FHitResult&) { return 0.f; });
 
 private:
 	static float NerfSpeedPerCm(float& InOutSpeed, const float InDistanceToTravel, const float InNerfPerCm);
