@@ -73,6 +73,18 @@ class HELPERLIBRARIES_API UBFL_ShooterHelpers : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+	/**
+	 * 
+	 */
+	static FVector PenetrationSceneCastWithExitHitsUsingSpeed(const float InInitialBulletSpeed, TArray<float>& InOutSpeedNerfStack, const UWorld* InWorld, TArray<FBulletHit>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+		const TFunctionRef<float(const FHitResult&)>&GetPenetrationSpeedNerf = [](const FHitResult&) { return 0.f; },
+		const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
+	static FVector PenetrationSceneCastWithExitHitsUsingSpeed(const float InInitialBulletSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, TArray<FBulletHit>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+		const TFunctionRef<float(const FHitResult&)>&GetPenetrationSpeedNerf = [](const FHitResult&) { return 0.f; },
+		const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
+	//static FVector PenetrationSceneCastWithExitHitsUsingSpeed(const float InInitialBulletSpeed, const UWorld* InWorld, TArray<FBulletHit>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+	//	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf = [](const FHitResult&) { return 0.f; },
+	//	const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
 
 private:
 	static float NerfSpeedPerCm(float& InOutSpeed, const float InDistanceToTravel, const float InNerfPerCm);
