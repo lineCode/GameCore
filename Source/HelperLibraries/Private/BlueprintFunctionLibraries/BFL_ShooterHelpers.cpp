@@ -255,10 +255,11 @@ void FScanResult::DebugScan(const UWorld* InWorld) const
 	const FColor TraceColor = FColor::Blue;
 	const FColor HitColor = FColor::Red;
 
+	
 	for (const FHitResult& Hit : BulletHits)
 	{
 		DrawDebugLine(InWorld, Hit.TraceStart, Hit.Location, TraceColor, false, DebugLifeTime);
-		DrawDebugPoint(InWorld, Hit.ImpactPoint, 10.f, HitColor, false, DebugLifeTime);
+		DrawDebugPoint(InWorld, Hit.ImpactPoint, DebugLifeTime, HitColor, false, DebugLifeTime);
 	}
 
 	if (BulletHits.Num() > 0)
