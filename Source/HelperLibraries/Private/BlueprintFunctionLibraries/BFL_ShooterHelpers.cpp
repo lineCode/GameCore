@@ -149,17 +149,17 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 	OutScanResult.BulletStart = InStart;
 	OutScanResult.InitialBulletSpeed = InOutSpeed;
 
-	FVector SceneCastStart = InStart;
-	FVector SceneCastDirection = InDirection;
+	FVector CurrentSceneCastStart = InStart;
+	FVector CurrentSceneCastDirection = InDirection;
 	float RemainingDistance = InDistanceCap;
 
 	// The first iteration of this loop is the initial scene cast and the rest of the iterations are ricochet scene casts
 	for (int32 RicochetNumber = 0; (RicochetNumber <= InRicochetCap || InRicochetCap == -1); ++RicochetNumber)
 	{
-		const FVector SceneCastEnd = SceneCastStart + (SceneCastDirection * RemainingDistance);
+		const FVector SceneCastEnd = CurrentSceneCastStart + (CurrentSceneCastDirection * RemainingDistance);
 
 		FScanResult ScanResult;
-		const bool bHitRicochetableHit = PenetrationSceneCastWithExitHitsUsingSpeed(InOutSpeed, InOutSpeedNerfStack, InWorld, ScanResult, SceneCastStart, SceneCastEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, GetPenetrationSpeedNerf, IsHitRicochetable);
+		const bool bHitRicochetableHit = PenetrationSceneCastWithExitHitsUsingSpeed(InOutSpeed, InOutSpeedNerfStack, InWorld, ScanResult, CurrentSceneCastStart, SceneCastEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, GetPenetrationSpeedNerf, IsHitRicochetable);
 
 		// Set BulletHit data
 		{
@@ -189,22 +189,26 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 		}
 
 
-		// Add to our output
+		// Finished with this cast. Add to our output
 		OutScanResult.BulletHits.Append(ScanResult.BulletHits);
 
-		// Check if we should follow through with the next trace
-		if (InOutSpeed < 0.f)
+		// Check if we should end the whole thing
 		{
-			OutScanResult.BulletEnd = ScanResult.BulletEnd;
-			return;
-		}
+			// Return if not enough speed for next cast
+			if (InOutSpeed < 0.f)
+			{
+				OutScanResult.BulletEnd = ScanResult.BulletEnd;
+				return;
+			}
 
-		if (!bHitRicochetableHit)
-		{
-			// Nothing to ricochet off of
-			OutScanResult.BulletEnd = SceneCastEnd;
-			return;
+			// Return if there was nothing to ricochet off of
+			if (!bHitRicochetableHit)
+			{
+				OutScanResult.BulletEnd = SceneCastEnd;
+				return;
+			}
 		}
+		
 
 		// SETUP FOR OUR NEXT SCENE CAST
 
@@ -220,9 +224,9 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 			return;
 		}
 
-		// Reflect our SceneCastDirection off of the ricochetable surface and calculate SceneCastStart for next ricochet scene cast
-		SceneCastDirection = SceneCastDirection.MirrorByVector(RicochetableHit.ImpactNormal);
-		SceneCastStart = RicochetableHit.Location + (SceneCastDirection * UBFL_CollisionQueryHelpers::SceneCastStartWallAvoidancePadding);
+		// Next ricochet cast needs a new direction and start location
+		CurrentSceneCastDirection = CurrentSceneCastDirection.MirrorByVector(RicochetableHit.ImpactNormal);
+		CurrentSceneCastStart = RicochetableHit.Location + (CurrentSceneCastDirection * UBFL_CollisionQueryHelpers::SceneCastStartWallAvoidancePadding);
 	}
 
 	
