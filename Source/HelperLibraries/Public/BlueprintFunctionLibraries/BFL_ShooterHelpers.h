@@ -63,6 +63,7 @@ struct HELPERLIBRARIES_API FShootResult
 		: ShooterHits(TArray<FShooterHitResult>())
 		, StartLocation(FVector::ZeroVector)
 		, EndLocation(FVector::ZeroVector)
+		, TotalDistanceTraveled(0.f)
 		, InitialSpeed(0.f)
 	{
 	}
@@ -73,6 +74,8 @@ struct HELPERLIBRARIES_API FShootResult
 	FVector StartLocation;
 	/** The location where this shot stopped */
 	FVector EndLocation;
+	/** The total distance that the hypothetical bullet traveled */
+	float TotalDistanceTraveled;
 	/** The initial speed when this shot began */
 	float InitialSpeed;
 

@@ -22,6 +22,7 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 
 
 	const FVector SceneCastDirection = (InEnd - InStart).GetSafeNormal();
+	const float SceneCastDistance = HitResults.Num() > 0 ? UBFL_HitResultHelpers::GetTraceLengthFromHit(HitResults.Last(), false) : FVector::Distance(InStart, InEnd);
 
 	// For this segment (from TraceStart to the first hit), apply speed nerfs and see if we stopped
 	{
@@ -34,7 +35,7 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 		else
 		{
 			// We casted into thin air - so use the distance of the whole scene cast
-			SegmentDistance = FVector::Distance(InStart, InEnd);
+			SegmentDistance = SceneCastDistance;
 		}
 
 		// Calculate how much speed per cm we should be taking away for this segment
@@ -50,6 +51,7 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 		if (InOutSpeed < 0.f)
 		{
 			OutShootResult.EndLocation = InStart + (SceneCastDirection * TraveledThroughDistance);
+			OutShootResult.TotalDistanceTraveled = TraveledThroughDistance;
 			return nullptr;
 		}
 	}
@@ -60,21 +62,23 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 		OutShootResult.ShooterHits.Reserve(HitResults.Num()); // assume that we will add all of the hits. But, there may end up being reserved space that goes unused if we run out of speed
 		for (int32 i = 0; i < HitResults.Num(); ++i) // loop through all hits, comparing each hit with the next so we can treat them as semgents
 		{
+			// Add this hit to our shooter hits
+			FShooterHitResult& AddedShooterHit = OutShootResult.ShooterHits.Add_GetRef(HitResults[i]);
+			AddedShooterHit.Speed = InOutSpeed;
+
 			if (HitResults[i].bStartPenetrating)
 			{
 				// Initial overlaps would mess up our PerCmSpeedNerfStack so skip it
 				// Btw this is only a thing for simple collision queries
+				UE_LOG(LogShooterHelpers, Verbose, TEXT("%s() Scene cast started inside of something. Make sure to not allow player to shoot staring inside of geometry. We will not consider this hit for the penetration speed nerf stack but it will still be included in the outputed hits. Hit Actor: [%s]."), ANSI_TO_TCHAR(__FUNCTION__), GetData(HitResults[i].GetActor()->GetName()));
 				continue;
 			}
-
-			// Add this hit to our shooter hits
-			FShooterHitResult& AddedShooterHit = OutShootResult.ShooterHits.Add_GetRef(HitResults[i]);
-			AddedShooterHit.Speed = InOutSpeed;
 
 			if (ImpenetrableHit && &HitResults[i] == ImpenetrableHit)
 			{
 				// Stop - don't calculate penetration nerfing on impenetrable hit
 				OutShootResult.EndLocation = AddedShooterHit.Location;
+				OutShootResult.TotalDistanceTraveled = AddedShooterHit.Distance;
 				return &AddedShooterHit;
 			}
 
@@ -93,7 +97,7 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 				}
 				else
 				{
-					UE_LOG(LogShooterHelpers, Error, TEXT("%s() Bullet exited a penetration nerf that was never entered. This means that the bullet started from within a collider. We can't account for that object's penetration nerf which means our speed values in the shoot result will be wrong. Make sure to not allow player to start shot from within a colider. Hit Actor: [%s]. ALSO this could've been the callers fault by not having consistent speed nerfs for entrances and exits"), ANSI_TO_TCHAR(__FUNCTION__), GetData(AddedShooterHit.GetActor()->GetName()));
+					UE_LOG(LogShooterHelpers, Error, TEXT("%s() Bullet exited a penetration nerf that was never entered. This must be the callers fault by his GetPenetrationSpeedNerf() not having consistent speed nerfs for entrances and exits. Hit Actor: [%s]."), ANSI_TO_TCHAR(__FUNCTION__), GetData(AddedShooterHit.GetActor()->GetName()));
 				}
 			}
 
@@ -109,7 +113,6 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 				else
 				{
 					// Get distance from this hit to trace end
-					const float SceneCastDistance = UBFL_HitResultHelpers::GetTraceLengthFromHit(AddedShooterHit, true);
 					SegmentDistance = (SceneCastDistance - AddedShooterHit.Distance);
 				}
 
@@ -126,6 +129,7 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 				if (InOutSpeed < 0.f)
 				{
 					OutShootResult.EndLocation = AddedShooterHit.Location + (SceneCastDirection * TraveledThroughDistance);
+					OutShootResult.TotalDistanceTraveled = AddedShooterHit.Distance + TraveledThroughDistance;
 					return nullptr;
 				}
 			}
@@ -134,6 +138,7 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 
 	// InOutSpeed made it past every nerf
 	OutShootResult.EndLocation = InEnd;
+	OutShootResult.TotalDistanceTraveled = SceneCastDistance;
 	return nullptr;
 }
 FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams,
@@ -196,26 +201,27 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 
 		// Check if we should end here
 		{
-			// Return if not enough speed for next cast
+			// Stop if not enough speed for next cast
 			if (InOutSpeed < 0.f)
 			{
 				OutShootResult.EndLocation = ShootResult.EndLocation;
-				return;
+				break;
 			}
 
-			// Return if there was nothing to ricochet off of
+			// Stop if there was nothing to ricochet off of
 			if (!RicochetableHit)
 			{
 				OutShootResult.EndLocation = SceneCastEnd;
-				return;
+				break;
 			}
 			// We have a ricochet hit
 
 			if (DistanceTraveled == InDistanceCap)
 			{
 				// Edge case: we should end the whole thing if we ran out of distance exactly when we hit a ricochet
+				OutShootResult.TotalDistanceTraveled = DistanceTraveled;
 				OutShootResult.EndLocation = RicochetableHit->Location;
-				return;
+				break;
 			}
 		}
 
@@ -225,6 +231,8 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 		CurrentSceneCastDirection = CurrentSceneCastDirection.MirrorByVector(RicochetableHit->ImpactNormal);
 		CurrentSceneCastStart = RicochetableHit->Location + (CurrentSceneCastDirection * UBFL_CollisionQueryHelpers::SceneCastStartWallAvoidancePadding);
 	}
+
+	OutShootResult.TotalDistanceTraveled = DistanceTraveled;
 }
 
 void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const int32 InRicochetCap,
@@ -254,7 +262,7 @@ void FShootResult::DebugShot(const UWorld* InWorld) const
 	const FColor TraceColor = FColor::Blue;
 	const FColor HitColor = FColor::Red;
 
-	
+
 	for (const FHitResult& Hit : ShooterHits)
 	{
 		DrawDebugLine(InWorld, Hit.TraceStart, Hit.Location, TraceColor, false, DebugLifeTime);
