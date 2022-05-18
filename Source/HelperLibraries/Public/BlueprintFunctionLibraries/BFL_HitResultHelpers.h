@@ -25,6 +25,6 @@ public:
 
 	/** Returns the total distance of the trace that this hit result was involved in */
 	UFUNCTION(BlueprintPure, Category = "HitResultHelpers")
-		static float GetTraceLengthFromHit(const FHitResult& Hit);
+		static float GetTraceLengthFromHit(const FHitResult& Hit, const bool bEnsureThatDistanceIsNotCalculated);
 
 };

@@ -105,7 +105,7 @@ FBulletHit* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(floa
 				else
 				{
 					// Get distance from this hit to trace end
-					const float SceneCastDistance = UBFL_HitResultHelpers::GetTraceLengthFromHit(AddedBulletHit);
+					const float SceneCastDistance = UBFL_HitResultHelpers::GetTraceLengthFromHit(AddedBulletHit, true);
 					SegmentDistance = (SceneCastDistance - AddedBulletHit.Distance);
 				}
 
