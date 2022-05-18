@@ -168,9 +168,8 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 		const FVector SceneCastEnd = CurrentSceneCastStart + (CurrentSceneCastDirection * (InDistanceCap - DistanceTraveled));
 
 		FShootResult ShootResult;
-		const float PreviousDistanceTraveled = DistanceTraveled;
 		FShooterHitResult* RicochetableHit = PenetrationSceneCastWithExitHitsUsingSpeed(InOutSpeed, InOutPerCmSpeedNerfStack, InWorld, ShootResult, CurrentSceneCastStart, SceneCastEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, GetPenetrationSpeedNerf, IsHitRicochetable);
-		DistanceTraveled = RicochetableHit ? DistanceTraveled + RicochetableHit->Distance : InDistanceCap;
+		DistanceTraveled += ShootResult.TotalDistanceTraveled;
 
 		// Set ShooterHit data
 		{
@@ -178,7 +177,7 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 			for (FShooterHitResult& ShooterHit : ShootResult.ShooterHits)
 			{
 				ShooterHit.RicochetNumber = RicochetNumber;
-				ShooterHit.TraveledDistanceBeforeThisTrace = PreviousDistanceTraveled;
+				ShooterHit.TraveledDistanceBeforeThisTrace = (DistanceTraveled - ShootResult.TotalDistanceTraveled); // distance up until this scene cast
 			}
 
 			// Give data to the ricochet hit
@@ -188,11 +187,10 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 			}
 		}
 
-		// Apply speed nerf
+		// Apply ricochet speed nerf
 		if (RicochetableHit)
 		{
-			const float RicochetSpeedNerf = GetRicochetSpeedNerf(*RicochetableHit);
-			InOutSpeed -= RicochetSpeedNerf;
+			InOutSpeed -= GetRicochetSpeedNerf(*RicochetableHit);
 		}
 
 
