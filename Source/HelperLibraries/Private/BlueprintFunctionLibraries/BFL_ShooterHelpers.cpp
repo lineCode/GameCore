@@ -9,7 +9,7 @@
 
 
 
-FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutSpeedNerfStack, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams,
+FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutPerCmSpeedNerfStack, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams,
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
 	const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
 {
@@ -34,9 +34,9 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 		}
 
 		// Calculate how much speed per cm we should be taking away for this segment
-		// Accumulate all of the speed nerfs from the InOutSpeedNerfStack
+		// Accumulate all of the speed nerfs from the InOutPerCmSpeedNerfStack
 		float SpeedToTakeAwayPerCm = 0.f;
-		for (const float& SpeedNerf : InOutSpeedNerfStack)
+		for (const float& SpeedNerf : InOutPerCmSpeedNerfStack)
 		{
 			SpeedToTakeAwayPerCm += SpeedNerf;
 		}
@@ -58,7 +58,7 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 		{
 			if (HitResults[i].bStartPenetrating)
 			{
-				// Initial overlaps would mess up our SpeedNerfStack stack so skip it
+				// Initial overlaps would mess up our PerCmSpeedNerfStack so skip it
 				// Btw this is only a thing for simple collision queries
 				continue;
 			}
@@ -74,18 +74,18 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 				return &AddedShooterHit;
 			}
 
-			// Update the InOutSpeedNerfStack with this hit
+			// Update the InOutPerCmSpeedNerfStack with this hit
 			if (AddedShooterHit.bIsExitHit == false)		// Add new nerf if we are entering something
 			{
-				InOutSpeedNerfStack.Push(GetPenetrationSpeedNerf(AddedShooterHit));
+				InOutPerCmSpeedNerfStack.Push(GetPenetrationSpeedNerf(AddedShooterHit));
 			}
 			else										// Remove most recent nerf if we are exiting something
 			{
-				const int32 IndexOfNerfThatWeAreExiting = InOutSpeedNerfStack.FindLast(GetPenetrationSpeedNerf(AddedShooterHit));
+				const int32 IndexOfNerfThatWeAreExiting = InOutPerCmSpeedNerfStack.FindLast(GetPenetrationSpeedNerf(AddedShooterHit));
 
 				if (IndexOfNerfThatWeAreExiting != INDEX_NONE)
 				{
-					InOutSpeedNerfStack.RemoveAt(IndexOfNerfThatWeAreExiting);
+					InOutPerCmSpeedNerfStack.RemoveAt(IndexOfNerfThatWeAreExiting);
 				}
 				else
 				{
@@ -110,9 +110,9 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 				}
 
 				// Calculate how much speed per cm we should be taking away for this segment
-				// Accumulate all of the speed nerfs from the InOutSpeedNerfStack
+				// Accumulate all of the speed nerfs from the InOutPerCmSpeedNerfStack
 				float SpeedToTakeAwayPerCm = 0.f;
-				for (const float& SpeedNerf : InOutSpeedNerfStack)
+				for (const float& SpeedNerf : InOutPerCmSpeedNerfStack)
 				{
 					SpeedToTakeAwayPerCm += SpeedNerf;
 				}
@@ -136,12 +136,12 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
 	const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
 {
-	TArray<float> SpeedNerfStack;
-	SpeedNerfStack.Push(InRangeFalloffNerf);
-	return PenetrationSceneCastWithExitHitsUsingSpeed(InOutSpeed, SpeedNerfStack, InWorld, OutShootResult, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, GetPenetrationSpeedNerf, IsHitImpenetrable);
+	TArray<float> PerCmSpeedNerfStack;
+	PerCmSpeedNerfStack.Push(InRangeFalloffNerf);
+	return PenetrationSceneCastWithExitHitsUsingSpeed(InOutSpeed, PerCmSpeedNerfStack, InWorld, OutShootResult, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, GetPenetrationSpeedNerf, IsHitImpenetrable);
 }
 
-void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutSpeedNerfStack, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const int32 InRicochetCap,
+void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutPerCmSpeedNerfStack, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const int32 InRicochetCap,
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
 	const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf,
 	const TFunction<bool(const FHitResult&)>& IsHitRicochetable)
@@ -160,7 +160,7 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 
 		FShootResult ShootResult;
 		const float PreviousDistanceTraveled = DistanceTraveled;
-		FShooterHitResult* RicochetableHit = PenetrationSceneCastWithExitHitsUsingSpeed(InOutSpeed, InOutSpeedNerfStack, InWorld, ShootResult, CurrentSceneCastStart, SceneCastEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, GetPenetrationSpeedNerf, IsHitRicochetable);
+		FShooterHitResult* RicochetableHit = PenetrationSceneCastWithExitHitsUsingSpeed(InOutSpeed, InOutPerCmSpeedNerfStack, InWorld, ShootResult, CurrentSceneCastStart, SceneCastEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, GetPenetrationSpeedNerf, IsHitRicochetable);
 		DistanceTraveled = RicochetableHit ? DistanceTraveled + RicochetableHit->Distance : InDistanceCap;
 
 		// Set ShooterHit data
@@ -228,9 +228,9 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 	const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf,
 	const TFunction<bool(const FHitResult&)>& IsHitRicochetable)
 {
-	TArray<float> SpeedNerfStack;
-	SpeedNerfStack.Push(InRangeFalloffNerf);
-	return RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(InOutSpeed, SpeedNerfStack, InWorld, OutShootResult, InStart, InDirection, InDistanceCap, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InRicochetCap, GetPenetrationSpeedNerf, GetRicochetSpeedNerf, IsHitRicochetable);
+	TArray<float> PerCmSpeedNerfStack;
+	PerCmSpeedNerfStack.Push(InRangeFalloffNerf);
+	return RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(InOutSpeed, PerCmSpeedNerfStack, InWorld, OutShootResult, InStart, InDirection, InDistanceCap, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InRicochetCap, GetPenetrationSpeedNerf, GetRicochetSpeedNerf, IsHitRicochetable);
 }
 
 float UBFL_ShooterHelpers::NerfSpeedPerCm(float& InOutSpeed, const float InDistanceToTravel, const float InNerfPerCm)

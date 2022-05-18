@@ -64,7 +64,7 @@ bool UBFL_CollisionQueryHelpers::SweepMultiWithExitHits(const UWorld* InWorld, T
 //  BEGIN Custom query
 FHitResult* UBFL_CollisionQueryHelpers::PenetrationSceneCast(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
 {
-	// Ensure our collision query params do NOT ignore overlaps because we are tracing as an ECR_Overlap (otherwise we won't get any Hit Results)
+	// Ensure our collision query params do NOT ignore overlaps because we are scene casting as an ECR_Overlap (otherwise we won't get any Hit Results)
 	FCollisionQueryParams CollisionQueryParams = InCollisionQueryParams;
 	CollisionQueryParams.bIgnoreTouches = false;
 
