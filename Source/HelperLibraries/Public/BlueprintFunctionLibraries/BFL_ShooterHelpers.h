@@ -14,53 +14,61 @@
  * 
  */
 USTRUCT()
-struct HELPERLIBRARIES_API FBulletHit : public FExitAwareHitResult
+struct HELPERLIBRARIES_API FShooterHitResult : public FExitAwareHitResult
 {
 	GENERATED_BODY()
 
-	FBulletHit()
+		FShooterHitResult()
 		: FExitAwareHitResult()
+		, TraveledDistanceBeforeThisTrace(0.f)
 		, RicochetNumber(0)
 		, bIsRicochet(false)
 		, Speed(0.f)
 	{
 	}
-	FBulletHit(const FExitAwareHitResult& HitResult)
+	FShooterHitResult(const FExitAwareHitResult& HitResult)
 		: FExitAwareHitResult(HitResult)
+		, TraveledDistanceBeforeThisTrace(0.f)
 		, RicochetNumber(0)
 		, bIsRicochet(false)
 		, Speed(0.f)
 	{
 	}
 
-	float BulletHitDistance;
+
+	float TraveledDistanceBeforeThisTrace;
 	int32 RicochetNumber;
 	uint8 bIsRicochet : 1;
 	float Speed;
+
+	float GetTotalDistanceTraveled() const
+	{
+		return TraveledDistanceBeforeThisTrace + Distance;
+	}
 };
 
 /**
  * 
  */
 USTRUCT()
-struct HELPERLIBRARIES_API FScanResult
+struct HELPERLIBRARIES_API FShootResult
 {
 	GENERATED_BODY()
 
-	FScanResult()
-		: BulletHits(TArray<FBulletHit>())
-		, BulletStart(FVector::ZeroVector)
-		, BulletEnd(FVector::ZeroVector)
-		, InitialBulletSpeed(0.f)
+	FShootResult()
+		: ShooterHits(TArray<FShooterHitResult>())
+		, StartLocation(FVector::ZeroVector)
+		, EndLocation(FVector::ZeroVector)
+		, InitialSpeed(0.f)
 	{
 	}
 
-	TArray<FBulletHit> BulletHits;
-	FVector BulletStart;
-	FVector BulletEnd;
-	float InitialBulletSpeed;
+	TArray<FShooterHitResult> ShooterHits;
+	FVector StartLocation;
+	FVector EndLocation;
+	float InitialSpeed;
 
-	void DebugScan(const UWorld* InWorld) const;
+	void DebugShot(const UWorld* InWorld) const;
 };
 
 
@@ -76,19 +84,19 @@ public:
 	/**
 	 * 
 	 */
-	static FBulletHit* PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutSpeedNerfStack, const UWorld* InWorld, FScanResult& OutScanResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+	static FShooterHitResult* PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutSpeedNerfStack, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
 		const TFunctionRef<float(const FHitResult&)>&GetPenetrationSpeedNerf = [](const FHitResult&) { return 0.f; },
 		const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
-	static FBulletHit* PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FScanResult& OutScanResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+	static FShooterHitResult* PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
 		const TFunctionRef<float(const FHitResult&)>&GetPenetrationSpeedNerf = [](const FHitResult&) { return 0.f; },
 		const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
 
 
-	static void RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutSpeedNerfStack, const UWorld* InWorld, FScanResult& OutScanResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const int32 InRicochetCap = -1,
+	static void RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutSpeedNerfStack, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const int32 InRicochetCap = -1,
 		const TFunctionRef<float(const FHitResult&)>&GetPenetrationSpeedNerf = [](const FHitResult&) { return 0.f; },
 		const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf = [](const FHitResult&) { return 0.f; },
 		const TFunction<bool(const FHitResult&)>& IsHitRicochetable = nullptr);
-	static void RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FScanResult& OutScanResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const int32 InRicochetCap = -1,
+	static void RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const int32 InRicochetCap = -1,
 		const TFunctionRef<float(const FHitResult&)>&GetPenetrationSpeedNerf = [](const FHitResult&) { return 0.f; },
 		const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf = [](const FHitResult&) { return 0.f; },
 		const TFunction<bool(const FHitResult&)>& IsHitRicochetable = nullptr);
