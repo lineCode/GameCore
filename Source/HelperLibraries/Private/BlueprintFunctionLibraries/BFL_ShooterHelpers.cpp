@@ -9,9 +9,13 @@
 
 
 
+const TFunctionRef<float(const FHitResult&)>& UBFL_ShooterHelpers::DefaultGetPenetrationSpeedNerf = [](const FHitResult&) { return 0.f; };
+const TFunctionRef<float(const FHitResult&)>& UBFL_ShooterHelpers::DefaultGetRicochetSpeedNerf = [](const FHitResult&) { return 0.f; };
+const TFunctionRef<bool(const FHitResult&)>& UBFL_ShooterHelpers::DefaultIsHitRicochetable = [](const FHitResult&) { return false; };
+
 FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutPerCmSpeedNerfStack, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams,
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
-	const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
+	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable)
 {
 	TArray<FExitAwareHitResult> HitResults;
 	FExitAwareHitResult* ImpenetrableHit = UBFL_CollisionQueryHelpers::PenetrationSceneCastWithExitHits(InWorld, HitResults, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, IsHitImpenetrable, true);
@@ -134,7 +138,7 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 }
 FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams,
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
-	const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
+	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable)
 {
 	TArray<float> PerCmSpeedNerfStack;
 	PerCmSpeedNerfStack.Push(InRangeFalloffNerf);
@@ -144,7 +148,7 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutPerCmSpeedNerfStack, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const int32 InRicochetCap,
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
 	const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf,
-	const TFunction<bool(const FHitResult&)>& IsHitRicochetable)
+	const TFunctionRef<bool(const FHitResult&)>& IsHitRicochetable)
 {
 	OutShootResult.StartLocation = InStart;
 	OutShootResult.InitialSpeed = InOutSpeed;
@@ -226,7 +230,7 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const int32 InRicochetCap,
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
 	const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf,
-	const TFunction<bool(const FHitResult&)>& IsHitRicochetable)
+	const TFunctionRef<bool(const FHitResult&)>& IsHitRicochetable)
 {
 	TArray<float> PerCmSpeedNerfStack;
 	PerCmSpeedNerfStack.Push(InRangeFalloffNerf);

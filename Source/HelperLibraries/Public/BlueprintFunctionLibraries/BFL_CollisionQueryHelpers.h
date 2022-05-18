@@ -41,6 +41,7 @@ class HELPERLIBRARIES_API UBFL_CollisionQueryHelpers : public UBlueprintFunction
 	
 public:
 	static const float SceneCastStartWallAvoidancePadding;
+	static const TFunctionRef<bool(const FHitResult&)>& DefaultIsHitImpenetrable;
 
 
 	//  BEGIN Custom query
@@ -81,9 +82,12 @@ public:
 	 *  @param  IsHitImpenetrable         TFunction where caller indicates whether provided HitResult should stop us. Since we penetrate blocking hits, caller might want to define when to stop.
 	 *  @return The impenetrable hit if we hit one
 	 */
-	static FHitResult* PenetrationSceneCast(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
-	static FHitResult* PenetrationLineTrace(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
-	static FHitResult* PenetrationSweep(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
+	static FHitResult* PenetrationSceneCast(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = DefaultIsHitImpenetrable);
+	static FHitResult* PenetrationLineTrace(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = DefaultIsHitImpenetrable);
+	static FHitResult* PenetrationSweep(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = DefaultIsHitImpenetrable);
 	//  END Custom query
 
 
@@ -96,9 +100,18 @@ public:
 	 * @param  IsHitImpenetrable         TFunction where caller indicates whether provided HitResult should stop us. Since we penetrate blocking hits, caller might want to define when to stop.
 	 * @return The impenetrable hit if we hit one (will always be an entrance hit)
 	 */
-	static FExitAwareHitResult* PenetrationSceneCastWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr, const bool bOptimizeBackwardsSceneCastLength = false, const bool bDrawDebugForBackwardsStart = false);
-	static FExitAwareHitResult* PenetrationLineTraceWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr, const bool bOptimizeBackwardsSceneCastLength = false, const bool bDrawDebugForBackwardsStart = false);
-	static FExitAwareHitResult* PenetrationSweepWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr, const bool bOptimizeBackwardsSceneCastLength = false, const bool bDrawDebugForBackwardsStart = false);
+	static FExitAwareHitResult* PenetrationSceneCastWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = DefaultIsHitImpenetrable,
+		const bool bOptimizeBackwardsSceneCastLength = false,
+		const bool bDrawDebugForBackwardsStart = false);
+	static FExitAwareHitResult* PenetrationLineTraceWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = DefaultIsHitImpenetrable,
+		const bool bOptimizeBackwardsSceneCastLength = false,
+		const bool bDrawDebugForBackwardsStart = false);
+	static FExitAwareHitResult* PenetrationSweepWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = DefaultIsHitImpenetrable,
+		const bool bOptimizeBackwardsSceneCastLength = false,
+		const bool bDrawDebugForBackwardsStart = false);
 	//  END Custom query
 
 

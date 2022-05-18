@@ -89,10 +89,15 @@ class HELPERLIBRARIES_API UBFL_ShooterHelpers : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+	static const TFunctionRef<float(const FHitResult&)>& DefaultGetPenetrationSpeedNerf;
+	static const TFunctionRef<float(const FHitResult&)>& DefaultGetRicochetSpeedNerf;
+	static const TFunctionRef<bool(const FHitResult&)>& DefaultIsHitRicochetable;
+
+
 	//  BEGIN Custom query
 	/**
 	 * Given an initial speed, perform a scene cast, applying nerfs to the hypothetical bullet as it penetrates through blocking hits.
-	 * 
+	 *
 	 * @param  InOutSpeed                Initial speed of the scene cast. Capable of going negative. However, any casting for hits ends at a speed of 0.
 	 * @param  InOutPerCmSpeedNerfStack  Stack of values that nerf the hypothetical bullet's speed per cm. Top of stack represents the most recent nerf (in penetration terminology, the most recent/inner object currently being penetrated).
 	 * @param  InWorld                   The world to scene cast in
@@ -108,18 +113,18 @@ public:
 	 * @return The impenetrable hit if we hit one
 	 */
 	static FShooterHitResult* PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutPerCmSpeedNerfStack, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
-		const TFunctionRef<float(const FHitResult&)>&GetPenetrationSpeedNerf = [](const FHitResult&) { return 0.f; },
-		const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
+		const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf = DefaultGetPenetrationSpeedNerf,
+		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = UBFL_CollisionQueryHelpers::DefaultIsHitImpenetrable);
 	static FShooterHitResult* PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
-		const TFunctionRef<float(const FHitResult&)>&GetPenetrationSpeedNerf = [](const FHitResult&) { return 0.f; },
-		const TFunction<bool(const FHitResult&)>& IsHitImpenetrable = nullptr);
+		const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf = DefaultGetPenetrationSpeedNerf,
+		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = UBFL_CollisionQueryHelpers::DefaultIsHitImpenetrable);
 	//  END Custom query
 
 
 	//  BEGIN Custom query
 	/**
 	 * Penetrating scene cast that can ricochet, using PenetrationSceneCastWithExitHitsUsingSpeed() for each cast.
-	 * 
+	 *
 	 * @param  InStart                   Start location of the scene cast
 	 * @param  InDirection               The direction to scene cast
 	 * @param  InDistanceCap             The max distance to travel (performance wise, length of the cast will be this large and get smaller as we travel from ricochets)
@@ -127,13 +132,13 @@ public:
 	 * @param  IsHitRicochetable         TFunction where caller indicates whether we should ricochet off of the HitResult
 	 */
 	static void RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutPerCmSpeedNerfStack, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const int32 InRicochetCap = -1,
-		const TFunctionRef<float(const FHitResult&)>&GetPenetrationSpeedNerf = [](const FHitResult&) { return 0.f; },
-		const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf = [](const FHitResult&) { return 0.f; },
-		const TFunction<bool(const FHitResult&)>& IsHitRicochetable = nullptr);
+		const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf = DefaultGetPenetrationSpeedNerf,
+		const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf = DefaultGetRicochetSpeedNerf,
+		const TFunctionRef<bool(const FHitResult&)>& IsHitRicochetable = DefaultIsHitRicochetable);
 	static void RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FShootResult& OutShootResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const int32 InRicochetCap = -1,
-		const TFunctionRef<float(const FHitResult&)>&GetPenetrationSpeedNerf = [](const FHitResult&) { return 0.f; },
-		const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf = [](const FHitResult&) { return 0.f; },
-		const TFunction<bool(const FHitResult&)>& IsHitRicochetable = nullptr);
+		const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf = DefaultGetPenetrationSpeedNerf,
+		const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf = DefaultGetRicochetSpeedNerf,
+		const TFunctionRef<bool(const FHitResult&)>& IsHitRicochetable = DefaultIsHitRicochetable);
 	//  END Custom query
 
 private:
