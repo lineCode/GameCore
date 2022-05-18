@@ -45,7 +45,7 @@ struct HELPERLIBRARIES_API FShooterHitResult : public FExitAwareHitResult
 	float Speed;
 
 	/** Gets the total distance the hypothetical bullet traveled until this hit's location */
-	float GetTotalDistanceTraveled() const
+	float GetTotalDistanceTraveledToThisHit() const
 	{
 		return TraveledDistanceBeforeThisTrace + Distance;
 	}
