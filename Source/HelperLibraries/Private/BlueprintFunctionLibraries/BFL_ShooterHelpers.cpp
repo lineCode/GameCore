@@ -9,12 +9,12 @@
 
 
 
-bool UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutSpeedNerfStack, const UWorld* InWorld, FScanResult& OutScanResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams,
+FBulletHit* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, TArray<float>& InOutSpeedNerfStack, const UWorld* InWorld, FScanResult& OutScanResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams,
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
 	const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
 {
 	TArray<FExitAwareHitResult> HitResults;
-	bool bHitImpenetrableHit = UBFL_CollisionQueryHelpers::PenetrationSceneCastWithExitHits(InWorld, HitResults, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, IsHitImpenetrable, true);
+	FExitAwareHitResult* ImpenetrableHit = UBFL_CollisionQueryHelpers::PenetrationSceneCastWithExitHits(InWorld, HitResults, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, IsHitImpenetrable, true);
 
 
 	const FVector SceneCastDirection = (InEnd - InStart).GetSafeNormal();
@@ -46,7 +46,7 @@ bool UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOu
 		if (InOutSpeed < 0.f)
 		{
 			OutScanResult.BulletEnd = InStart + (SceneCastDirection * TraveledThroughDistance);
-			return false;
+			return nullptr;
 		}
 	}
 
@@ -67,11 +67,11 @@ bool UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOu
 			FBulletHit& AddedBulletHit = OutScanResult.BulletHits.Add_GetRef(HitResults[i]);
 			AddedBulletHit.Speed = InOutSpeed;
 
-			if (bHitImpenetrableHit && i == HitResults.Num() - 1)
+			if (ImpenetrableHit && &HitResults[i] == ImpenetrableHit)
 			{
 				// Stop - don't calculate penetration nerfing on impenetrable hit
 				OutScanResult.BulletEnd = AddedBulletHit.Location;
-				return true;
+				return &AddedBulletHit;
 			}
 
 			// Update the InOutSpeedNerfStack with this hit
@@ -122,7 +122,7 @@ bool UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOu
 				if (InOutSpeed < 0.f)
 				{
 					OutScanResult.BulletEnd = AddedBulletHit.Location + (SceneCastDirection * TraveledThroughDistance);
-					return false;
+					return nullptr;
 				}
 			}
 		}
@@ -130,9 +130,9 @@ bool UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOu
 
 	// InOutSpeed made it past every nerf
 	OutScanResult.BulletEnd = InEnd;
-	return false;
+	return nullptr;
 }
-bool UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FScanResult& OutScanResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams,
+FBulletHit* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FScanResult& OutScanResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams,
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
 	const TFunction<bool(const FHitResult&)>& IsHitImpenetrable)
 {
@@ -159,7 +159,7 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 		const FVector SceneCastEnd = CurrentSceneCastStart + (CurrentSceneCastDirection * RemainingDistance);
 
 		FScanResult ScanResult;
-		const bool bHitRicochetableHit = PenetrationSceneCastWithExitHitsUsingSpeed(InOutSpeed, InOutSpeedNerfStack, InWorld, ScanResult, CurrentSceneCastStart, SceneCastEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, GetPenetrationSpeedNerf, IsHitRicochetable);
+		FBulletHit* RicochetableHit = PenetrationSceneCastWithExitHitsUsingSpeed(InOutSpeed, InOutSpeedNerfStack, InWorld, ScanResult, CurrentSceneCastStart, SceneCastEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, GetPenetrationSpeedNerf, IsHitRicochetable);
 
 		// Set BulletHit data
 		{
@@ -173,18 +173,16 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 			}
 
 			// Ricochet speed nerf and ricochet hit info
-			if (bHitRicochetableHit)
+			if (RicochetableHit)
 			{
-				FBulletHit& RicochetableHit = ScanResult.BulletHits.Last();
-				RicochetableHit.bIsRicochet = true;
+				RicochetableHit->bIsRicochet = true;
 			}
 		}
 
 		// Apply ricochet speed nerf
-		if (bHitRicochetableHit)
+		if (RicochetableHit)
 		{
-			FBulletHit& RicochetableHit = ScanResult.BulletHits.Last();
-			const float RicochetSpeedNerf = GetRicochetSpeedNerf(RicochetableHit);
+			const float RicochetSpeedNerf = GetRicochetSpeedNerf(*RicochetableHit);
 			InOutSpeed -= RicochetSpeedNerf;
 		}
 
@@ -202,31 +200,28 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 			}
 
 			// Return if there was nothing to ricochet off of
-			if (!bHitRicochetableHit)
+			if (!RicochetableHit)
 			{
 				OutScanResult.BulletEnd = SceneCastEnd;
 				return;
 			}
+			// We are a ricochet hit!
+
+			// Take away the distance traveled of this scene cast from our RemainingDistance
+			RemainingDistance -= RicochetableHit->Distance;
+			if (RemainingDistance == 0.f)
+			{
+				// Edge case: we should end the whole thing if we ran out of distance exactly when we hit a ricochet
+				OutScanResult.BulletEnd = RicochetableHit->Location;
+				return;
+			}
 		}
-		
+
 
 		// SETUP FOR OUR NEXT SCENE CAST
-
-		FBulletHit& RicochetableHit = ScanResult.BulletHits.Last();
-
-		// Take away the distance traveled of this scene cast from our RemainingDistance
-		RemainingDistance -= RicochetableHit.Distance;
-
-		// Edge case: if we ran out of distance exactly when we hit a ricochet
-		if (RemainingDistance == 0.f)
-		{
-			OutScanResult.BulletEnd = RicochetableHit.Location;
-			return;
-		}
-
 		// Next ricochet cast needs a new direction and start location
-		CurrentSceneCastDirection = CurrentSceneCastDirection.MirrorByVector(RicochetableHit.ImpactNormal);
-		CurrentSceneCastStart = RicochetableHit.Location + (CurrentSceneCastDirection * UBFL_CollisionQueryHelpers::SceneCastStartWallAvoidancePadding);
+		CurrentSceneCastDirection = CurrentSceneCastDirection.MirrorByVector(RicochetableHit->ImpactNormal);
+		CurrentSceneCastStart = RicochetableHit->Location + (CurrentSceneCastDirection * UBFL_CollisionQueryHelpers::SceneCastStartWallAvoidancePadding);
 	}
 
 	
