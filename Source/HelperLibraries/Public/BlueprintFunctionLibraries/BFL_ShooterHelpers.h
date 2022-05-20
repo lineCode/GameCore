@@ -60,7 +60,7 @@ struct HELPERLIBRARIES_API FShootResult
 	GENERATED_BODY()
 
 	FShootResult()
-		: ShooterHits(TArray<FShooterHitResult>())
+		: ShooterHits(TArray<TArray<FShooterHitResult>>())
 		, StartLocation(FVector::ZeroVector)
 		, EndLocation(FVector::ZeroVector)
 		, TotalDistanceTraveled(0.f)
@@ -68,8 +68,8 @@ struct HELPERLIBRARIES_API FShootResult
 	{
 	}
 
-	/** Everything the shot hit */
-	TArray<FShooterHitResult> ShooterHits;
+	/** Each array represents the hits from each trace (initial and ricochet traces) */
+	TArray<TArray<FShooterHitResult>> ShooterHits;
 	/** The location where this shot began */
 	FVector StartLocation;
 	/** The location where this shot stopped */

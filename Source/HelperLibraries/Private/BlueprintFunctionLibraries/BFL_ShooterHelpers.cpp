@@ -17,6 +17,9 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
 	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable)
 {
+	OutShootResult.ShooterHits.Empty(1);
+	TArray<FShooterHitResult>& OutputShooterHits = OutShootResult.ShooterHits.Add_GetRef(TArray<FShooterHitResult>());
+
 	OutShootResult.StartLocation = InStart;
 	OutShootResult.StartDirection = (InEnd - InStart).GetSafeNormal();
 
@@ -62,11 +65,11 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 	if (InOutSpeed > 0.f)
 	{
 		// Add found hit results to the OutShootResult
-		OutShootResult.ShooterHits.Reserve(HitResults.Num()); // assume that we will add all of the hits. But, there may end up being reserved space that goes unused if we run out of speed
+		OutputShooterHits.Reserve(HitResults.Num()); // assume that we will add all of the hits. But, there may end up being reserved space that goes unused if we run out of speed
 		for (int32 i = 0; i < HitResults.Num(); ++i) // loop through all hits, comparing each hit with the next so we can treat them as semgents
 		{
 			// Add this hit to our shooter hits
-			FShooterHitResult& AddedShooterHit = OutShootResult.ShooterHits.Add_GetRef(HitResults[i]);
+			FShooterHitResult& AddedShooterHit = OutputShooterHits.Add_GetRef(HitResults[i]);
 			AddedShooterHit.Speed = InOutSpeed;
 
 			if (HitResults[i].bStartPenetrating)
@@ -174,11 +177,12 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 		FShootResult ShootResult;
 		FShooterHitResult* RicochetableHit = PenetrationSceneCastWithExitHitsUsingSpeed(InOutSpeed, InOutPerCmSpeedNerfStack, InWorld, ShootResult, CurrentSceneCastStart, SceneCastEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, GetPenetrationSpeedNerf, IsHitRicochetable);
 		DistanceTraveled += ShootResult.TotalDistanceTraveled;
+		TArray<FShooterHitResult>& ThisSceneCastHitResults = ShootResult.ShooterHits.Last();
 
 		// Set ShooterHit data
 		{
 			// Give data to our shooter hits for this scene cast
-			for (FShooterHitResult& ShooterHit : ShootResult.ShooterHits)
+			for (FShooterHitResult& ShooterHit : ThisSceneCastHitResults)
 			{
 				ShooterHit.RicochetNumber = RicochetNumber;
 				ShooterHit.TraveledDistanceBeforeThisTrace = (DistanceTraveled - ShootResult.TotalDistanceTraveled); // distance up until this scene cast
@@ -198,8 +202,8 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 		}
 
 
-		// Finished with this cast. Add to our output
-		OutShootResult.ShooterHits.Append(ShootResult.ShooterHits);
+		// Finished with this cast. Add this cast's hit results to our output
+		OutShootResult.ShooterHits.Add(ThisSceneCastHitResults);
 
 		// Check if we should end here
 		{
@@ -261,89 +265,6 @@ float UBFL_ShooterHelpers::NerfSpeedPerCm(float& InOutSpeed, const float InDista
 void FShootResult::DebugShot(const UWorld* InWorld, const float InLineSegmentLength) const
 {
 #if ENABLE_DRAW_DEBUG
-	const float DebugLifeTime = 5.f;
-	const FColor TraceColor = FColor::Blue;
-	const FColor HitColor = FColor::Red;
-	const float Thickness = 1.f;
 
-
-	int32 IndexToNextRicochet = ShooterHits.IndexOfByPredicate([](const FShooterHitResult& Hit) -> bool { return Hit.bIsRicochet; });
-	FVector CurrentCastStart = StartLocation;
-	FVector CurrentCastDirection = StartDirection;
-	float CurrentTraveledDistanceBeforeThisCast = 0.f;
-	const int32 NumberOfLineSegments = FMath::CeilToInt(TotalDistanceTraveled / InLineSegmentLength);
-	for (int32 i = 0; i < NumberOfLineSegments; ++i)
-	{
-		const bool bIsGapSegment = (i % 2 != 0); // odd iterations will be gap segments
-		FColor RandomColor = FLinearColor(FMath::RandRange(0.f, 1.f), FMath::RandRange(0.f, 1.f), FMath::RandRange(0.f, 1.f)).ToFColor(false);
-
-
-		const float CurrentDistanceToSegmentStart = (InLineSegmentLength * i) - CurrentTraveledDistanceBeforeThisCast;
-		const float CurrentDistanceToSegmentEnd = CurrentDistanceToSegmentStart + InLineSegmentLength;
-		FVector SegmentStart = CurrentCastStart + (CurrentCastDirection * CurrentDistanceToSegmentStart);
-		FVector SegmentEnd = CurrentCastStart + (CurrentCastDirection * CurrentDistanceToSegmentEnd);
-
-
-		if (ShooterHits.IsValidIndex(IndexToNextRicochet))
-		{
-			const FShooterHitResult& RicochetHit = ShooterHits[IndexToNextRicochet];
-			if (CurrentDistanceToSegmentEnd > RicochetHit.Distance)
-			{
-				if (!bIsGapSegment)
-				{
-					DrawDebugLine(InWorld, SegmentStart, RicochetHit.Location, RandomColor, false, DebugLifeTime, 0, Thickness);
-				}
-
-				if (ShooterHits.IsValidIndex(IndexToNextRicochet + 1))
-				{
-					const FShooterHitResult& HitAfterRicochet = ShooterHits[IndexToNextRicochet + 1];
-					CurrentCastStart = HitAfterRicochet.TraceStart;
-					CurrentCastDirection = (HitAfterRicochet.TraceEnd - HitAfterRicochet.TraceStart).GetSafeNormal();
-					CurrentTraveledDistanceBeforeThisCast = HitAfterRicochet.TraveledDistanceBeforeThisTrace;
-				}
-				else
-				{
-					CurrentCastStart = RicochetHit.Location;
-					CurrentCastDirection = (EndLocation - RicochetHit.Location).GetSafeNormal();
-					CurrentTraveledDistanceBeforeThisCast = RicochetHit.GetTotalDistanceTraveledToThisHit();
-				}
-
-				SegmentEnd = CurrentCastStart + (CurrentCastDirection * CurrentDistanceToSegmentEnd);
-
-				if (!bIsGapSegment)
-				{
-					DrawDebugLine(InWorld, RicochetHit.Location, SegmentEnd, RandomColor, false, DebugLifeTime, 0, Thickness);
-				}
-
-				int32 j = IndexToNextRicochet + 1;
-				while (true)
-				{
-					if (j >= ShooterHits.Num())
-					{
-						IndexToNextRicochet = INDEX_NONE;
-						break;
-					}
-
-					if (ShooterHits[j].bIsRicochet)
-					{
-						IndexToNextRicochet = j;
-						break;
-					}
-				}
-
-				continue;
-			}
-		}
-
-
-		// Temporarily commented so we can focus on making above part always work
-		/*if (!bIsGapSegment)
-		{
-			DrawDebugLine(InWorld, SegmentStart, SegmentEnd, RandomColor, false, DebugLifeTime, 0, Thickness);
-		}*/
-
-
-
-	}
 #endif // ENABLE_DRAW_DEBUG
 }
