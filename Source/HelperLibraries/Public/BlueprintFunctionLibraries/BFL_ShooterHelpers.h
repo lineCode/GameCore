@@ -74,12 +74,14 @@ struct HELPERLIBRARIES_API FShootResult
 	FVector StartLocation;
 	/** The location where this shot stopped */
 	FVector EndLocation;
+	/** The direction shot in */
+	FVector StartDirection;
 	/** The total distance that the hypothetical bullet traveled */
 	float TotalDistanceTraveled;
 	/** The initial speed when this shot began */
 	float InitialSpeed;
 
-	void DebugShot(const UWorld* InWorld) const;
+	void DebugShot(const UWorld* InWorld, const float InLineSegmentLength) const;
 };
 
 

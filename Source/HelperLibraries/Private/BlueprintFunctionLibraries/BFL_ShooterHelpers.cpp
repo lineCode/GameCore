@@ -17,6 +17,9 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
 	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable)
 {
+	OutShootResult.StartLocation = InStart;
+	OutShootResult.StartDirection = (InEnd - InStart).GetSafeNormal();
+
 	TArray<FExitAwareHitResult> HitResults;
 	FExitAwareHitResult* ImpenetrableHit = UBFL_CollisionQueryHelpers::PenetrationSceneCastWithExitHits(InWorld, HitResults, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, IsHitImpenetrable, true);
 
@@ -156,6 +159,7 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 	const TFunctionRef<bool(const FHitResult&)>& IsHitRicochetable)
 {
 	OutShootResult.StartLocation = InStart;
+	OutShootResult.StartDirection = InDirection;
 	OutShootResult.InitialSpeed = InOutSpeed;
 
 	FVector CurrentSceneCastStart = InStart;
@@ -255,27 +259,93 @@ float UBFL_ShooterHelpers::NerfSpeedPerCm(float& InOutSpeed, const float InDista
 	return TraveledThroughDistance;
 }
 
-void FShootResult::DebugShot(const UWorld* InWorld) const
+
+void FShootResult::DebugShot(const UWorld* InWorld, const float InLineSegmentLength) const
 {
 #if ENABLE_DRAW_DEBUG
 	const float DebugLifeTime = 5.f;
 	const FColor TraceColor = FColor::Blue;
 	const FColor HitColor = FColor::Red;
+	const float Thickness = 1.f;
 
 
-	for (const FHitResult& Hit : ShooterHits)
+	int32 IndexToNextRicochet = ShooterHits.IndexOfByPredicate([](const FShooterHitResult& Hit) -> bool { return Hit.bIsRicochet; });
+	FVector CurrentCastStart = StartLocation;
+	FVector CurrentCastDirection = StartDirection;
+	float CurrentTraveledDistanceBeforeThisCast = 0.f;
+	const int32 NumberOfLineSegments = FMath::CeilToInt(TotalDistanceTraveled / InLineSegmentLength);
+	for (int32 i = 0; i < NumberOfLineSegments; ++i)
 	{
-		DrawDebugLine(InWorld, Hit.TraceStart, Hit.Location, TraceColor, false, DebugLifeTime);
-		DrawDebugPoint(InWorld, Hit.ImpactPoint, 10.f, HitColor, false, DebugLifeTime);
-	}
+		const bool bIsGapSegment = (i % 2 != 0); // odd iterations will be gap segments
+		FColor RandomColor = FLinearColor(FMath::RandRange(0.f, 1.f), FMath::RandRange(0.f, 1.f), FMath::RandRange(0.f, 1.f)).ToFColor(false);
 
-	if (ShooterHits.Num() > 0)
-	{
-		DrawDebugLine(InWorld, ShooterHits.Last().Location, EndLocation, TraceColor, false, DebugLifeTime);
-	}
-	else
-	{
-		DrawDebugLine(InWorld, StartLocation, EndLocation, TraceColor, false, DebugLifeTime);
+
+		const float CurrentDistanceToSegmentStart = (InLineSegmentLength * i) - CurrentTraveledDistanceBeforeThisCast;
+		const float CurrentDistanceToSegmentEnd = CurrentDistanceToSegmentStart + InLineSegmentLength;
+		FVector SegmentStart = CurrentCastStart + (CurrentCastDirection * CurrentDistanceToSegmentStart);
+		FVector SegmentEnd = CurrentCastStart + (CurrentCastDirection * CurrentDistanceToSegmentEnd);
+
+
+		if (ShooterHits.IsValidIndex(IndexToNextRicochet))
+		{
+			const FShooterHitResult& RicochetHit = ShooterHits[IndexToNextRicochet];
+			if (CurrentDistanceToSegmentEnd > RicochetHit.Distance)
+			{
+				if (!bIsGapSegment)
+				{
+					DrawDebugLine(InWorld, SegmentStart, RicochetHit.Location, RandomColor, false, DebugLifeTime, 0, Thickness);
+				}
+
+				if (ShooterHits.IsValidIndex(IndexToNextRicochet + 1))
+				{
+					const FShooterHitResult& HitAfterRicochet = ShooterHits[IndexToNextRicochet + 1];
+					CurrentCastStart = HitAfterRicochet.TraceStart;
+					CurrentCastDirection = (HitAfterRicochet.TraceEnd - HitAfterRicochet.TraceStart).GetSafeNormal();
+					CurrentTraveledDistanceBeforeThisCast = HitAfterRicochet.TraveledDistanceBeforeThisTrace;
+				}
+				else
+				{
+					CurrentCastStart = RicochetHit.Location;
+					CurrentCastDirection = (EndLocation - RicochetHit.Location).GetSafeNormal();
+					CurrentTraveledDistanceBeforeThisCast = RicochetHit.GetTotalDistanceTraveledToThisHit();
+				}
+
+				SegmentEnd = CurrentCastStart + (CurrentCastDirection * CurrentDistanceToSegmentEnd);
+
+				if (!bIsGapSegment)
+				{
+					DrawDebugLine(InWorld, RicochetHit.Location, SegmentEnd, RandomColor, false, DebugLifeTime, 0, Thickness);
+				}
+
+				int32 j = IndexToNextRicochet + 1;
+				while (true)
+				{
+					if (j >= ShooterHits.Num())
+					{
+						IndexToNextRicochet = INDEX_NONE;
+						break;
+					}
+
+					if (ShooterHits[j].bIsRicochet)
+					{
+						IndexToNextRicochet = j;
+						break;
+					}
+				}
+
+				continue;
+			}
+		}
+
+
+		// Temporarily commented so we can focus on making above part always work
+		/*if (!bIsGapSegment)
+		{
+			DrawDebugLine(InWorld, SegmentStart, SegmentEnd, RandomColor, false, DebugLifeTime, 0, Thickness);
+		}*/
+
+
+
 	}
 #endif // ENABLE_DRAW_DEBUG
 }
