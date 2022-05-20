@@ -62,8 +62,8 @@ struct HELPERLIBRARIES_API FSceneCastInfo
 	FSceneCastInfo()
 		: StartLocation(FVector::ZeroVector)
 		, EndLocation(FVector::ZeroVector)
+		, StartDirection(FVector::ZeroVector)
 		, TotalDistanceTraveled(0.f)
-		, InitialSpeed(0.f)
 	{
 	}
 
@@ -75,8 +75,6 @@ struct HELPERLIBRARIES_API FSceneCastInfo
 	FVector StartDirection;
 	/** The total distance that the hypothetical bullet traveled */
 	float TotalDistanceTraveled;
-	/** The initial speed when this scene cast began */
-	float InitialSpeed;
 };
 
 /**

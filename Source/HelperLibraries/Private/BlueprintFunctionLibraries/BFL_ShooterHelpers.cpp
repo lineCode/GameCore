@@ -20,7 +20,6 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 {
 	OutSceneCastInfo.StartLocation = InStart;
 	OutSceneCastInfo.StartDirection = (InEnd - InStart).GetSafeNormal();
-	OutSceneCastInfo.InitialSpeed = InOutSpeed;
 
 	TArray<FExitAwareHitResult> HitResults;
 	FExitAwareHitResult* ImpenetrableHit = UBFL_CollisionQueryHelpers::PenetrationSceneCastWithExitHits(InWorld, HitResults, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, IsHitImpenetrable, true);
@@ -164,7 +163,6 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 {
 	OutSceneCastInfo.StartLocation = InStart;
 	OutSceneCastInfo.StartDirection = InDirection;
-	OutSceneCastInfo.InitialSpeed = InOutSpeed;
 
 	FVector CurrentSceneCastStart = InStart;
 	FVector CurrentSceneCastDirection = InDirection;
