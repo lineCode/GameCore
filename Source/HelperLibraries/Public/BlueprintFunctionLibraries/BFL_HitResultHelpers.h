@@ -30,4 +30,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "HitResultHelpers")
 		static float CheapCalculateTraceLength(const FHitResult& InHit);
 
+	/** Adjust a hit result's TraceStart and TraceEnd */
+	static void AdjustTraceRange(FHitResult& InOutHit, const float InTimeAtNewTraceStart, const float InTimeAtNewTraceEnd);
+
 };

@@ -35,9 +35,12 @@ bool UBFL_CollisionQueryHelpers::SceneCastMultiWithExitHits(const UWorld* InWorl
 		DrawDebugForBackwardsStart(InWorld, InCollisionShape, InRotation, BackwardsStart, BackwardsDir);
 	}
 #endif // ENABLE_DRAW_DEBUG
+	FCollisionQueryParams BackwardsCollisionQueryParams = InCollisionQueryParams;
+	BackwardsCollisionQueryParams.bFindInitialOverlaps = false;
+
 	TArray<FHitResult> ExitHitResults;
 	ExitHitResults.Reserve(EntranceHitResults.Num());
-	SceneCastMultiByChannel(InWorld, ExitHitResults, BackwardsStart, InStart, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InCollisionResponseParams);
+	SceneCastMultiByChannel(InWorld, ExitHitResults, BackwardsStart, InStart, InRotation, InTraceChannel, InCollisionShape, BackwardsCollisionQueryParams, InCollisionResponseParams);
 
 
 	// Make our exit hits relative to the forwards cast
@@ -128,9 +131,12 @@ FExitAwareHitResult* UBFL_CollisionQueryHelpers::PenetrationSceneCastWithExitHit
 		DrawDebugForBackwardsStart(InWorld, InCollisionShape, InRotation, BackwardsStart, BackwardsDir);
 	}
 #endif // ENABLE_DRAW_DEBUG
+	FCollisionQueryParams BackwardsCollisionQueryParams = InCollisionQueryParams;
+	BackwardsCollisionQueryParams.bFindInitialOverlaps = false;
+
 	TArray<FHitResult> ExitHitResults;
 	ExitHitResults.Reserve(EntranceHitResults.Num());
-	PenetrationSceneCast(InWorld, ExitHitResults, BackwardsStart, InStart, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams);
+	PenetrationSceneCast(InWorld, ExitHitResults, BackwardsStart, InStart, InRotation, InTraceChannel, InCollisionShape, BackwardsCollisionQueryParams);
 
 
 	MakeBackwardsHitsDataRelativeToForwadsSceneCast(ExitHitResults, InStart, InEnd, BackwardsStart, (ImpenetrableHit ? true : false), bOptimizeBackwardsSceneCastLength);
