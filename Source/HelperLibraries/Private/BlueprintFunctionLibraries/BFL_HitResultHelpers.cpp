@@ -32,7 +32,7 @@ float UBFL_HitResultHelpers::CheapCalculateTraceLength(const FHitResult& InHit)
 	return InHit.Distance * (1 / InHit.Time);
 }
 
-void UBFL_HitResultHelpers::AdjustTraceRange(FHitResult& InOutHit, const float InTimeAtNewTraceStart, const float InTimeAtNewTraceEnd)
+void UBFL_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(FHitResult& InOutHit, const float InTimeAtNewTraceStart, const float InTimeAtNewTraceEnd)
 {
 	const float OriginalTraceLength = CheapCalculateTraceLength(InOutHit);
 
@@ -48,14 +48,14 @@ void UBFL_HitResultHelpers::AdjustTraceRange(FHitResult& InOutHit, const float I
 	}
 
 	const float TotalTimeMultiplier = (InTimeAtNewTraceEnd - InTimeAtNewTraceStart);
-	const float NewTraceLength = OriginalTraceLength * TotalTimeMultiplier;
+	const float NewTraceLength = FMath::Abs(OriginalTraceLength * TotalTimeMultiplier);
 
-	// Update trace-related data to reflect our change
+	// Update trace-related data
 	{
 		InOutHit.Time -= InTimeAtNewTraceStart; // move our hit time with the new start time
 		InOutHit.Time /= TotalTimeMultiplier;   // then adjust it with the total multiplier
 
-		InOutHit.Distance *= NewTraceLength * InOutHit.Time;
+		InOutHit.Distance = NewTraceLength * InOutHit.Time;
 	}
 
 

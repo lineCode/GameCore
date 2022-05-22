@@ -30,7 +30,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "HitResultHelpers")
 		static float CheapCalculateTraceLength(const FHitResult& InHit);
 
-	/** Adjust a hit result's TraceStart and TraceEnd */
-	static void AdjustTraceRange(FHitResult& InOutHit, const float InTimeAtNewTraceStart, const float InTimeAtNewTraceEnd);
+	/**
+	 * Adjust a hit result's TraceStart and TraceEnd while keeping its trace-related data (time and distance) consistent with the modification.
+	 * 
+	 * @param  InOutHit                 Hit to modify
+	 * @param  InTimeAtNewTraceStart    Time of where the new TraceStart location is. Lessthan/Greaterthan 0 to grow/shrink the length of the trace, respectively.
+	 * @param  InTimeAtNewTraceEnd      Time of where the new TraceEnd location is.   Greaterthan/Lessthan 1 to grow/shrink the length of the trace, respectively.
+	 */
+	static void AdjustTraceDataBySlidingTraceStartAndEndByTime(FHitResult& InOutHit, const float InTimeAtNewTraceStart, const float InTimeAtNewTraceEnd);
 
 };
