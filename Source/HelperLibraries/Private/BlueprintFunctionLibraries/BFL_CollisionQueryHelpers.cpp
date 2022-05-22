@@ -43,13 +43,7 @@ bool UBFL_CollisionQueryHelpers::SceneCastMultiWithExitHits(const UWorld* InWorl
 	ExitHitResults.Reserve(EntranceHitResults.Num());
 	SceneCastMultiByChannel(InWorld, ExitHitResults, BackwardsStart, InStart, InRotation, InTraceChannel, InCollisionShape, BackwardsCollisionQueryParams, InCollisionResponseParams);
 
-	// Make our exit hits relative to the forwards cast
-	if (ExitHitResults.Num() > 0)
-	{
-		const float ForwardsSceneCastLength = UBFL_HitResultHelpers::CheapCalculateTraceLength(EntranceHitResults.Last());
-		const float BackwardsSceneCastLength = UBFL_HitResultHelpers::CheapCalculateTraceLength(ExitHitResults.Last());
-		MakeBackwardsHitsDataRelativeToForwadsSceneCast(ExitHitResults, ForwardsSceneCastLength, BackwardsSceneCastLength);
-	}
+	MakeBackwardsHitsDataRelativeToForwadsSceneCast(ExitHitResults, EntranceHitResults);
 
 
 	// Lastly combine these hits together into our output value with the entrance and exit hits in order
@@ -144,12 +138,7 @@ FExitAwareHitResult* UBFL_CollisionQueryHelpers::PenetrationSceneCastWithExitHit
 	ExitHitResults.Reserve(EntranceHitResults.Num());
 	PenetrationSceneCast(InWorld, ExitHitResults, BackwardsStart, InStart, InRotation, InTraceChannel, InCollisionShape, BackwardsCollisionQueryParams);
 
-	if (ExitHitResults.Num() > 0)
-	{
-		const float ForwardsSceneCastLength = UBFL_HitResultHelpers::CheapCalculateTraceLength(EntranceHitResults.Last());
-		const float BackwardsSceneCastLength = UBFL_HitResultHelpers::CheapCalculateTraceLength(ExitHitResults.Last());
-		MakeBackwardsHitsDataRelativeToForwadsSceneCast(ExitHitResults, ForwardsSceneCastLength, BackwardsSceneCastLength);
-	}
+	MakeBackwardsHitsDataRelativeToForwadsSceneCast(ExitHitResults, EntranceHitResults);
 
 
 	const FVector ForwardsDir = (InEnd - InStart).GetSafeNormal();
@@ -302,17 +291,29 @@ FVector UBFL_CollisionQueryHelpers::DetermineBackwardsSceneCastStart(const TArra
 	return OptimizedBackwardsSceneCastStart;
 }
 
-void UBFL_CollisionQueryHelpers::MakeBackwardsHitsDataRelativeToForwadsSceneCast(TArray<FHitResult>& InOutBackwardsHitResults, const float InForwardsSceneCastLength, const float InBackwardsSceneCastLength)
+void UBFL_CollisionQueryHelpers::MakeBackwardsHitsDataRelativeToForwadsSceneCast(TArray<FHitResult>& InOutBackwardsHitResults, const TArray<FHitResult>& InForwardsHitResults)
 {
-	for (FHitResult& HitResult : InOutBackwardsHitResults)
+	if (InOutBackwardsHitResults.Num() > 0)
 	{
-		// Switch TraceStart and TraceEnd
-		UBFL_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(HitResult, 1, 0);
+		const FHitResult& AForwardHit = InForwardsHitResults.Last();
 
-		// Now make the hit's trace length the same as the forwards scene cast length
-		// The backwards length is different when the optimization shortened us OR if we hit a stopping hit and got shortened by wall avoidance padding
-		const float TimeAtNewTraceEnd = InForwardsSceneCastLength / InBackwardsSceneCastLength;
-		UBFL_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(HitResult, 0, TimeAtNewTraceEnd);
+		const float ForwardsSceneCastLength = UBFL_HitResultHelpers::CheapCalculateTraceLength(AForwardHit);
+		const float BackwardsSceneCastLength = UBFL_HitResultHelpers::CheapCalculateTraceLength(InOutBackwardsHitResults.Last());
+
+		for (FHitResult& HitResult : InOutBackwardsHitResults)
+		{
+			// Switch TraceStart and TraceEnd
+			UBFL_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(HitResult, 1, 0);
+
+			// Now make the hit's trace length the same as the forwards scene cast length
+			// The backwards length is different when the optimization shortened it OR if we hit a stopping hit and it got shortened by wall avoidance padding
+			const float TimeAtNewTraceEnd = ForwardsSceneCastLength / BackwardsSceneCastLength;
+			UBFL_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(HitResult, 0, TimeAtNewTraceEnd);
+
+			// Although we just calculated TraceStart and TraceEnd, our forwards hits already have TraceStart and TraceEnd without any floating point errors. May as well use them.
+			HitResult.TraceStart = AForwardHit.TraceStart;
+			HitResult.TraceEnd = AForwardHit.TraceEnd;
+		}
 	}
 }
 

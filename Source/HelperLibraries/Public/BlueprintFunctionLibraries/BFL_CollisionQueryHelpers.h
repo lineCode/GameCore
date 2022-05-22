@@ -138,8 +138,8 @@ private:
 	/** Returns the start point of our backwards scene cast based on information from the forwards cast */
 	static FVector DetermineBackwardsSceneCastStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FHitResult* InHitStoppedAt, const bool bOptimizeBackwardsSceneCastLength, const float SweepShapeBoundingSphereRadius = 0.f);
 
-	/** Modify data of backwards scene cast to be accurate to the forwards scene cast */
-	static void MakeBackwardsHitsDataRelativeToForwadsSceneCast(TArray<FHitResult>& InOutBackwardsHitResults, const float InForwardsSceneCastLength, const float InBackwardsSceneCastLength);
+	/** Modify data of backwards scene cast to be relevant to the forwards scene cast */
+	static void MakeBackwardsHitsDataRelativeToForwadsSceneCast(TArray<FHitResult>& InOutBackwardsHitResults, const TArray<FHitResult>& InForwardsHitResults);
 
 	/** Given entrance and exit hit results, output a combined array of them in order */
 	static void OrderHitResultsInForwardsDirection(TArray<FExitAwareHitResult>& OutOrderedHitResults, const TArray<FHitResult>& InEntranceHitResults, const TArray<FHitResult>& InExitHitResults, const FVector& InForwardsDirection);
