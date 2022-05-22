@@ -7,6 +7,7 @@
 #include "BlueprintFunctionLibraries/BFL_ArrayHelpers.h"
 #include "BlueprintFunctionLibraries/BFL_DrawDebugHelpers.h"
 #include "DrawDebugHelpers.h"
+#include "BlueprintFunctionLibraries/BFL_HitResultHelpers.h"
 
 
 
@@ -302,24 +303,18 @@ void UBFL_CollisionQueryHelpers::MakeBackwardsHitsDataRelativeToForwadsSceneCast
 
 	for (FHitResult& HitResult : InOutBackwardsHitResults)
 	{
-		// Assign expected values in our exit hit result
-		HitResult.TraceStart = InForwardsStart;
-		HitResult.TraceEnd = InForwardsEnd;
+		// Switch TraceStart and TraceEnd
+		UBFL_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(HitResult, 1, 0);
 
 		// Remove/re-add our padding from this hit's distance
 		HitResult.Distance += bStoppedAtHit ? SceneCastStartWallAvoidancePadding : -SceneCastStartWallAvoidancePadding;
 
 		if (bOptimizeBackwardsSceneCastLength)
 		{
-			// Account for the distance that was optimized out in the backwards scene cast
-			HitResult.Distance += (ForwardsSceneCastDistance - BackwardsSceneCastDistance);
+			// Scale up the optimized TraceEnd to go to the InForwardsEnd
+			const float TimeAtNewTraceEnd = ForwardsSceneCastDistance / BackwardsSceneCastDistance;
+			UBFL_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(HitResult, 0, TimeAtNewTraceEnd);
 		}
-
-		// Make the distance relative to the forwards direction
-		HitResult.Distance = (ForwardsSceneCastDistance - HitResult.Distance); // a oneminus-like operation
-
-		// Now that we have corrected Distance, recalculate Time to be correct
-		HitResult.Time = FMath::GetRangePct(FVector2D(0.f, ForwardsSceneCastDistance), HitResult.Distance);
 	}
 }
 
