@@ -27,4 +27,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "HitResultHelpers")
 		static float GetTraceLengthFromHit(const FHitResult& Hit, const bool bEnsureThatDistanceIsNotCalculated);
 
+	/** Adjust a hit result's TraceStart and TraceEnd */
+	static void AdjustTraceRange(FHitResult& InOutHit, const float InTimeAtNewTraceStart, const float InTimeAtNewTraceEnd);
+
 };
