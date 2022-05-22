@@ -43,9 +43,14 @@ bool UBFL_CollisionQueryHelpers::SceneCastMultiWithExitHits(const UWorld* InWorl
 	ExitHitResults.Reserve(EntranceHitResults.Num());
 	SceneCastMultiByChannel(InWorld, ExitHitResults, BackwardsStart, InStart, InRotation, InTraceChannel, InCollisionShape, BackwardsCollisionQueryParams, InCollisionResponseParams);
 
-
 	// Make our exit hits relative to the forwards cast
-	MakeBackwardsHitsDataRelativeToForwadsSceneCast(ExitHitResults, InStart, InEnd, BackwardsStart, bHitBlockingHit, bOptimizeBackwardsSceneCastLength);
+	if (ExitHitResults.Num() > 0)
+	{
+		const float ForwardsSceneCastLength = UBFL_HitResultHelpers::CheapCalculateTraceLength(EntranceHitResults.Last());
+		const float BackwardsSceneCastLength = UBFL_HitResultHelpers::CheapCalculateTraceLength(ExitHitResults.Last());
+		MakeBackwardsHitsDataRelativeToForwadsSceneCast(ExitHitResults, ForwardsSceneCastLength, BackwardsSceneCastLength);
+	}
+
 
 	// Lastly combine these hits together into our output value with the entrance and exit hits in order
 	const FVector ForwardsDir = (InEnd - InStart).GetSafeNormal();
@@ -139,8 +144,13 @@ FExitAwareHitResult* UBFL_CollisionQueryHelpers::PenetrationSceneCastWithExitHit
 	ExitHitResults.Reserve(EntranceHitResults.Num());
 	PenetrationSceneCast(InWorld, ExitHitResults, BackwardsStart, InStart, InRotation, InTraceChannel, InCollisionShape, BackwardsCollisionQueryParams);
 
+	if (ExitHitResults.Num() > 0)
+	{
+		const float ForwardsSceneCastLength = UBFL_HitResultHelpers::CheapCalculateTraceLength(EntranceHitResults.Last());
+		const float BackwardsSceneCastLength = UBFL_HitResultHelpers::CheapCalculateTraceLength(ExitHitResults.Last());
+		MakeBackwardsHitsDataRelativeToForwadsSceneCast(ExitHitResults, ForwardsSceneCastLength, BackwardsSceneCastLength);
+	}
 
-	MakeBackwardsHitsDataRelativeToForwadsSceneCast(ExitHitResults, InStart, InEnd, BackwardsStart, (ImpenetrableHit ? true : false), bOptimizeBackwardsSceneCastLength);
 
 	const FVector ForwardsDir = (InEnd - InStart).GetSafeNormal();
 	OrderHitResultsInForwardsDirection(OutHits, EntranceHitResults, ExitHitResults, ForwardsDir);
@@ -292,29 +302,17 @@ FVector UBFL_CollisionQueryHelpers::DetermineBackwardsSceneCastStart(const TArra
 	return OptimizedBackwardsSceneCastStart;
 }
 
-void UBFL_CollisionQueryHelpers::MakeBackwardsHitsDataRelativeToForwadsSceneCast(TArray<FHitResult>& InOutBackwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FVector& InBackwardsStart, const bool bStoppedAtHit, const bool bOptimizeBackwardsSceneCastLength)
+void UBFL_CollisionQueryHelpers::MakeBackwardsHitsDataRelativeToForwadsSceneCast(TArray<FHitResult>& InOutBackwardsHitResults, const float InForwardsSceneCastLength, const float InBackwardsSceneCastLength)
 {
-	const float ForwardsSceneCastDistance = FVector::Distance(InForwardsStart, InForwardsEnd); // same as our pre-optimized backwards scene cast distance
-	float BackwardsSceneCastDistance = ForwardsSceneCastDistance;
-	if (bOptimizeBackwardsSceneCastLength)
-	{
-		BackwardsSceneCastDistance = FVector::Distance(InBackwardsStart, InForwardsStart);
-	}
-
 	for (FHitResult& HitResult : InOutBackwardsHitResults)
 	{
 		// Switch TraceStart and TraceEnd
 		UBFL_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(HitResult, 1, 0);
 
-		// Remove/re-add our padding from this hit's distance
-		HitResult.Distance += bStoppedAtHit ? SceneCastStartWallAvoidancePadding : -SceneCastStartWallAvoidancePadding;
-
-		if (bOptimizeBackwardsSceneCastLength)
-		{
-			// Scale up the optimized TraceEnd to go to the InForwardsEnd
-			const float TimeAtNewTraceEnd = ForwardsSceneCastDistance / BackwardsSceneCastDistance;
-			UBFL_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(HitResult, 0, TimeAtNewTraceEnd);
-		}
+		// Now make the hit's trace length the same as the forwards scene cast length
+		// The backwards length is different when the optimization shortened us OR if we hit a stopping hit and got shortened by wall avoidance padding
+		const float TimeAtNewTraceEnd = InForwardsSceneCastLength / InBackwardsSceneCastLength;
+		UBFL_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(HitResult, 0, TimeAtNewTraceEnd);
 	}
 }
 
