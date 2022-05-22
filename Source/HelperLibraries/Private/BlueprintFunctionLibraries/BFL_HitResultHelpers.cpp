@@ -15,25 +15,19 @@ bool UBFL_HitResultHelpers::AreHitsFromSameTrace(const FHitResult& HitA, const F
 	return bSameTrace;
 }
 
-float UBFL_HitResultHelpers::GetTraceLengthFromHit(const FHitResult& Hit, const bool bEnsureThatDistanceIsNotCalculated)
+float UBFL_HitResultHelpers::CheapCalculateTraceLength(const FHitResult& InHit)
 {
-	if (Hit.TraceStart == Hit.TraceEnd)
+	if (InHit.TraceStart == InHit.TraceEnd)
 	{
 		return 0.f;
 	}
 
-	if (Hit.Time == 0.f)
+	if (InHit.Time == 0.f)
 	{
-		if (bEnsureThatDistanceIsNotCalculated)
-		{
-			UE_LOG(LogHitResultHelpers, Warning, TEXT("%s() Cannot extract trace length from hit result with time of 0"), ANSI_TO_TCHAR(__FUNCTION__));
-			check(0);
-			return -1.f;
-		}
-
-		return FVector::Distance(Hit.TraceStart, Hit.TraceEnd);
+		UE_LOG(LogHitResultHelpers, Verbose, TEXT("%s() Cannot cheaply calculate trace length from a hit result with time of 0. Fall back on normal (more expensive) method for calculating"), ANSI_TO_TCHAR(__FUNCTION__));
+		return FVector::Distance(InHit.TraceStart, InHit.TraceEnd);
 	}
 	
 	// Return the hit's distance scaled up by the trace time
-	return Hit.Distance * (1 / Hit.Time);
+	return InHit.Distance * (1 / InHit.Time);
 }

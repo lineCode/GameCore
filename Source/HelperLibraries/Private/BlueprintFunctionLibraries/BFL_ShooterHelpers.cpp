@@ -26,7 +26,7 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 
 
 	const FVector SceneCastDirection = (InEnd - InStart).GetSafeNormal();
-	const float SceneCastDistance = HitResults.Num() > 0 ? UBFL_HitResultHelpers::GetTraceLengthFromHit(HitResults.Last(), false) : FVector::Distance(InStart, InEnd);
+	const float SceneCastDistance = HitResults.Num() > 0 ? UBFL_HitResultHelpers::CheapCalculateTraceLength(HitResults.Last()) : FVector::Distance(InStart, InEnd);
 
 	// For this segment (from TraceStart to the first hit), apply speed nerfs and see if we stopped
 	{

@@ -22,9 +22,12 @@ public:
 	/** Returns true if the two given hits were from the same trace */
 	UFUNCTION(BlueprintPure, Category = "HitResultHelpers")
 		static bool AreHitsFromSameTrace(const FHitResult& HitA, const FHitResult& HitB);
-
-	/** Returns the total distance of the trace that this hit result was involved in */
+	
+	/**
+	 * Avoids having to run a square root distance calculation to calculate a hit's trace's length.
+	 * If your hit has a known Time value of 0, you minus well just call FVector::Distance() since that is this function's fallback calculation for this case.
+	 */
 	UFUNCTION(BlueprintPure, Category = "HitResultHelpers")
-		static float GetTraceLengthFromHit(const FHitResult& Hit, const bool bEnsureThatDistanceIsNotCalculated);
+		static float CheapCalculateTraceLength(const FHitResult& InHit);
 
 };
