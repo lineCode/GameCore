@@ -7,6 +7,7 @@
 #include "BlueprintFunctionLibraries/BFL_HitResultHelpers.h"
 #include "BlueprintFunctionLibraries/BFL_DrawDebugHelpers.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 
@@ -20,6 +21,7 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable)
 {
 	OutSceneCastResult.StartLocation = InStart;
+	OutSceneCastResult.StartSpeed = InOutSpeed;
 	OutSceneCastResult.StartDirection = (InEnd - InStart).GetSafeNormal();
 
 	TArray<FExitAwareHitResult> HitResults;
@@ -56,7 +58,9 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 		if (InOutSpeed < 0.f)
 		{
 			OutSceneCastResult.EndLocation = InStart + (SceneCastDirection * TraveledThroughDistance);
+			OutSceneCastResult.EndTime = TraveledThroughDistance / SceneCastDistance;
 			OutSceneCastResult.LengthFromStartToEnd = TraveledThroughDistance;
+			OutSceneCastResult.EndSpeed = 0.f;
 			return nullptr;
 		}
 	}
@@ -83,7 +87,9 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 			{
 				// Stop - don't calculate penetration nerfing on impenetrable hit
 				OutSceneCastResult.EndLocation = AddedShooterHit.Location;
+				OutSceneCastResult.EndTime = AddedShooterHit.Time;
 				OutSceneCastResult.LengthFromStartToEnd = AddedShooterHit.Distance;
+				OutSceneCastResult.EndSpeed = InOutSpeed >= 0.f ? InOutSpeed : 0.f;
 				return &AddedShooterHit;
 			}
 
@@ -134,7 +140,9 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 				if (InOutSpeed < 0.f)
 				{
 					OutSceneCastResult.EndLocation = AddedShooterHit.Location + (SceneCastDirection * TraveledThroughDistance);
+					OutSceneCastResult.EndTime = AddedShooterHit.Time + (TraveledThroughDistance / SceneCastDistance);
 					OutSceneCastResult.LengthFromStartToEnd = AddedShooterHit.Distance + TraveledThroughDistance;
+					OutSceneCastResult.EndSpeed = 0.f;
 					return nullptr;
 				}
 			}
@@ -143,7 +151,9 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 
 	// InOutSpeed made it past every nerf
 	OutSceneCastResult.EndLocation = InEnd;
+	OutSceneCastResult.EndTime = 1.f;
 	OutSceneCastResult.LengthFromStartToEnd = SceneCastDistance;
+	OutSceneCastResult.EndSpeed = InOutSpeed;
 	return nullptr;
 }
 FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(float& InOutSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FSceneCastResult& OutSceneCastResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams,
@@ -252,12 +262,66 @@ float UBFL_ShooterHelpers::NerfSpeedPerCm(float& InOutSpeed, const float InDista
 void UBFL_ShooterHelpers::DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const TArray<FSceneCastResult>& InSceneCastResults, const float InInitialSpeed, const float InSegmentsLength, const float InSegmentsSpacingLength)
 {
 	const float DebugLifeTime = 5.f;
-	const FColor TraceColor = FColor::Blue;
+	const FLinearColor InitialSpeedColor = FColor::Red;
+	const FLinearColor OutOfSpeedColor = FColor::Blue;
 	const FColor HitColor = FColor::Red;
 	const float Thickness = 1.f;
 
 	for (const FSceneCastResult& SceneCastResult : InSceneCastResults)
 	{
-		UBFL_DrawDebugHelpers::DrawDebugLineDotted(InWorld, SceneCastResult.StartLocation, SceneCastResult.EndLocation, TraceColor, InSegmentsSpacingLength, InSegmentsSpacingLength, false, DebugLifeTime, 0, Thickness);
+		const FVector& StartLocation = SceneCastResult.StartLocation;
+		const FVector& EndLocation = SceneCastResult.EndLocation;
+
+		const FVector Direction = (EndLocation - StartLocation).GetSafeNormal();
+		const float FullLength = SceneCastResult.LengthFromStartToEnd;
+		const float NumberOfLineSegments = FMath::CeilToInt(FullLength / (InSegmentsLength + InSegmentsSpacingLength));
+
+		for (int32 i = 0; i < NumberOfLineSegments; ++i)
+		{
+			float DistanceToLineSegmentStart = (InSegmentsLength + InSegmentsSpacingLength) * i;
+			float DistanceToLineSegmentEnd = DistanceToLineSegmentStart + InSegmentsLength;
+
+			if (DistanceToLineSegmentEnd > FullLength)
+			{
+				DistanceToLineSegmentEnd = FullLength;
+			}
+
+			const FVector LineSegmentStart = StartLocation + (Direction * DistanceToLineSegmentStart);
+			const FVector LineSegmentEnd = StartLocation + (Direction * DistanceToLineSegmentEnd);
+
+
+			// Find the color for this segment
+			float RatioBehindLineSegmentStart = 0.f;
+			float SpeedBehindLineSegmentStart = SceneCastResult.StartSpeed;
+			float RatioInfrontOfLineSegmentStart = 1.f;
+			float SpeedInfrontOfLineSegmentStart = SceneCastResult.EndSpeed;
+			for (const FShooterHitResult& Hit : SceneCastResult.HitResults)
+			{
+				if (DistanceToLineSegmentStart > Hit.Distance)
+				{
+					RatioBehindLineSegmentStart = Hit.Time / SceneCastResult.EndTime;
+					SpeedBehindLineSegmentStart = Hit.Speed;
+					continue;
+				}
+				if (Hit.Distance > DistanceToLineSegmentStart)
+				{
+					RatioInfrontOfLineSegmentStart = Hit.Time / SceneCastResult.EndTime;
+					SpeedInfrontOfLineSegmentStart = Hit.Speed;
+					break;
+				}
+			}
+
+			const float RatioForLineSegmentStart = DistanceToLineSegmentStart / FullLength;
+			// Split segment into more segments where each starts at an entrance
+			/*const float RatioForLineSegmentEnd = DistanceToLineSegmentEnd / FullLength;
+			if (RatioForLineSegmentEnd > RatioInfrontOfLineSegmentStart)
+			{
+
+			}*/
+
+
+			const float SpeedAtLineSegmentStart = FMath::Lerp(SpeedBehindLineSegmentStart, SpeedInfrontOfLineSegmentStart, RatioForLineSegmentStart / RatioInfrontOfLineSegmentStart);
+			DrawDebugLine(InWorld, LineSegmentStart, LineSegmentEnd, FMath::Lerp(InitialSpeedColor, OutOfSpeedColor, 1 - (SpeedAtLineSegmentStart / InInitialSpeed)).ToFColor(true), false, DebugLifeTime, 0, Thickness);
+		}
 	}
 }

@@ -62,8 +62,11 @@ struct HELPERLIBRARIES_API FSceneCastResult
 	FSceneCastResult()
 		: HitResults(TArray<FShooterHitResult>())
 		, StartLocation(FVector::ZeroVector)
-		, EndLocation(FVector::ZeroVector)
+		, StartSpeed(0.f)
 		, StartDirection(FVector::ZeroVector)
+		, EndLocation(FVector::ZeroVector)
+		, EndTime(0.f)
+		, EndSpeed(0.f)
 		, LengthFromStartToEnd(0.f)
 	{
 	}
@@ -72,10 +75,16 @@ struct HELPERLIBRARIES_API FSceneCastResult
 	TArray<FShooterHitResult> HitResults;
 	/** The location where this scene cast began */
 	FVector StartLocation;
-	/** The location where this scene cast stopped */
-	FVector EndLocation;
+	/** The speed this scene cast started with */
+	float StartSpeed;
 	/** The direction casted in */
 	FVector StartDirection;
+	/** The location where we were stopped */
+	FVector EndLocation;
+	/** The time where we were stopped */
+	float EndTime;
+	/** The speed when we stopped */
+	float EndSpeed;
 	/** Distance from StartLocation to EndLocation */
 	float LengthFromStartToEnd;
 };
