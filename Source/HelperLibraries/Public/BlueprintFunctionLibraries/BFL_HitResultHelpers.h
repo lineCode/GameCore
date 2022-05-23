@@ -32,7 +32,7 @@ public:
 
 	/**
 	 * Adjust a hit result's TraceStart and TraceEnd while keeping its trace-related data (time and distance) consistent with the modification.
-	 * It's rare when you would want to change a HitResult's gathered data, but this becomes useful when creating custom collision queries where you need to adjust initial data of the hits to more accuratly describe your query.
+	 * It's rare when you would want to change a HitResult's gathered data, but this becomes useful when creating custom collision queries where you need to adjust data of the hits to more accuratly describe your query.
 	 * 
 	 * @param  InOutHit                 Hit to modify
 	 * @param  InTimeAtNewTraceStart    Time of where the new TraceStart location is. Lessthan/Greaterthan 0 to grow/shrink the length of the trace, respectively.
