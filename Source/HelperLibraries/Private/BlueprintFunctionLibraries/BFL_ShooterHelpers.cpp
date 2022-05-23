@@ -291,36 +291,39 @@ void UBFL_ShooterHelpers::DebugRicochetingPenetrationSceneCastWithExitHitsUsingS
 
 
 			// Find the color for this segment
-			float RatioBehindLineSegmentStart = 0.f;
+			// NOTE: we use the term "Time" as in the ratio from FSceneCastResult::StartLocation to FSceneCastResult::EndLocation. This is not the same as FHitResult::Time!
+			float TimeBehindLineSegmentStart = 0.f;
 			float SpeedBehindLineSegmentStart = SceneCastResult.StartSpeed;
-			float RatioInfrontOfLineSegmentStart = 1.f;
+			float TimeInfrontOfLineSegmentStart = 1.f;
 			float SpeedInfrontOfLineSegmentStart = SceneCastResult.EndSpeed;
+			TArray<FShooterHitResult> HitsWithinLineSegment;
 			for (const FShooterHitResult& Hit : SceneCastResult.HitResults)
 			{
 				if (DistanceToLineSegmentStart > Hit.Distance)
 				{
-					RatioBehindLineSegmentStart = Hit.Time / SceneCastResult.EndTime;
+					TimeBehindLineSegmentStart = Hit.Time / SceneCastResult.EndTime;
 					SpeedBehindLineSegmentStart = Hit.Speed;
 					continue;
 				}
+				HitsWithinLineSegment.Add(Hit);
 				if (Hit.Distance > DistanceToLineSegmentStart)
 				{
-					RatioInfrontOfLineSegmentStart = Hit.Time / SceneCastResult.EndTime;
+					TimeInfrontOfLineSegmentStart = Hit.Time / SceneCastResult.EndTime;
 					SpeedInfrontOfLineSegmentStart = Hit.Speed;
 					break;
 				}
 			}
 
-			const float RatioForLineSegmentStart = DistanceToLineSegmentStart / FullLength;
+			const float TimeOfLineSegmentStart = DistanceToLineSegmentStart / FullLength;
 			// Split segment into more segments where each starts at an entrance
-			/*const float RatioForLineSegmentEnd = DistanceToLineSegmentEnd / FullLength;
-			if (RatioForLineSegmentEnd > RatioInfrontOfLineSegmentStart)
+			/*const float TimeOfLineSegmentEnd = DistanceToLineSegmentEnd / FullLength;
+			if (TimeOfLineSegmentEnd > TimeInfrontOfLineSegmentStart)
 			{
 
 			}*/
 
 
-			const float SpeedAtLineSegmentStart = FMath::Lerp(SpeedBehindLineSegmentStart, SpeedInfrontOfLineSegmentStart, RatioForLineSegmentStart / RatioInfrontOfLineSegmentStart);
+			const float SpeedAtLineSegmentStart = FMath::Lerp(SpeedBehindLineSegmentStart, SpeedInfrontOfLineSegmentStart, TimeOfLineSegmentStart / TimeInfrontOfLineSegmentStart);
 			DrawDebugLine(InWorld, LineSegmentStart, LineSegmentEnd, FMath::Lerp(InitialSpeedColor, OutOfSpeedColor, 1 - (SpeedAtLineSegmentStart / InInitialSpeed)).ToFColor(true), false, DebugLifeTime, 0, Thickness);
 		}
 	}
