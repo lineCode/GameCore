@@ -5,6 +5,7 @@
 
 #include "BlueprintFunctionLibraries/BFL_CollisionQueryHelpers.h"
 #include "BlueprintFunctionLibraries/BFL_HitResultHelpers.h"
+#include "BlueprintFunctionLibraries/BFL_DrawDebugHelpers.h"
 #include "DrawDebugHelpers.h"
 
 
@@ -246,4 +247,17 @@ float UBFL_ShooterHelpers::NerfSpeedPerCm(float& InOutSpeed, const float InDista
 	InOutSpeed -= SpeedToTakeAway;
 
 	return TraveledThroughDistance;
+}
+
+void UBFL_ShooterHelpers::DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const TArray<FSceneCastResult>& InSceneCastResults, const float InInitialSpeed, const float InSegmentsLength, const float InSegmentsSpacingLength)
+{
+	const float DebugLifeTime = 5.f;
+	const FColor TraceColor = FColor::Blue;
+	const FColor HitColor = FColor::Red;
+	const float Thickness = 1.f;
+
+	for (const FSceneCastResult& SceneCastResult : InSceneCastResults)
+	{
+		UBFL_DrawDebugHelpers::DrawDebugLineDotted(InWorld, SceneCastResult.StartLocation, SceneCastResult.EndLocation, TraceColor, InSegmentsSpacingLength, InSegmentsSpacingLength, false, DebugLifeTime, 0, Thickness);
+	}
 }

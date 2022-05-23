@@ -142,6 +142,9 @@ public:
 		const TFunctionRef<bool(const FHitResult&)>& IsHitRicochetable = DefaultIsHitRicochetable);
 	//  END Custom query
 
+
+	static void DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const TArray<FSceneCastResult>& InSceneCastResults, const float InInitialSpeed, const float InSegmentsLength = 20.f, const float InSegmentsSpacingLength = 20.f);
+
 private:
 	static float NerfSpeedPerCm(float& InOutSpeed, const float InDistanceToTravel, const float InNerfPerCm);
 };
