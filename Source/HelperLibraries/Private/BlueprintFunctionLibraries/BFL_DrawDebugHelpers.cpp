@@ -37,7 +37,7 @@ void UBFL_DrawDebugHelpers::DrawDebugCollisionShape(const UWorld* InWorld, const
 #endif // ENABLE_DRAW_DEBUG
 }
 
-void UBFL_DrawDebugHelpers::DrawDebugLineDotted(const UWorld* InWorld, const FVector& InStart, const FVector& InEnd, const FColor& Color, const float InSegmentsLength, const float InSegmentsSpacingLength, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness)
+void UBFL_DrawDebugHelpers::DrawDebugLineDotted(const UWorld* InWorld, const FVector& InStart, const FVector& InEnd, const FColor& Color, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength)
 {
 #if ENABLE_DRAW_DEBUG
 	const FVector Direction = (InEnd - InStart).GetSafeNormal();

@@ -20,5 +20,5 @@ public:
 	/** Accepts a generic FCollisionShape to draw */
 	static void DrawDebugCollisionShape(const UWorld* InWorld, const FVector& Center, const FCollisionShape& CollisionShape, const FQuat& Rotation, const FColor& Color, const int32 Segments = 16, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f);
 
-	static void DrawDebugLineDotted(const UWorld* InWorld, const FVector& InStart, const FVector& InEnd, const FColor& Color, const float InSegmentsLength = 20.f, const float InSegmentsSpacingLength = 20.f, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f);
+	static void DrawDebugLineDotted(const UWorld* InWorld, const FVector& InStart, const FVector& InEnd, const FColor& Color, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 10.f);
 };
