@@ -42,4 +42,32 @@ public:
 	 * E.g. having a weapon's muzzle aim towards the Player's look point.
 	 */
 	static FVector GetLocationAimDirection(const UWorld* InWorld, const FCollisionQueryParams& Params, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location);
+
+	/** Performs linear interpolation on any number of values */
+	template <class T>
+	static T LerpMultiple(const TArray<T>& Values, float InAlpha)
+	{
+		if (Values.Num() <= 0)
+		{
+			UE_LOG(LogMathHelpers, Warning, TEXT("%s() was not given any values to lerp between! Returning a default value."), ANSI_TO_TCHAR(__FUNCTION__));
+			return T();
+		}
+
+		InAlpha = FMath::Clamp(InAlpha, 0.f, 1.f);
+
+
+		// Scale the alpha by the number of lerps
+		const int32 NumberOfLerps = (Values.Num() - 1);
+		const float ScaledAlpha = (InAlpha * NumberOfLerps);
+
+		// Get the indexes of A and B to lerp between
+		const int32 IndexOfA = FMath::FloorToInt(ScaledAlpha);
+		const int32 IndexOfB = FMath::CeilToInt(ScaledAlpha);
+
+		// Get the alpha relative to this A and B (the decimal part of our ScaledAlpha)
+		const float LerpAlpha = ScaledAlpha - IndexOfA;
+
+		// Perform the lerp
+		return FMath::Lerp<T>(Values[IndexOfA], Values[IndexOfB], LerpAlpha);
+	}
 };
