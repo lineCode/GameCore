@@ -64,17 +64,17 @@ public:
 		// Check for alpha outside of 0 and 1
 		{
 			const int32 LastIndex = InValues.Num() - 1;
-			if (IndexOfA >= LastIndex)
+			if (IndexOfB > LastIndex)
 			{
 				IndexOfB = LastIndex;
 				IndexOfA = LastIndex - 1;
-				IndexOfA = FMath::Min(IndexOfA, LastIndex); // keep it in range
+				IndexOfA = FMath::Max(IndexOfA, 0); // keep it in range
 			}
-			else if (IndexOfB <= 0)
+			else if (IndexOfA < 0)
 			{
 				IndexOfA = 0;
 				IndexOfB = 1;
-				IndexOfB = FMath::Max(IndexOfB, 0); // keep it in range
+				IndexOfB = FMath::Min(IndexOfB, LastIndex); // keep it in range
 			}
 		}
 
