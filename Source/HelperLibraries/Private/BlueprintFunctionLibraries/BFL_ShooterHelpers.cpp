@@ -376,5 +376,8 @@ void UBFL_ShooterHelpers::DebugDebugLineForPenetrationSceneCastWithExitHitsUsing
 }
 void UBFL_ShooterHelpers::DrawDebugTextForPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const FSceneCastResult& InSceneCastResult, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor)
 {
-	DrawDebugString(InWorld, InSceneCastResult.StartLocation, TEXT("DEBUG TEXT"));
+	for (const FShooterHitResult& Hit : InSceneCastResult.HitResults)
+	{
+		DrawDebugString(InWorld, Hit.Location, TEXT("DEBUG TEXT"));
+	}
 }
