@@ -259,7 +259,16 @@ float UBFL_ShooterHelpers::NerfSpeedPerCm(float& InOutSpeed, const float InDista
 	return TraveledThroughDistance;
 }
 
-void UBFL_ShooterHelpers::DebugPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const FSceneCastResult& InSceneCastResult, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor)
+
+void UBFL_ShooterHelpers::DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const TArray<FSceneCastResult>& InSceneCastResults, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor)
+{
+	for (const FSceneCastResult& SceneCastResult : InSceneCastResults)
+	{
+		DebugDebugLineForPenetrationSceneCastWithExitHitsUsingSpeed(InWorld, SceneCastResult, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
+		DrawDebugTextForPenetrationSceneCastWithExitHitsUsingSpeed(InWorld, SceneCastResult, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
+	}
+}
+void UBFL_ShooterHelpers::DebugDebugLineForPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const FSceneCastResult& InSceneCastResult, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor)
 {
 	const FVector Direction = (InSceneCastResult.EndLocation - InSceneCastResult.StartLocation).GetSafeNormal();
 	const float SceneCastTravelDistance = InSceneCastResult.LengthFromStartToEnd;
@@ -365,11 +374,7 @@ void UBFL_ShooterHelpers::DebugPenetrationSceneCastWithExitHitsUsingSpeed(const 
 		}
 	}
 }
-
-void UBFL_ShooterHelpers::DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const TArray<FSceneCastResult>& InSceneCastResults, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor)
+void UBFL_ShooterHelpers::DrawDebugTextForPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const FSceneCastResult& InSceneCastResult, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor)
 {
-	for (const FSceneCastResult& SceneCastResult : InSceneCastResults)
-	{
-		DebugPenetrationSceneCastWithExitHitsUsingSpeed(InWorld, SceneCastResult, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
-	}
+	DrawDebugString(InWorld, InSceneCastResult.StartLocation, TEXT("DEBUG TEXT"));
 }
