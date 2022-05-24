@@ -45,29 +45,43 @@ public:
 
 	/** Performs linear interpolation on any number of values */
 	template <class T>
-	static T LerpMultiple(const TArray<T>& Values, float InAlpha)
+	static T LerpMultiple(const TArray<T>& InValues, const float InAlpha)
 	{
-		if (Values.Num() <= 0)
+		if (InValues.Num() <= 0)
 		{
-			UE_LOG(LogMathHelpers, Warning, TEXT("%s() was not given any values to lerp between! Returning a default value."), ANSI_TO_TCHAR(__FUNCTION__));
+			UE_LOG(/*LogMathHelpers*/LogTemp, Warning, TEXT("%s() was not given any values to lerp between! Returning a default value."), ANSI_TO_TCHAR(__FUNCTION__)); // NOTE: could not figure out how to use the private LogMathHelpers log category in this templated function so we are just using LogTemp
 			return T();
 		}
 
-		InAlpha = FMath::Clamp(InAlpha, 0.f, 1.f);
-
-
 		// Scale the alpha by the number of lerps
-		const int32 NumberOfLerps = (Values.Num() - 1);
+		const int32 NumberOfLerps = (InValues.Num() - 1);
 		const float ScaledAlpha = (InAlpha * NumberOfLerps);
 
 		// Get the indexes of A and B to lerp between
-		const int32 IndexOfA = FMath::FloorToInt(ScaledAlpha);
-		const int32 IndexOfB = FMath::CeilToInt(ScaledAlpha);
+		int32 IndexOfA = FMath::FloorToInt(ScaledAlpha);
+		int32 IndexOfB = FMath::CeilToInt(ScaledAlpha);
+
+		// Check for alpha outside of 0 and 1
+		{
+			const int32 LastIndex = InValues.Num() - 1;
+			if (IndexOfB > LastIndex)
+			{
+				IndexOfB = LastIndex;
+				IndexOfA = LastIndex - 1;
+				IndexOfA = FMath::Max(IndexOfA, 0); // keep it in range
+			}
+			else if (IndexOfA < 0)
+			{
+				IndexOfA = 0;
+				IndexOfB = 1;
+				IndexOfB = FMath::Min(IndexOfB, LastIndex); // keep it in range
+			}
+		}
 
 		// Get the alpha relative to this A and B (the decimal part of our ScaledAlpha)
 		const float LerpAlpha = ScaledAlpha - IndexOfA;
 
 		// Perform the lerp
-		return FMath::Lerp<T>(Values[IndexOfA], Values[IndexOfB], LerpAlpha);
+		return FMath::Lerp<T>(InValues[IndexOfA], InValues[IndexOfB], LerpAlpha);
 	}
 };
