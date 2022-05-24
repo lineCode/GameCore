@@ -152,7 +152,8 @@ public:
 	//  END Custom query
 
 
-	static void DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const TArray<FSceneCastResult>& InSceneCastResults, const float InInitialSpeed, const float InSegmentsLength = 20.f, const float InSegmentsSpacingLength = 0.f);
+	static void DebugPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const FSceneCastResult& InSceneCastResult, const float InInitialSpeed, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f, const FLinearColor& FullSpeedColor = FColor::Red, const FLinearColor& NoSpeedColor = FColor::Blue, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f);
+	static void DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const TArray<FSceneCastResult>& InSceneCastResults, const float InInitialSpeed, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f, const FLinearColor& FullSpeedColor = FColor::Red, const FLinearColor& NoSpeedColor = FColor::Blue, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f);
 
 private:
 	static float NerfSpeedPerCm(float& InOutSpeed, const float InDistanceToTravel, const float InNerfPerCm);

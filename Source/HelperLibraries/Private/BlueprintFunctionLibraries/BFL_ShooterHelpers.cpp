@@ -259,121 +259,117 @@ float UBFL_ShooterHelpers::NerfSpeedPerCm(float& InOutSpeed, const float InDista
 	return TraveledThroughDistance;
 }
 
-void UBFL_ShooterHelpers::DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const TArray<FSceneCastResult>& InSceneCastResults, const float InInitialSpeed, const float InSegmentsLength, const float InSegmentsSpacingLength)
+void UBFL_ShooterHelpers::DebugPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const FSceneCastResult& InSceneCastResult, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor, const float InSegmentsLength, const float InSegmentsSpacingLength)
 {
-	const float DebugLifeTime = 5.f;
-	const FLinearColor InitialSpeedColor = FColor::Red;
-	const FLinearColor OutOfSpeedColor = FColor::Blue;
-	const FColor HitColor = FColor::Red;
-	const float Thickness = 1.f;
+	const FVector Direction = (InSceneCastResult.EndLocation - InSceneCastResult.StartLocation).GetSafeNormal();
+	const float SceneCastTravelDistance = InSceneCastResult.LengthFromStartToEnd;
 
-	for (const FSceneCastResult& SceneCastResult : InSceneCastResults)
+	const float NumberOfLineSegments = FMath::CeilToInt(SceneCastTravelDistance / (InSegmentsLength + InSegmentsSpacingLength));
+	for (int32 i = 0; i < NumberOfLineSegments; ++i)
 	{
-		const FVector& StartLocation = SceneCastResult.StartLocation;
-		const FVector& EndLocation = SceneCastResult.EndLocation;
-
-		const FVector Direction = (EndLocation - StartLocation).GetSafeNormal();
-		const float SceneCastTravelDistance = SceneCastResult.LengthFromStartToEnd;
-		const float NumberOfLineSegments = FMath::CeilToInt(SceneCastTravelDistance / (InSegmentsLength + InSegmentsSpacingLength));
-
-		for (int32 i = 0; i < NumberOfLineSegments; ++i)
+		float DistanceToLineSegmentStart = (InSegmentsLength + InSegmentsSpacingLength) * i;
+		float DistanceToLineSegmentEnd = DistanceToLineSegmentStart + InSegmentsLength;
+		if (DistanceToLineSegmentEnd > SceneCastTravelDistance)
 		{
-			float DistanceToLineSegmentStart = (InSegmentsLength + InSegmentsSpacingLength) * i;
-			float DistanceToLineSegmentEnd = DistanceToLineSegmentStart + InSegmentsLength;
-			if (DistanceToLineSegmentEnd > SceneCastTravelDistance)
-			{
-				DistanceToLineSegmentEnd = SceneCastTravelDistance;
-			}
+			DistanceToLineSegmentEnd = SceneCastTravelDistance;
+		}
 
-			const FVector LineSegmentStart = StartLocation + (Direction * DistanceToLineSegmentStart);
-			const FVector LineSegmentEnd = StartLocation + (Direction * DistanceToLineSegmentEnd);
+		const FVector LineSegmentStart = InSceneCastResult.StartLocation + (Direction * DistanceToLineSegmentStart);
+		const FVector LineSegmentEnd = InSceneCastResult.StartLocation + (Direction * DistanceToLineSegmentEnd);
 
 
-			// Get the speed at the line segment start
-			float SpeedAtLineSegmentStart;
-			{
-				// NOTE: we use the term "Time" as in the ratio from FSceneCastResult::StartLocation to FSceneCastResult::EndLocation. This is not the same as FHitResult::Time!
-				float TimeOnOrBeforeLineSegmentStart = 0.f;
-				float SpeedOnOrBeforeLineSegmentStart = SceneCastResult.StartSpeed;
-				float TimeOnOrAfterLineSegmentStart = 1.f;
-				float SpeedOnOrAfterLineSegmentStart = SceneCastResult.EndSpeed;
-				for (const FShooterHitResult& Hit : SceneCastResult.HitResults)
-				{
-					if (Hit.Distance <= DistanceToLineSegmentStart)
-					{
-						// This hit is directly on or before the line segment start
-						TimeOnOrBeforeLineSegmentStart = Hit.Time / SceneCastResult.EndTime;
-						SpeedOnOrBeforeLineSegmentStart = Hit.Speed;
-						continue;
-					}
-					if (Hit.Distance >= DistanceToLineSegmentStart)
-					{
-						// This hit is directly on or after the line segment start
-						TimeOnOrAfterLineSegmentStart = Hit.Time / SceneCastResult.EndTime;
-						SpeedOnOrAfterLineSegmentStart = Hit.Speed;
-						break;
-					}
-				}
-
-				const float TimeOfLineSegmentStart = DistanceToLineSegmentStart / SceneCastTravelDistance;
-				SpeedAtLineSegmentStart = FMath::Lerp(SpeedOnOrBeforeLineSegmentStart, SpeedOnOrAfterLineSegmentStart, TimeOfLineSegmentStart / TimeOnOrAfterLineSegmentStart);
-			}
-
-			// Find the hits in between the line segment start and end
-			TArray<FShooterHitResult> HitsWithinLineSegment;
-			for (const FShooterHitResult& Hit : SceneCastResult.HitResults)
+		// Get the speed at the line segment start
+		float SpeedAtLineSegmentStart;
+		{
+			// NOTE: we use the term "Time" as in the ratio from FSceneCastResult::StartLocation to FSceneCastResult::EndLocation. This is not the same as FHitResult::Time!
+			float TimeOnOrBeforeLineSegmentStart = 0.f;
+			float SpeedOnOrBeforeLineSegmentStart = InSceneCastResult.StartSpeed;
+			float TimeOnOrAfterLineSegmentStart = 1.f;
+			float SpeedOnOrAfterLineSegmentStart = InSceneCastResult.EndSpeed;
+			for (const FShooterHitResult& Hit : InSceneCastResult.HitResults)
 			{
 				if (Hit.Distance <= DistanceToLineSegmentStart)
 				{
+					// This hit is directly on or before the line segment start
+					TimeOnOrBeforeLineSegmentStart = Hit.Time / InSceneCastResult.EndTime;
+					SpeedOnOrBeforeLineSegmentStart = Hit.Speed;
 					continue;
 				}
-				if (Hit.Distance >= DistanceToLineSegmentEnd)
+				if (Hit.Distance >= DistanceToLineSegmentStart)
+				{
+					// This hit is directly on or after the line segment start
+					TimeOnOrAfterLineSegmentStart = Hit.Time / InSceneCastResult.EndTime;
+					SpeedOnOrAfterLineSegmentStart = Hit.Speed;
+					break;
+				}
+			}
+
+			const float TimeOfLineSegmentStart = DistanceToLineSegmentStart / SceneCastTravelDistance;
+			SpeedAtLineSegmentStart = FMath::Lerp(SpeedOnOrBeforeLineSegmentStart, SpeedOnOrAfterLineSegmentStart, TimeOfLineSegmentStart / TimeOnOrAfterLineSegmentStart);
+		}
+
+		// Find the hits in between the line segment start and end
+		TArray<FShooterHitResult> HitsWithinLineSegment;
+		for (const FShooterHitResult& Hit : InSceneCastResult.HitResults)
+		{
+			if (Hit.Distance <= DistanceToLineSegmentStart)
+			{
+				continue;
+			}
+			if (Hit.Distance >= DistanceToLineSegmentEnd)
+			{
+				break;
+			}
+
+			HitsWithinLineSegment.Add(Hit); // hit in between segment
+		}
+
+
+		// Draw the debug line(s)
+		if (HitsWithinLineSegment.Num() <= 0)
+		{
+			const FLinearColor SpeedColor = FMath::Lerp(FullSpeedColor, NoSpeedColor, 1 - (SpeedAtLineSegmentStart / InInitialSpeed));
+			DrawDebugLine(InWorld, LineSegmentStart, LineSegmentEnd, SpeedColor.ToFColor(true), false, LifeTime, 0, Thickness);
+		}
+		else // there are hits (penetrations) within this segment so we will draw multible lines for this segment to give more accurate colors
+		{
+			// Debug line from the line segment start to the first hit
+			{
+				const FVector DebugLineStart = LineSegmentStart;
+				const FVector DebugLineEnd = HitsWithinLineSegment[0].Location;
+				const FLinearColor SpeedColor = FMath::Lerp(FullSpeedColor, NoSpeedColor, 1 - (SpeedAtLineSegmentStart / InInitialSpeed));
+				DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedColor.ToFColor(true), false, LifeTime, 0, Thickness);
+			}
+
+			// Debug lines from hit to hit
+			for (int32 j = 0; j < HitsWithinLineSegment.Num(); ++j)
+			{
+				if (HitsWithinLineSegment.IsValidIndex(j + 1) == false)
 				{
 					break;
 				}
 
-				HitsWithinLineSegment.Add(Hit); // hit in between segment
+				const FVector DebugLineStart = HitsWithinLineSegment[j].Location;
+				const FVector DebugLineEnd = HitsWithinLineSegment[j + 1].Location;
+				const FLinearColor SpeedColor = FMath::Lerp(FullSpeedColor, NoSpeedColor, 1 - (HitsWithinLineSegment[j].Speed / InInitialSpeed));
+				DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedColor.ToFColor(true), false, LifeTime, 0, Thickness);
 			}
 
-
-			// Draw the debug line(s)
-			if (HitsWithinLineSegment.Num() <= 0)
+			// Debug line from the last hit to the line segment end
 			{
-				const FLinearColor SpeedColor = FMath::Lerp(InitialSpeedColor, OutOfSpeedColor, 1 - (SpeedAtLineSegmentStart / InInitialSpeed));
-				DrawDebugLine(InWorld, LineSegmentStart, LineSegmentEnd, SpeedColor.ToFColor(true), false, DebugLifeTime, 0, Thickness);
-			}
-			else // there are hits (penetrations) within this segment so we will draw multible lines for this segment to give more accurate colors
-			{
-				// Debug line from the line segment start to the first hit
-				{
-					const FVector DebugLineStart = LineSegmentStart;
-					const FVector DebugLineEnd = HitsWithinLineSegment[0].Location;
-					const FLinearColor SpeedColor = FMath::Lerp(InitialSpeedColor, OutOfSpeedColor, 1 - (SpeedAtLineSegmentStart / InInitialSpeed));
-					DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedColor.ToFColor(true), false, DebugLifeTime, 0, Thickness);
-				}
-
-				// Debug lines from hit to hit
-				for (int32 j = 0; j < HitsWithinLineSegment.Num(); ++j)
-				{
-					if (HitsWithinLineSegment.IsValidIndex(j + 1) == false)
-					{
-						break;
-					}
-
-					const FVector DebugLineStart = HitsWithinLineSegment[j].Location;
-					const FVector DebugLineEnd = HitsWithinLineSegment[j + 1].Location;
-					const FLinearColor SpeedColor = FMath::Lerp(InitialSpeedColor, OutOfSpeedColor, 1 - (HitsWithinLineSegment[j].Speed / InInitialSpeed));
-					DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedColor.ToFColor(true), false, DebugLifeTime, 0, Thickness);
-				}
-
-				// Debug line from the last hit to the line segment end
-				{
-					const FVector DebugLineStart = HitsWithinLineSegment.Last().Location;
-					const FVector DebugLineEnd = LineSegmentEnd;
-					const FLinearColor SpeedColor = FMath::Lerp(InitialSpeedColor, OutOfSpeedColor, 1 - (HitsWithinLineSegment.Last().Speed / InInitialSpeed));
-					DrawDebugLine(InWorld, HitsWithinLineSegment.Last().Location, LineSegmentEnd, SpeedColor.ToFColor(true), false, DebugLifeTime, 0, Thickness);
-				}
+				const FVector DebugLineStart = HitsWithinLineSegment.Last().Location;
+				const FVector DebugLineEnd = LineSegmentEnd;
+				const FLinearColor SpeedColor = FMath::Lerp(FullSpeedColor, NoSpeedColor, 1 - (HitsWithinLineSegment.Last().Speed / InInitialSpeed));
+				DrawDebugLine(InWorld, HitsWithinLineSegment.Last().Location, LineSegmentEnd, SpeedColor.ToFColor(true), false, LifeTime, 0, Thickness);
 			}
 		}
+	}
+}
+
+void UBFL_ShooterHelpers::DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const TArray<FSceneCastResult>& InSceneCastResults, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor, const float InSegmentsLength, const float InSegmentsSpacingLength)
+{
+	for (const FSceneCastResult& SceneCastResult : InSceneCastResults)
+	{
+		DebugPenetrationSceneCastWithExitHitsUsingSpeed(InWorld, SceneCastResult, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, FullSpeedColor, NoSpeedColor, InSegmentsLength, InSegmentsSpacingLength);
 	}
 }
