@@ -45,16 +45,13 @@ public:
 
 	/** Performs linear interpolation on any number of values */
 	template <class T>
-	static T LerpMultiple(const TArray<T>& Values, float InAlpha)
+	static T LerpMultiple(const TArray<T>& Values, const float InAlpha)
 	{
 		if (Values.Num() <= 0)
 		{
 			UE_LOG(LogMathHelpers, Warning, TEXT("%s() was not given any values to lerp between! Returning a default value."), ANSI_TO_TCHAR(__FUNCTION__));
 			return T();
 		}
-
-		InAlpha = FMath::Clamp(InAlpha, 0.f, 1.f);
-
 
 		// Scale the alpha by the number of lerps
 		const int32 NumberOfLerps = (Values.Num() - 1);
@@ -68,6 +65,9 @@ public:
 		const float LerpAlpha = ScaledAlpha - IndexOfA;
 
 		// Perform the lerp
-		return FMath::Lerp<T>(Values[IndexOfA], Values[IndexOfB], LerpAlpha);
+		// Also, in case the caller gave us an alpha outside of 0 and 1, ensure that we don't access out of range indexes
+		const int32 SafeIndexOfA = FMath::Clamp(IndexOfA, 0, Values.Num() - 1);
+		const int32 SafeIndexOfB = FMath::Clamp(IndexOfB, 0, Values.Num() - 1);
+		return FMath::Lerp<T>(Values[SafeIndexOfA], Values[SafeIndexOfB], LerpAlpha);
 	}
 };
