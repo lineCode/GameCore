@@ -85,7 +85,7 @@ struct HELPERLIBRARIES_API FSceneCastResult
 	float EndTime;
 	/** The speed when we stopped */
 	float EndSpeed;
-	/** Distance from StartLocation to EndLocation */
+	/** Distance from StartLocation to EndLocation (not to TraceEnd) */
 	float LengthFromStartToEnd;
 };
 
@@ -152,7 +152,7 @@ public:
 	//  END Custom query
 
 
-	static void DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const TArray<FSceneCastResult>& InSceneCastResults, const float InInitialSpeed, const float InSegmentsLength = 20.f, const float InSegmentsSpacingLength = 20.f);
+	static void DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const TArray<FSceneCastResult>& InSceneCastResults, const float InInitialSpeed, const float InSegmentsLength = 20.f, const float InSegmentsSpacingLength = 0.f);
 
 private:
 	static float NerfSpeedPerCm(float& InOutSpeed, const float InDistanceToTravel, const float InNerfPerCm);
