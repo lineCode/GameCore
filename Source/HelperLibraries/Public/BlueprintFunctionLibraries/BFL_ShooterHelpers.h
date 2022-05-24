@@ -152,8 +152,8 @@ public:
 	//  END Custom query
 
 
-	static void DebugPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const FSceneCastResult& InSceneCastResult, const float InInitialSpeed, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& FullSpeedColor = FColor::Red, const FLinearColor& NoSpeedColor = FColor::Blue);
-	static void DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const TArray<FSceneCastResult>& InSceneCastResults, const float InInitialSpeed, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& FullSpeedColor = FColor::Red, const FLinearColor& NoSpeedColor = FColor::Blue);
+	static void DebugPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const FSceneCastResult& InSceneCastResult, const float InInitialSpeed, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& FullSpeedColor = FColor::Green, const FLinearColor& NoSpeedColor = FColor::Red);
+	static void DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const TArray<FSceneCastResult>& InSceneCastResults, const float InInitialSpeed, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& FullSpeedColor = FColor::Green, const FLinearColor& NoSpeedColor = FColor::Red);
 
 private:
 	static float NerfSpeedPerCm(float& InOutSpeed, const float InDistanceToTravel, const float InNerfPerCm);

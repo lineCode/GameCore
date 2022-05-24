@@ -7,7 +7,6 @@
 #include "BlueprintFunctionLibraries/BFL_HitResultHelpers.h"
 #include "BlueprintFunctionLibraries/BFL_DrawDebugHelpers.h"
 #include "DrawDebugHelpers.h"
-#include "Kismet/KismetMathLibrary.h"
 
 
 
@@ -328,7 +327,7 @@ void UBFL_ShooterHelpers::DebugPenetrationSceneCastWithExitHitsUsingSpeed(const 
 		// Draw the debug line(s)
 		if (HitsWithinLineSegment.Num() <= 0)
 		{
-			const FLinearColor SpeedColor = FMath::Lerp(FullSpeedColor, NoSpeedColor, 1 - (SpeedAtLineSegmentStart / InInitialSpeed));
+			const FLinearColor SpeedColor = FLinearColor::LerpUsingHSV(FullSpeedColor, NoSpeedColor, 1 - (SpeedAtLineSegmentStart / InInitialSpeed));
 			DrawDebugLine(InWorld, LineSegmentStart, LineSegmentEnd, SpeedColor.ToFColor(true), false, LifeTime, 0, Thickness);
 		}
 		else // there are hits (penetrations) within this segment so we will draw multible lines for this segment to give more accurate colors
@@ -337,7 +336,7 @@ void UBFL_ShooterHelpers::DebugPenetrationSceneCastWithExitHitsUsingSpeed(const 
 			{
 				const FVector DebugLineStart = LineSegmentStart;
 				const FVector DebugLineEnd = HitsWithinLineSegment[0].Location;
-				const FLinearColor SpeedColor = FMath::Lerp(FullSpeedColor, NoSpeedColor, 1 - (SpeedAtLineSegmentStart / InInitialSpeed));
+				const FLinearColor SpeedColor = FLinearColor::LerpUsingHSV(FullSpeedColor, NoSpeedColor, 1 - (SpeedAtLineSegmentStart / InInitialSpeed));
 				DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedColor.ToFColor(true), false, LifeTime, 0, Thickness);
 			}
 
@@ -351,7 +350,7 @@ void UBFL_ShooterHelpers::DebugPenetrationSceneCastWithExitHitsUsingSpeed(const 
 
 				const FVector DebugLineStart = HitsWithinLineSegment[j].Location;
 				const FVector DebugLineEnd = HitsWithinLineSegment[j + 1].Location;
-				const FLinearColor SpeedColor = FMath::Lerp(FullSpeedColor, NoSpeedColor, 1 - (HitsWithinLineSegment[j].Speed / InInitialSpeed));
+				const FLinearColor SpeedColor = FLinearColor::LerpUsingHSV(FullSpeedColor, NoSpeedColor, 1 - (HitsWithinLineSegment[j].Speed / InInitialSpeed));
 				DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedColor.ToFColor(true), false, LifeTime, 0, Thickness);
 			}
 
@@ -359,7 +358,7 @@ void UBFL_ShooterHelpers::DebugPenetrationSceneCastWithExitHitsUsingSpeed(const 
 			{
 				const FVector DebugLineStart = HitsWithinLineSegment.Last().Location;
 				const FVector DebugLineEnd = LineSegmentEnd;
-				const FLinearColor SpeedColor = FMath::Lerp(FullSpeedColor, NoSpeedColor, 1 - (HitsWithinLineSegment.Last().Speed / InInitialSpeed));
+				const FLinearColor SpeedColor = FLinearColor::LerpUsingHSV(FullSpeedColor, NoSpeedColor, 1 - (HitsWithinLineSegment.Last().Speed / InInitialSpeed));
 				DrawDebugLine(InWorld, HitsWithinLineSegment.Last().Location, LineSegmentEnd, SpeedColor.ToFColor(true), false, LifeTime, 0, Thickness);
 			}
 		}
