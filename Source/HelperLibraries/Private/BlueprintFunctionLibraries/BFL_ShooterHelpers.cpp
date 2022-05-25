@@ -21,7 +21,7 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 {
 	OutResult.StartLocation = InStart;
 	OutResult.StartSpeed = InInitialSpeed;
-	OutResult.StartDirection = (InEnd - InStart).GetSafeNormal();
+	OutResult.CastDirection = (InEnd - InStart).GetSafeNormal();
 
 	TArray<FExitAwareHitResult> HitResults;
 	FExitAwareHitResult* ImpenetrableHit = UBFL_CollisionQueryHelpers::PenetrationSceneCastWithExitHits(InWorld, HitResults, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, IsHitImpenetrable, true);
@@ -58,10 +58,10 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 		const float TraveledThroughDistance = NerfSpeedPerCm(CurrentSpeed, SegmentDistance, SpeedToTakeAwayPerCm);
 		if (CurrentSpeed < 0.f)
 		{
-			OutResult.EndLocation = InStart + (SceneCastDirection * TraveledThroughDistance);
-			OutResult.EndTime = TraveledThroughDistance / SceneCastDistance;
-			OutResult.LengthFromStartToEnd = TraveledThroughDistance;
-			OutResult.EndSpeed = 0.f;
+			OutResult.StopLocation = InStart + (SceneCastDirection * TraveledThroughDistance);
+			OutResult.TimeAtStop = TraveledThroughDistance / SceneCastDistance;
+			OutResult.DistanceToStop = TraveledThroughDistance;
+			OutResult.StopSpeed = 0.f;
 			return nullptr;
 		}
 	}
@@ -87,10 +87,10 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 			if (ImpenetrableHit && &HitResults[i] == ImpenetrableHit)
 			{
 				// Stop - don't calculate penetration nerfing on impenetrable hit
-				OutResult.EndLocation = AddedShooterHit.Location;
-				OutResult.EndTime = AddedShooterHit.Time;
-				OutResult.LengthFromStartToEnd = AddedShooterHit.Distance;
-				OutResult.EndSpeed = FMath::Max(CurrentSpeed, 0.f);
+				OutResult.StopLocation = AddedShooterHit.Location;
+				OutResult.TimeAtStop = AddedShooterHit.Time;
+				OutResult.DistanceToStop = AddedShooterHit.Distance;
+				OutResult.StopSpeed = FMath::Max(CurrentSpeed, 0.f);
 				return &AddedShooterHit;
 			}
 
@@ -140,10 +140,10 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 				const float TraveledThroughDistance = NerfSpeedPerCm(CurrentSpeed, SegmentDistance, SpeedToTakeAwayPerCm);
 				if (CurrentSpeed < 0.f)
 				{
-					OutResult.EndLocation = AddedShooterHit.Location + (SceneCastDirection * TraveledThroughDistance);
-					OutResult.EndTime = AddedShooterHit.Time + (TraveledThroughDistance / SceneCastDistance);
-					OutResult.LengthFromStartToEnd = AddedShooterHit.Distance + TraveledThroughDistance;
-					OutResult.EndSpeed = 0.f;
+					OutResult.StopLocation = AddedShooterHit.Location + (SceneCastDirection * TraveledThroughDistance);
+					OutResult.TimeAtStop = AddedShooterHit.Time + (TraveledThroughDistance / SceneCastDistance);
+					OutResult.DistanceToStop = AddedShooterHit.Distance + TraveledThroughDistance;
+					OutResult.StopSpeed = 0.f;
 					return nullptr;
 				}
 			}
@@ -151,10 +151,10 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 	}
 
 	// CurrentSpeed made it past every nerf
-	OutResult.EndLocation = InEnd;
-	OutResult.EndTime = 1.f;
-	OutResult.LengthFromStartToEnd = SceneCastDistance;
-	OutResult.EndSpeed = CurrentSpeed;
+	OutResult.StopLocation = InEnd;
+	OutResult.TimeAtStop = 1.f;
+	OutResult.DistanceToStop = SceneCastDistance;
+	OutResult.StopSpeed = CurrentSpeed;
 	return nullptr;
 }
 FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpeed(const float InInitialSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FPenetrationSceneCastWithExitHitsUsingSpeedResult& OutResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams,
@@ -186,8 +186,8 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 		FPenetrationSceneCastWithExitHitsUsingSpeedResult& PenetrationSceneCastWithExitHitsUsingSpeedResult = OutResult.PenetrationSceneCastWithExitHitsUsingSpeedResults.AddDefaulted_GetRef();
 		FShooterHitResult* RicochetableHit = PenetrationSceneCastWithExitHitsUsingSpeed(CurrentSpeed, InOutPerCmSpeedNerfStack, InWorld, PenetrationSceneCastWithExitHitsUsingSpeedResult, CurrentSceneCastStart, SceneCastEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, GetPenetrationSpeedNerf, IsHitRicochetable);
 
-		DistanceTraveled += PenetrationSceneCastWithExitHitsUsingSpeedResult.LengthFromStartToEnd;
-		CurrentSpeed = PenetrationSceneCastWithExitHitsUsingSpeedResult.EndSpeed;
+		DistanceTraveled += PenetrationSceneCastWithExitHitsUsingSpeedResult.DistanceToStop;
+		CurrentSpeed = PenetrationSceneCastWithExitHitsUsingSpeedResult.StopSpeed;
 
 		// Set more shooter hit result data
 		{
@@ -195,7 +195,7 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 			for (FShooterHitResult& ShooterHit : PenetrationSceneCastWithExitHitsUsingSpeedResult.HitResults)
 			{
 				ShooterHit.RicochetNumber = RicochetNumber;
-				ShooterHit.TraveledDistanceBeforeThisTrace = (DistanceTraveled - PenetrationSceneCastWithExitHitsUsingSpeedResult.LengthFromStartToEnd); // distance up until this scene cast
+				ShooterHit.TraveledDistanceBeforeThisTrace = (DistanceTraveled - PenetrationSceneCastWithExitHitsUsingSpeedResult.DistanceToStop); // distance up until this scene cast
 			}
 
 			// Give data to the ricochet hit
@@ -223,7 +223,7 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 			// Stop if there was nothing to ricochet off of
 			if (!RicochetableHit)
 			{
-				PenetrationSceneCastWithExitHitsUsingSpeedResult.EndLocation = SceneCastEnd;
+				PenetrationSceneCastWithExitHitsUsingSpeedResult.StopLocation = SceneCastEnd;
 				break;
 			}
 			// We have a ricochet hit
@@ -231,7 +231,7 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 			if (DistanceTraveled == InDistanceCap)
 			{
 				// Edge case: we should end the whole thing if we ran out of distance exactly when we hit a ricochet
-				PenetrationSceneCastWithExitHitsUsingSpeedResult.EndLocation = RicochetableHit->Location;
+				PenetrationSceneCastWithExitHitsUsingSpeedResult.StopLocation = RicochetableHit->Location;
 				break;
 			}
 		}
@@ -270,8 +270,7 @@ float UBFL_ShooterHelpers::NerfSpeedPerCm(float& InOutSpeed, const float InDista
 
 void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugLine(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
 {
-	const FVector Direction = (EndLocation - StartLocation).GetSafeNormal();
-	const float SceneCastTravelDistance = LengthFromStartToEnd;
+	const float SceneCastTravelDistance = DistanceToStop;
 
 	const float NumberOfLineSegments = FMath::CeilToInt(SceneCastTravelDistance / (InSegmentsLength + InSegmentsSpacingLength));
 	for (int32 i = 0; i < NumberOfLineSegments; ++i)
@@ -283,31 +282,31 @@ void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugLine(const UWor
 			DistanceToLineSegmentEnd = SceneCastTravelDistance;
 		}
 
-		const FVector LineSegmentStart = StartLocation + (Direction * DistanceToLineSegmentStart);
-		const FVector LineSegmentEnd = StartLocation + (Direction * DistanceToLineSegmentEnd);
+		const FVector LineSegmentStart = StartLocation + (CastDirection * DistanceToLineSegmentStart);
+		const FVector LineSegmentEnd = StartLocation + (CastDirection * DistanceToLineSegmentEnd);
 
 
 		// Get the speed at the line segment start
 		float SpeedAtLineSegmentStart;
 		{
-			// NOTE: we use the term "Time" as in the ratio from FPenetrationSceneCastWithExitHitsUsingSpeedResult::StartLocation to FPenetrationSceneCastWithExitHitsUsingSpeedResult::EndLocation. This is not the same as FHitResult::Time!
+			// NOTE: we use the term "Time" as in the ratio from FPenetrationSceneCastWithExitHitsUsingSpeedResult::StartLocation to FPenetrationSceneCastWithExitHitsUsingSpeedResult::StopLocation. This is not the same as FHitResult::Time!
 			float TimeOnOrBeforeLineSegmentStart = 0.f;
 			float SpeedOnOrBeforeLineSegmentStart = StartSpeed;
 			float TimeOnOrAfterLineSegmentStart = 1.f;
-			float SpeedOnOrAfterLineSegmentStart = EndSpeed;
+			float SpeedOnOrAfterLineSegmentStart = StopSpeed;
 			for (const FShooterHitResult& Hit : HitResults)
 			{
 				if (Hit.Distance <= DistanceToLineSegmentStart)
 				{
 					// This hit is directly on or before the line segment start
-					TimeOnOrBeforeLineSegmentStart = Hit.Time / EndTime;
+					TimeOnOrBeforeLineSegmentStart = Hit.Time / TimeAtStop;
 					SpeedOnOrBeforeLineSegmentStart = Hit.Speed;
 					continue;
 				}
 				if (Hit.Distance >= DistanceToLineSegmentStart)
 				{
 					// This hit is directly on or after the line segment start
-					TimeOnOrAfterLineSegmentStart = Hit.Time / EndTime;
+					TimeOnOrAfterLineSegmentStart = Hit.Time / TimeAtStop;
 					SpeedOnOrAfterLineSegmentStart = Hit.Speed;
 					break;
 				}
@@ -383,7 +382,7 @@ void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugText(const UWor
 	{
 		LocationsWithSpeeds.Emplace(Hit.Location, Hit.Speed);
 	}
-	LocationsWithSpeeds.Emplace(EndLocation, EndSpeed);
+	LocationsWithSpeeds.Emplace(StopLocation, StopSpeed);
 
 
 	const FVector OffsetDirection = FVector::UpVector;
@@ -430,10 +429,10 @@ void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugText
 			if (Hit.bIsRicochet)
 			{
 				// This will be the axis that we shift our debug string locations for the pre-ricochet and post-ricochet speeds
-				RicochetTextOffsetDirection = FVector::CrossProduct(PenetrationSceneCastWithExitHitsUsingSpeedResult.StartDirection, Hit.ImpactNormal);
+				RicochetTextOffsetDirection = FVector::CrossProduct(PenetrationSceneCastWithExitHitsUsingSpeedResult.CastDirection, Hit.ImpactNormal);
 			}
 		}
-		LocationsWithSpeeds.Emplace(PenetrationSceneCastWithExitHitsUsingSpeedResult.EndLocation, PenetrationSceneCastWithExitHitsUsingSpeedResult.EndSpeed);
+		LocationsWithSpeeds.Emplace(PenetrationSceneCastWithExitHitsUsingSpeedResult.StopLocation, PenetrationSceneCastWithExitHitsUsingSpeedResult.StopSpeed);
 
 		// Debug them
 		const float RicochetOffsetAmount = 30.f;
@@ -448,7 +447,7 @@ void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugText
 			const FColor SpeedDebugColor = FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(LocationsWithSpeeds[j].Value, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
 			FVector StringLocation = LocationsWithSpeeds[j].Key;
 
-			if (j == LocationsWithSpeeds.Num() - 1) // if we are the end location
+			if (j == LocationsWithSpeeds.Num() - 1) // if we are the stop location
 			{
 				// If we are about to ricochet
 				if (PenetrationSceneCastWithExitHitsUsingSpeedResult.HitResults.Num() > 0 && PenetrationSceneCastWithExitHitsUsingSpeedResult.HitResults.Last().bIsRicochet)

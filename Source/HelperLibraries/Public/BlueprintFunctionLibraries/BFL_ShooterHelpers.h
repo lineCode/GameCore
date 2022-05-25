@@ -61,32 +61,32 @@ struct HELPERLIBRARIES_API FPenetrationSceneCastWithExitHitsUsingSpeedResult
 
 	FPenetrationSceneCastWithExitHitsUsingSpeedResult()
 		: HitResults(TArray<FShooterHitResult>())
+		, CastDirection(FVector::ZeroVector)
 		, StartLocation(FVector::ZeroVector)
 		, StartSpeed(0.f)
-		, StartDirection(FVector::ZeroVector)
-		, EndLocation(FVector::ZeroVector)
-		, EndTime(0.f)
-		, EndSpeed(0.f)
-		, LengthFromStartToEnd(0.f)
+		, StopLocation(FVector::ZeroVector)
+		, StopSpeed(0.f)
+		, DistanceToStop(0.f)
+		, TimeAtStop(0.f)
 	{
 	}
 
 	/** Hit results in this scene cast */
 	TArray<FShooterHitResult> HitResults;
+	/** The direction casted in */
+	FVector CastDirection;
 	/** The location where this scene cast began */
 	FVector StartLocation;
 	/** The speed this scene cast started with */
 	float StartSpeed;
-	/** The direction casted in */
-	FVector StartDirection;
 	/** The location where we were stopped */
-	FVector EndLocation;
-	/** The time where we were stopped */
-	float EndTime;
+	FVector StopLocation;
 	/** The speed when we stopped */
-	float EndSpeed;
-	/** Distance from StartLocation to EndLocation (not to TraceEnd) */
-	float LengthFromStartToEnd;
+	float StopSpeed;
+	/** Distance from StartLocation to StopLocation */
+	float DistanceToStop;
+	/** The time where we were stopped */
+	float TimeAtStop;
 
 
 	/** Draws line representing this scene cast, representing speed in color */
