@@ -268,18 +268,18 @@ float UBFL_ShooterHelpers::NerfSpeedPerCm(float& InOutSpeed, const float InDista
 }
 
 
-void UBFL_ShooterHelpers::DebugRicochetingPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult& InResult, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor)
+void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::Debug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
 {
-	for (const FPenetrationSceneCastWithExitHitsUsingSpeedResult& PenetrationSceneCastWithExitHitsUsingSpeedResult : InResult.PenetrationSceneCastWithExitHitsUsingSpeedResults)
+	for (const FPenetrationSceneCastWithExitHitsUsingSpeedResult& PenetrationSceneCastWithExitHitsUsingSpeedResult : PenetrationSceneCastWithExitHitsUsingSpeedResults)
 	{
-		DrawDebugLineForPenetrationSceneCastWithExitHitsUsingSpeed(InWorld, PenetrationSceneCastWithExitHitsUsingSpeedResult, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
-		DrawDebugTextForPenetrationSceneCastWithExitHitsUsingSpeed(InWorld, PenetrationSceneCastWithExitHitsUsingSpeedResult, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
+		PenetrationSceneCastWithExitHitsUsingSpeedResult.DrawDebugLine(InWorld, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
+		PenetrationSceneCastWithExitHitsUsingSpeedResult.DrawDebugText(InWorld, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
 	}
 }
-void UBFL_ShooterHelpers::DrawDebugLineForPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const FPenetrationSceneCastWithExitHitsUsingSpeedResult& InResult, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor)
+void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugLine(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
 {
-	const FVector Direction = (InResult.EndLocation - InResult.StartLocation).GetSafeNormal();
-	const float SceneCastTravelDistance = InResult.LengthFromStartToEnd;
+	const FVector Direction = (EndLocation - StartLocation).GetSafeNormal();
+	const float SceneCastTravelDistance = LengthFromStartToEnd;
 
 	const float NumberOfLineSegments = FMath::CeilToInt(SceneCastTravelDistance / (InSegmentsLength + InSegmentsSpacingLength));
 	for (int32 i = 0; i < NumberOfLineSegments; ++i)
@@ -291,8 +291,8 @@ void UBFL_ShooterHelpers::DrawDebugLineForPenetrationSceneCastWithExitHitsUsingS
 			DistanceToLineSegmentEnd = SceneCastTravelDistance;
 		}
 
-		const FVector LineSegmentStart = InResult.StartLocation + (Direction * DistanceToLineSegmentStart);
-		const FVector LineSegmentEnd = InResult.StartLocation + (Direction * DistanceToLineSegmentEnd);
+		const FVector LineSegmentStart = StartLocation + (Direction * DistanceToLineSegmentStart);
+		const FVector LineSegmentEnd = StartLocation + (Direction * DistanceToLineSegmentEnd);
 
 
 		// Get the speed at the line segment start
@@ -300,22 +300,22 @@ void UBFL_ShooterHelpers::DrawDebugLineForPenetrationSceneCastWithExitHitsUsingS
 		{
 			// NOTE: we use the term "Time" as in the ratio from FPenetrationSceneCastWithExitHitsUsingSpeedResult::StartLocation to FPenetrationSceneCastWithExitHitsUsingSpeedResult::EndLocation. This is not the same as FHitResult::Time!
 			float TimeOnOrBeforeLineSegmentStart = 0.f;
-			float SpeedOnOrBeforeLineSegmentStart = InResult.StartSpeed;
+			float SpeedOnOrBeforeLineSegmentStart = StartSpeed;
 			float TimeOnOrAfterLineSegmentStart = 1.f;
-			float SpeedOnOrAfterLineSegmentStart = InResult.EndSpeed;
-			for (const FShooterHitResult& Hit : InResult.HitResults)
+			float SpeedOnOrAfterLineSegmentStart = EndSpeed;
+			for (const FShooterHitResult& Hit : HitResults)
 			{
 				if (Hit.Distance <= DistanceToLineSegmentStart)
 				{
 					// This hit is directly on or before the line segment start
-					TimeOnOrBeforeLineSegmentStart = Hit.Time / InResult.EndTime;
+					TimeOnOrBeforeLineSegmentStart = Hit.Time / EndTime;
 					SpeedOnOrBeforeLineSegmentStart = Hit.Speed;
 					continue;
 				}
 				if (Hit.Distance >= DistanceToLineSegmentStart)
 				{
 					// This hit is directly on or after the line segment start
-					TimeOnOrAfterLineSegmentStart = Hit.Time / InResult.EndTime;
+					TimeOnOrAfterLineSegmentStart = Hit.Time / EndTime;
 					SpeedOnOrAfterLineSegmentStart = Hit.Speed;
 					break;
 				}
@@ -327,7 +327,7 @@ void UBFL_ShooterHelpers::DrawDebugLineForPenetrationSceneCastWithExitHitsUsingS
 
 		// Find the hits in between the line segment start and end
 		TArray<FShooterHitResult> HitsWithinLineSegment;
-		for (const FShooterHitResult& Hit : InResult.HitResults)
+		for (const FShooterHitResult& Hit : HitResults)
 		{
 			if (Hit.Distance <= DistanceToLineSegmentStart)
 			{
@@ -346,7 +346,7 @@ void UBFL_ShooterHelpers::DrawDebugLineForPenetrationSceneCastWithExitHitsUsingS
 		if (HitsWithinLineSegment.Num() <= 0)
 		{
 			const FColor SpeedDebugColor = GetDebugColorForSpeed(SpeedAtLineSegmentStart, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
-			DrawDebugLine(InWorld, LineSegmentStart, LineSegmentEnd, SpeedDebugColor, false, LifeTime, 0, Thickness);
+			::DrawDebugLine(InWorld, LineSegmentStart, LineSegmentEnd, SpeedDebugColor, false, LifeTime, 0, Thickness);
 		}
 		else // there are hits (penetrations) within this segment so we will draw multible lines for this segment to give more accurate colors
 		{
@@ -355,7 +355,7 @@ void UBFL_ShooterHelpers::DrawDebugLineForPenetrationSceneCastWithExitHitsUsingS
 				const FVector DebugLineStart = LineSegmentStart;
 				const FVector DebugLineEnd = HitsWithinLineSegment[0].Location;
 				const FColor SpeedDebugColor = GetDebugColorForSpeed(SpeedAtLineSegmentStart, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
-				DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedDebugColor, false, LifeTime, 0, Thickness);
+				::DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedDebugColor, false, LifeTime, 0, Thickness);
 			}
 
 			// Debug lines from hit to hit
@@ -369,7 +369,7 @@ void UBFL_ShooterHelpers::DrawDebugLineForPenetrationSceneCastWithExitHitsUsingS
 				const FVector DebugLineStart = HitsWithinLineSegment[j].Location;
 				const FVector DebugLineEnd = HitsWithinLineSegment[j + 1].Location;
 				const FColor SpeedDebugColor = GetDebugColorForSpeed(HitsWithinLineSegment[j].Speed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
-				DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedDebugColor, false, LifeTime, 0, Thickness);
+				::DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedDebugColor, false, LifeTime, 0, Thickness);
 			}
 
 			// Debug line from the last hit to the line segment end
@@ -377,26 +377,26 @@ void UBFL_ShooterHelpers::DrawDebugLineForPenetrationSceneCastWithExitHitsUsingS
 				const FVector DebugLineStart = HitsWithinLineSegment.Last().Location;
 				const FVector DebugLineEnd = LineSegmentEnd;
 				const FColor SpeedDebugColor = GetDebugColorForSpeed(HitsWithinLineSegment.Last().Speed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
-				DrawDebugLine(InWorld, HitsWithinLineSegment.Last().Location, LineSegmentEnd, SpeedDebugColor, false, LifeTime, 0, Thickness);
+				::DrawDebugLine(InWorld, HitsWithinLineSegment.Last().Location, LineSegmentEnd, SpeedDebugColor, false, LifeTime, 0, Thickness);
 			}
 		}
 	}
 }
-void UBFL_ShooterHelpers::DrawDebugTextForPenetrationSceneCastWithExitHitsUsingSpeed(const UWorld* InWorld, const FPenetrationSceneCastWithExitHitsUsingSpeedResult& InResult, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor)
+void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugText(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
 {
 	const FVector OffsetDirection = FVector::UpVector;
 
 	// Debug start
 	{
-		const FColor SpeedDebugColor = GetDebugColorForSpeed(InResult.StartSpeed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
+		const FColor SpeedDebugColor = GetDebugColorForSpeed(StartSpeed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
 
-		const FVector StringLocation = InResult.StartLocation/* + (OffsetDirection * 10.f)*/;
-		const FString DebugString = FString::Printf(TEXT("%.2f"), InResult.StartSpeed);
-		DrawDebugString(InWorld, StringLocation, DebugString, nullptr, SpeedDebugColor, LifeTime);
+		const FVector StringLocation = StartLocation/* + (OffsetDirection * 10.f)*/;
+		const FString DebugString = FString::Printf(TEXT("%.2f"), StartSpeed);
+		::DrawDebugString(InWorld, StringLocation, DebugString, nullptr, SpeedDebugColor, LifeTime);
 	}
 
 	// Debug hits
-	for (const FShooterHitResult& Hit : InResult.HitResults)
+	for (const FShooterHitResult& Hit : HitResults)
 	{
 		const FString DebugString = FString::Printf(TEXT("%.2f"), Hit.Speed);
 
@@ -409,20 +409,20 @@ void UBFL_ShooterHelpers::DrawDebugTextForPenetrationSceneCastWithExitHitsUsingS
 		}
 
 		const FColor NormalHitSpeedDebugColor = GetDebugColorForSpeed(Hit.Speed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
-		DrawDebugString(InWorld, StringLocation, DebugString, nullptr, NormalHitSpeedDebugColor, LifeTime);
+		::DrawDebugString(InWorld, StringLocation, DebugString, nullptr, NormalHitSpeedDebugColor, LifeTime);
 	}
 
 	// Debug end
 	{
-		const FColor SpeedDebugColor = GetDebugColorForSpeed(InResult.EndSpeed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
+		const FColor SpeedDebugColor = GetDebugColorForSpeed(EndSpeed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
 
-		const FVector StringLocation = InResult.EndLocation/* + (OffsetDirection * 10.f)*/;
-		const FString DebugString = FString::Printf(TEXT("%.2f"), InResult.EndSpeed);
-		DrawDebugString(InWorld, StringLocation, DebugString, nullptr, SpeedDebugColor, LifeTime);
+		const FVector StringLocation = EndLocation/* + (OffsetDirection * 10.f)*/;
+		const FString DebugString = FString::Printf(TEXT("%.2f"), EndSpeed);
+		::DrawDebugString(InWorld, StringLocation, DebugString, nullptr, SpeedDebugColor, LifeTime);
 	}
 }
 
-FLinearColor UBFL_ShooterHelpers::GetDebugColorForSpeed(const float InSpeed, const float InInitialSpeed, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor)
+FLinearColor FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(const float InSpeed, const float InInitialSpeed, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor)
 {
 	return FLinearColor::LerpUsingHSV(FullSpeedColor, NoSpeedColor, 1 - (InSpeed / InInitialSpeed));
 }
