@@ -268,14 +268,6 @@ float UBFL_ShooterHelpers::NerfSpeedPerCm(float& InOutSpeed, const float InDista
 }
 
 
-void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::Debug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
-{
-	for (const FPenetrationSceneCastWithExitHitsUsingSpeedResult& PenetrationSceneCastWithExitHitsUsingSpeedResult : PenetrationSceneCastWithExitHitsUsingSpeedResults)
-	{
-		PenetrationSceneCastWithExitHitsUsingSpeedResult.DrawDebugLine(InWorld, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
-		PenetrationSceneCastWithExitHitsUsingSpeedResult.DrawDebugText(InWorld, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
-	}
-}
 void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugLine(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
 {
 	const FVector Direction = (EndLocation - StartLocation).GetSafeNormal();
@@ -384,40 +376,23 @@ void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugLine(const UWor
 }
 void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugText(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
 {
-	const FVector OffsetDirection = FVector::UpVector;
+	TArray<TPair<FVector, float>> LocationsWithSpeeds;
 
-	// Debug start
-	{
-		const FColor SpeedDebugColor = GetDebugColorForSpeed(StartSpeed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
-
-		const FVector StringLocation = StartLocation/* + (OffsetDirection * 10.f)*/;
-		const FString DebugString = FString::Printf(TEXT("%.2f"), StartSpeed);
-		::DrawDebugString(InWorld, StringLocation, DebugString, nullptr, SpeedDebugColor, LifeTime);
-	}
-
-	// Debug hits
+	LocationsWithSpeeds.Emplace(StartLocation, StartSpeed);
 	for (const FShooterHitResult& Hit : HitResults)
 	{
-		const FString DebugString = FString::Printf(TEXT("%.2f"), Hit.Speed);
-
-		FVector StringLocation = Hit.Location;
-
-		if (Hit.bIsRicochet) // if it's a ricochet hit
-		{
-			const float OffsetAmount = 5.f;
-			StringLocation = Hit.Location + (OffsetDirection * OffsetAmount);
-		}
-
-		const FColor NormalHitSpeedDebugColor = GetDebugColorForSpeed(Hit.Speed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
-		::DrawDebugString(InWorld, StringLocation, DebugString, nullptr, NormalHitSpeedDebugColor, LifeTime);
+		LocationsWithSpeeds.Emplace(Hit.Location, Hit.Speed);
 	}
+	LocationsWithSpeeds.Emplace(EndLocation, EndSpeed);
 
-	// Debug end
+
+	const FVector OffsetDirection = FVector::UpVector;
+	for (const TPair<FVector, float>& LocationWithSpeed : LocationsWithSpeeds)
 	{
-		const FColor SpeedDebugColor = GetDebugColorForSpeed(EndSpeed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
+		const FColor SpeedDebugColor = GetDebugColorForSpeed(LocationWithSpeed.Value, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
 
-		const FVector StringLocation = EndLocation/* + (OffsetDirection * 10.f)*/;
-		const FString DebugString = FString::Printf(TEXT("%.2f"), EndSpeed);
+		const FVector StringLocation = LocationWithSpeed.Key/* + (OffsetDirection * 10.f)*/;
+		const FString DebugString = FString::Printf(TEXT("%.2f"), LocationWithSpeed.Value);
 		::DrawDebugString(InWorld, StringLocation, DebugString, nullptr, SpeedDebugColor, LifeTime);
 	}
 }
@@ -425,4 +400,88 @@ void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugText(const UWor
 FLinearColor FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(const float InSpeed, const float InInitialSpeed, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor)
 {
 	return FLinearColor::LerpUsingHSV(FullSpeedColor, NoSpeedColor, 1 - (InSpeed / InInitialSpeed));
+}
+
+void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::Debug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
+{
+	for (const FPenetrationSceneCastWithExitHitsUsingSpeedResult& PenetrationSceneCastWithExitHitsUsingSpeedResult : PenetrationSceneCastWithExitHitsUsingSpeedResults)
+	{
+		PenetrationSceneCastWithExitHitsUsingSpeedResult.DrawDebugLine(InWorld, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
+	}
+
+	DrawDebugText(InWorld, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
+}
+void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugText(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
+{
+	FVector PreviousRicochetTextOffsetDirection = FVector::ZeroVector;
+	for (int32 i = 0; i < PenetrationSceneCastWithExitHitsUsingSpeedResults.Num(); ++i)
+	{
+		const FPenetrationSceneCastWithExitHitsUsingSpeedResult& PenetrationSceneCastWithExitHitsUsingSpeedResult = PenetrationSceneCastWithExitHitsUsingSpeedResults[i];
+
+		FVector RicochetTextOffsetDirection;
+
+		// Collect locations and speeds
+		TArray<TPair<FVector, float>> LocationsWithSpeeds;
+		LocationsWithSpeeds.Emplace(PenetrationSceneCastWithExitHitsUsingSpeedResult.StartLocation, PenetrationSceneCastWithExitHitsUsingSpeedResult.StartSpeed);
+		for (const FShooterHitResult& Hit : PenetrationSceneCastWithExitHitsUsingSpeedResult.HitResults)
+		{
+			LocationsWithSpeeds.Emplace(Hit.Location, Hit.Speed);
+
+			if (Hit.bIsRicochet)
+			{
+				// This will be the axis that we shift our debug string locations for the pre-ricochet and post-ricochet speeds
+				RicochetTextOffsetDirection = FVector::CrossProduct(PenetrationSceneCastWithExitHitsUsingSpeedResult.StartDirection, Hit.ImpactNormal);
+			}
+		}
+		LocationsWithSpeeds.Emplace(PenetrationSceneCastWithExitHitsUsingSpeedResult.EndLocation, PenetrationSceneCastWithExitHitsUsingSpeedResult.EndSpeed);
+
+		// Debug them
+		const float RicochetOffsetAmount = 30.f;
+		for (int j = 0; j < LocationsWithSpeeds.Num(); ++j)
+		{
+			if (LocationsWithSpeeds.IsValidIndex(j + 1) && LocationsWithSpeeds[j] == LocationsWithSpeeds[j + 1])
+			{
+				// Skip duplicates
+				continue;
+			}
+
+			const FColor SpeedDebugColor = FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(LocationsWithSpeeds[j].Value, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
+			FVector StringLocation = LocationsWithSpeeds[j].Key;
+
+			if (j == LocationsWithSpeeds.Num() - 1) // if we are the end location
+			{
+				// If we are about to ricochet
+				if (PenetrationSceneCastWithExitHitsUsingSpeedResult.HitResults.Num() > 0 && PenetrationSceneCastWithExitHitsUsingSpeedResult.HitResults.Last().bIsRicochet)
+				{
+					// Offset the pre-ricochet speed debug location upwards
+					StringLocation += (-RicochetTextOffsetDirection * RicochetOffsetAmount);
+
+					// If there is not a post-ricochet line after this
+					if (i == PenetrationSceneCastWithExitHitsUsingSpeedResults.Num() - 1)
+					{
+						// Then just debug the post-ricochet speed here
+						const FColor ExtraEndSpeedDebugColor = FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(EndSpeed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
+						const FVector ExtraEndStringLocation = LocationsWithSpeeds[j].Key + (RicochetTextOffsetDirection * RicochetOffsetAmount);
+						const FString ExtraEndDebugString = FString::Printf(TEXT("%.2f"), EndSpeed);
+						::DrawDebugString(InWorld, ExtraEndStringLocation, ExtraEndDebugString, nullptr, ExtraEndSpeedDebugColor, LifeTime);
+					}
+				}
+			}
+			else if (j == 0) // if we are the start location
+			{
+				// If we came from a ricochet
+				if (PenetrationSceneCastWithExitHitsUsingSpeedResults.IsValidIndex(i - 1) && PenetrationSceneCastWithExitHitsUsingSpeedResults[i - 1].HitResults.Num() > 0 && PenetrationSceneCastWithExitHitsUsingSpeedResults[i - 1].HitResults.Last().bIsRicochet)
+				{
+					// Offset the post-ricochet speed debug location downwards
+					StringLocation += (PreviousRicochetTextOffsetDirection * RicochetOffsetAmount);
+				}
+			}
+
+			// Debug this location's speed
+			const FString DebugString = FString::Printf(TEXT("%.2f"), LocationsWithSpeeds[j].Value);
+			::DrawDebugString(InWorld, StringLocation, DebugString, nullptr, SpeedDebugColor, LifeTime);
+		}
+
+		PreviousRicochetTextOffsetDirection = RicochetTextOffsetDirection;
+	}
 }

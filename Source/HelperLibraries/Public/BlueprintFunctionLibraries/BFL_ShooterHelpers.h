@@ -94,7 +94,6 @@ struct HELPERLIBRARIES_API FPenetrationSceneCastWithExitHitsUsingSpeedResult
 	/** Draws text representing this scene cast, indicating speed at significant points */
 	void DrawDebugText(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& FullSpeedColor = FLinearColor::Green, const FLinearColor& NoSpeedColor = FLinearColor::Red) const;
 
-private:
 	static FLinearColor GetDebugColorForSpeed(const float InSpeed, const float InInitialSpeed, const FLinearColor& FullSpeedColor = FLinearColor::Green, const FLinearColor& NoSpeedColor = FLinearColor::Red);
 };
 /**
@@ -122,6 +121,9 @@ struct HELPERLIBRARIES_API FRicochetingPenetrationSceneCastWithExitHitsUsingSpee
 
 	/** Drawn representation of this query */
 	void Debug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& FullSpeedColor = FLinearColor::Green, const FLinearColor& NoSpeedColor = FLinearColor::Red) const;
+
+	/** Draws text representing this scene cast, indicating speed at significant points */
+	void DrawDebugText(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& FullSpeedColor = FLinearColor::Green, const FLinearColor& NoSpeedColor = FLinearColor::Red) const;
 };
 
 /**
