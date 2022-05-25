@@ -158,4 +158,6 @@ public:
 
 private:
 	static float NerfSpeedPerCm(float& InOutSpeed, const float InDistanceToTravel, const float InNerfPerCm);
+
+	static FLinearColor GetDebugColorForSpeed(const float InSpeed, const float InInitialSpeed, const FLinearColor& FullSpeedColor = FLinearColor::Green, const FLinearColor& NoSpeedColor = FLinearColor::Red);
 };
