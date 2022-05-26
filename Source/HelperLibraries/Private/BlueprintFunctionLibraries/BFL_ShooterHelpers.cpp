@@ -431,13 +431,13 @@ void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebu
 			if (Hit.bIsRicochet)
 			{
 				// This will be the axis that we shift our debug string locations for the pre-ricochet and post-ricochet speeds
-				RicochetTextOffsetDirection = FVector::CrossProduct(PenetrationSceneCastWithExitHitsUsingSpeedResult.CastDirection, Hit.ImpactNormal);
+				RicochetTextOffsetDirection = FVector::CrossProduct(PenetrationSceneCastWithExitHitsUsingSpeedResult.CastDirection, Hit.ImpactNormal).GetSafeNormal();
 			}
 		}
 		LocationsWithSpeeds.Emplace(PenetrationSceneCastWithExitHitsUsingSpeedResult.StopLocation, PenetrationSceneCastWithExitHitsUsingSpeedResult.StopSpeed);
 
 		// Debug them
-		const float RicochetOffsetAmount = 30.f;
+		const float RicochetTextOffsetAmount = 30.f;
 		for (int j = 0; j < LocationsWithSpeeds.Num(); ++j)
 		{
 			if (LocationsWithSpeeds.IsValidIndex(j + 1) && LocationsWithSpeeds[j] == LocationsWithSpeeds[j + 1])
@@ -455,14 +455,14 @@ void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebu
 				if (PenetrationSceneCastWithExitHitsUsingSpeedResult.HitResults.Num() > 0 && PenetrationSceneCastWithExitHitsUsingSpeedResult.HitResults.Last().bIsRicochet)
 				{
 					// Offset the pre-ricochet speed debug location upwards
-					StringLocation += (-RicochetTextOffsetDirection * RicochetOffsetAmount);
+					StringLocation += (-RicochetTextOffsetDirection * RicochetTextOffsetAmount);
 
 					// If there is not a post-ricochet line after this
 					if (i == PenetrationSceneCastWithExitHitsUsingSpeedResults.Num() - 1)
 					{
 						// Then just debug the post-ricochet speed here
 						const FColor ExtraEndSpeedDebugColor = FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(EndSpeed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
-						const FVector ExtraEndStringLocation = LocationsWithSpeeds[j].Key + (RicochetTextOffsetDirection * RicochetOffsetAmount);
+						const FVector ExtraEndStringLocation = LocationsWithSpeeds[j].Key + (RicochetTextOffsetDirection * RicochetTextOffsetAmount);
 						const FString ExtraEndDebugString = FString::Printf(TEXT("%.2f"), EndSpeed);
 						::DrawDebugString(InWorld, ExtraEndStringLocation, ExtraEndDebugString, nullptr, ExtraEndSpeedDebugColor, LifeTime);
 					}
@@ -474,7 +474,7 @@ void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebu
 				if (PenetrationSceneCastWithExitHitsUsingSpeedResults.IsValidIndex(i - 1) && PenetrationSceneCastWithExitHitsUsingSpeedResults[i - 1].HitResults.Num() > 0 && PenetrationSceneCastWithExitHitsUsingSpeedResults[i - 1].HitResults.Last().bIsRicochet)
 				{
 					// Offset the post-ricochet speed debug location downwards
-					StringLocation += (PreviousRicochetTextOffsetDirection * RicochetOffsetAmount);
+					StringLocation += (PreviousRicochetTextOffsetDirection * RicochetTextOffsetAmount);
 				}
 			}
 
