@@ -52,15 +52,16 @@ struct HELPERLIBRARIES_API FShooterHitResult : public FExitAwareHitResult
 };
 
 /**
- * Struct describing a PenetrationSceneCastWithExitHitsUsingSpeed()
+ * Describes a scene cast that uses speed. Since we have multible speed-related queries, this data is needed by each of them.
  */
 USTRUCT()
-struct HELPERLIBRARIES_API FPenetrationSceneCastWithExitHitsUsingSpeedResult
+struct HELPERLIBRARIES_API FSpeedSceneCastInfo
 {
 	GENERATED_BODY()
 
-	FPenetrationSceneCastWithExitHitsUsingSpeedResult()
-		: HitResults(TArray<FShooterHitResult>())
+	FSpeedSceneCastInfo()
+		: CollisionShapeCasted(FCollisionShape())
+		, CollisionShapeCastedRotation(FQuat::Identity)
 		, CastDirection(FVector::ZeroVector)
 		, StartLocation(FVector::ZeroVector)
 		, StartSpeed(0.f)
@@ -73,8 +74,8 @@ struct HELPERLIBRARIES_API FPenetrationSceneCastWithExitHitsUsingSpeedResult
 
 	/** The shape we used for the query (line trace if ECollisionShape::Line) */
 	FCollisionShape CollisionShapeCasted;
-	/** Hit results in this scene cast */
-	TArray<FShooterHitResult> HitResults;
+	/** Casted shape's rotation */
+	FQuat CollisionShapeCastedRotation;
 	/** The direction casted in */
 	FVector CastDirection;
 	/** The location where this scene cast began */
@@ -89,12 +90,34 @@ struct HELPERLIBRARIES_API FPenetrationSceneCastWithExitHitsUsingSpeedResult
 	float DistanceToStop;
 	/** The time where we were stopped */
 	float TimeAtStop;
+};
+
+/**
+ * Struct describing a PenetrationSceneCastWithExitHitsUsingSpeed()
+ */
+USTRUCT()
+struct HELPERLIBRARIES_API FPenetrationSceneCastWithExitHitsUsingSpeedResult
+{
+	GENERATED_BODY()
+
+	FPenetrationSceneCastWithExitHitsUsingSpeedResult()
+		: SpeedSceneCastInfo(FSpeedSceneCastInfo())
+		, HitResults(TArray<FShooterHitResult>())
+	{
+	}
+
+	/** Info about the scene cast that uses speed */
+	FSpeedSceneCastInfo SpeedSceneCastInfo;
+	/** Hit results in this scene cast */
+	TArray<FShooterHitResult> HitResults;
 
 
 	/** Draws line representing this scene cast, representing speed in color */
-	void DrawDebugLine(const UWorld* InWorld, const float InInitialSpeed, const bool bInPersistentLines = false, const float InLifeTime = -1.f, const uint8 InDepthPriority = 0, const float InThickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& InFullSpeedColor = FLinearColor::Green, const FLinearColor& InNoSpeedColor = FLinearColor::Red) const;
+	void DrawSpeedDebugLine(const UWorld* InWorld, const float InInitialSpeed, const bool bInPersistentLines = false, const float InLifeTime = -1.f, const uint8 InDepthPriority = 0, const float InThickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& InFullSpeedColor = FLinearColor::Green, const FLinearColor& InNoSpeedColor = FLinearColor::Red) const;
 	/** Draws text representing this scene cast, indicating speed at significant points */
-	void DrawSpeedDebug(const UWorld* InWorld, const float InInitialSpeed, const float InLifeTime = -1.f, const FLinearColor& InFullSpeedColor = FLinearColor::Green, const FLinearColor& InNoSpeedColor = FLinearColor::Red) const;
+	void DrawSpeedDebugText(const UWorld* InWorld, const float InInitialSpeed, const float InLifeTime = -1.f, const FLinearColor& InFullSpeedColor = FLinearColor::Green, const FLinearColor& InNoSpeedColor = FLinearColor::Red) const;
+	/** Draws casted collision shape at significant points */
+	void DrawCollisionShapeDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bInPersistentLines = false, const float InLifeTime = -1.f, const uint8 InDepthPriority = 0, const float InThickness = 0.f, const FLinearColor& InFullSpeedColor = FLinearColor::Green, const FLinearColor& InNoSpeedColor = FLinearColor::Red) const;
 
 	static FLinearColor GetDebugColorForSpeed(const float InSpeed, const float InInitialSpeed, const FLinearColor& InFullSpeedColor = FLinearColor::Green, const FLinearColor& InNoSpeedColor = FLinearColor::Red);
 };
@@ -107,26 +130,21 @@ struct HELPERLIBRARIES_API FRicochetingPenetrationSceneCastWithExitHitsUsingSpee
 	GENERATED_BODY()
 
 	FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult()
-		: PenetrationSceneCastWithExitHitsUsingSpeedResults(TArray<FPenetrationSceneCastWithExitHitsUsingSpeedResult>())
-		, EndSpeed(0.f)
-		, DistanceTraveled(0.f)
+		: SpeedSceneCastInfo(FSpeedSceneCastInfo())
+		, PenetrationSceneCastWithExitHitsUsingSpeedResults(TArray<FPenetrationSceneCastWithExitHitsUsingSpeedResult>())
 	{
 	}
 
-	/** The shape we used for the query (line trace if ECollisionShape::Line) */
-	FCollisionShape CollisionShapeCasted;
+	/** Info about the scene cast that uses speed */
+	FSpeedSceneCastInfo SpeedSceneCastInfo;
 	/** Penetration with speed scene casts. The initial and ricochets. */
 	TArray<FPenetrationSceneCastWithExitHitsUsingSpeedResult> PenetrationSceneCastWithExitHitsUsingSpeedResults;
-	/** The speed when we stopped */
-	float EndSpeed;
-	/** Distance traveled */
-	float DistanceTraveled;
 
 
 	/** Drawn representation of this query */
 	void DrawFullDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bInPersistentLines = false, const float InLifeTime = -1.f, const uint8 InDepthPriority = 0, const float InThickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& InFullSpeedColor = FLinearColor::Green, const FLinearColor& InNoSpeedColor = FLinearColor::Red) const;
 	/** Draws text representing this scene cast, indicating speed at significant points */
-	void DrawSpeedDebug(const UWorld* InWorld, const float InInitialSpeed, const float InLifeTime = -1.f, const FLinearColor& InFullSpeedColor = FLinearColor::Green, const FLinearColor& InNoSpeedColor = FLinearColor::Red) const;
+	void DrawSpeedDebugText(const UWorld* InWorld, const float InInitialSpeed, const float InLifeTime = -1.f, const FLinearColor& InFullSpeedColor = FLinearColor::Green, const FLinearColor& InNoSpeedColor = FLinearColor::Red) const;
 };
 
 /**
