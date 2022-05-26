@@ -178,7 +178,6 @@ FExitAwareHitResult* UBFL_CollisionQueries::PenetrationSweepWithExitHits(const U
 //  END Custom query
 
 
-//  BEGIN private functions
 bool UBFL_CollisionQueries::SceneCastMultiByChannel(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams)
 {
 	// UWorld has SweepMultiByChannel() which already checks for zero extent shapes, but it doesn't explicitly check for ECollisionChannel::LineShape and its name can lead you to think that it doesn't support line traces
@@ -192,6 +191,36 @@ bool UBFL_CollisionQueries::SceneCastMultiByChannel(const UWorld* InWorld, TArra
 	}
 }
 
+ECollisionResponse UBFL_CollisionQueries::GetCollisionResponseForQueryOnBodyInstance(const FBodyInstance& InBodyInstance, const ECollisionChannel InQueryCollisionChannel, const FCollisionResponseParams& InQueryCollisionResponseParams)
+{
+	const bool bHasQueryEnabled = CollisionEnabledHasQuery(InBodyInstance.GetCollisionEnabled());
+	if (bHasQueryEnabled)
+	{
+		// The trace's response to the component channel
+		const ECollisionResponse QueryResponse = InQueryCollisionResponseParams.CollisionResponse.GetResponse(InBodyInstance.GetObjectType());
+		// The component's response to the trace channel
+		const ECollisionResponse BodyResponse = InBodyInstance.GetResponseToChannels().GetResponse(InQueryCollisionChannel);
+
+		// Determine overall response
+		if (QueryResponse == ECollisionResponse::ECR_Ignore || BodyResponse == ECollisionResponse::ECR_Ignore)
+		{
+			return ECollisionResponse::ECR_Ignore;
+		}
+		if (QueryResponse == ECollisionResponse::ECR_Overlap || BodyResponse == ECollisionResponse::ECR_Overlap)
+		{
+			return ECollisionResponse::ECR_Overlap;
+		}
+		if (QueryResponse == ECollisionResponse::ECR_Block || BodyResponse == ECollisionResponse::ECR_Block)
+		{
+			return ECollisionResponse::ECR_Block;
+		}
+	}
+
+	// Query was disabled on the given body
+	return ECollisionResponse::ECR_Ignore;
+}
+
+//  BEGIN private functions
 void UBFL_CollisionQueries::ChangeHitsResponseData(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams)
 {
 	for (int32 i = 0; i < InOutHits.Num(); ++i)
@@ -240,35 +269,6 @@ void UBFL_CollisionQueries::ChangeHitsResponseData(TArray<FHitResult>& InOutHits
 			}
 		}
 	}
-}
-
-ECollisionResponse UBFL_CollisionQueries::GetCollisionResponseForQueryOnBodyInstance(const FBodyInstance& InBodyInstance, const ECollisionChannel InQueryCollisionChannel, const FCollisionResponseParams& InQueryCollisionResponseParams)
-{
-	const bool bBodyQueryEnabled = ::CollisionEnabledHasQuery(InBodyInstance.GetCollisionEnabled());
-	if (bBodyQueryEnabled)
-	{
-		const ECollisionChannel BodyCollisionChannel = InBodyInstance.GetObjectType();
-		const FCollisionResponseParams BodyCollisionResponseParams = InBodyInstance.GetResponseToChannels();
-
-		const ECollisionResponse QueryResponse = InQueryCollisionResponseParams.CollisionResponse.GetResponse(BodyCollisionChannel); // the trace's response to the component channel
-		const ECollisionResponse BodyResponse = BodyCollisionResponseParams.CollisionResponse.GetResponse(InQueryCollisionChannel); // the component's response to the trace channel
-
-		if (QueryResponse == ECollisionResponse::ECR_Ignore || BodyResponse == ECollisionResponse::ECR_Ignore)
-		{
-			return ECollisionResponse::ECR_Ignore;
-		}
-		if (QueryResponse == ECollisionResponse::ECR_Overlap || BodyResponse == ECollisionResponse::ECR_Overlap)
-		{
-			return ECollisionResponse::ECR_Overlap;
-		}
-		if (QueryResponse == ECollisionResponse::ECR_Block || BodyResponse == ECollisionResponse::ECR_Block)
-		{
-			return ECollisionResponse::ECR_Block;
-		}
-	}
-
-	// Query disabled for the given body
-	return ECollisionResponse::ECR_Ignore;
 }
 
 FVector UBFL_CollisionQueries::DetermineBackwardsSceneCastStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FHitResult* InHitStoppedAt, const bool bOptimizeBackwardsSceneCastLength, const float SweepShapeBoundingSphereRadius)

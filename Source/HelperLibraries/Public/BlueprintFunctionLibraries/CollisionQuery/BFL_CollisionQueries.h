@@ -59,7 +59,6 @@ public:
 
 
 
-
 	//  BEGIN Custom query
 	/**
 	 *  Scene cast that penetrates everything except for what the caller says in IsHitImpenetrable() TFunction
@@ -93,7 +92,6 @@ public:
 
 
 
-
 	//  BEGIN Custom query
 	/**
 	 * Scene cast that also gives us the exit hits using SceneCastMultiWithExitHits() while also providing penetrating functionality
@@ -117,12 +115,20 @@ public:
 
 
 
-
 	/**
 	 * FCollisionShape scene cast.
 	 * This keeps the scene cast generic to sweeps and linetraces, allowing our custom queries to support both sweeps and linetraces without duplicate code.
 	 */
 	static bool SceneCastMultiByChannel(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam);
+
+	/**
+	 * Determine the resulting response for a query hitting a body instance.
+	 * 
+	 * Takes in a body instance to test against (e.g. a Primitive Component's).
+	 * Takes in a query's trace channel and response params to use (e.g. the visibility trace channel).
+	 * Returns the resulting response of the query hitting the body instance.
+	 */
+	static ECollisionResponse GetCollisionResponseForQueryOnBodyInstance(const FBodyInstance& InBodyInstance, const ECollisionChannel InQueryCollisionChannel, const FCollisionResponseParams& InQueryCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam);
 
 private:
 	/**
@@ -135,9 +141,6 @@ private:
 	 * @param  InCollisionResponseParams    The trace's response params
 	 */
 	static void ChangeHitsResponseData(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam);
-
-	/** Determine the resulting response for a query hitting a body instance */
-	static ECollisionResponse GetCollisionResponseForQueryOnBodyInstance(const FBodyInstance& InBodyInstance, const ECollisionChannel InQueryCollisionChannel, const FCollisionResponseParams& InQueryCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam);
 
 
 	/** Returns the start point of our backwards scene cast based on information from the forwards cast */
