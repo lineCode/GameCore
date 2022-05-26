@@ -270,7 +270,7 @@ float UBFL_ShooterHelpers::NerfSpeedPerCm(float& InOutSpeed, const float InDista
 }
 
 
-void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugLine(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
+void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugLine(const UWorld* InWorld, const float InInitialSpeed, const bool bInPersistentLines, const float InLifeTime, const uint8 InDepthPriority, const float InThickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& InFullSpeedColor, const FLinearColor& InNoSpeedColor) const
 {
 	const float SceneCastTravelDistance = DistanceToStop;
 
@@ -338,8 +338,8 @@ void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugLine(const UWor
 		// Draw the debug line(s)
 		if (HitsWithinLineSegment.Num() <= 0)
 		{
-			const FColor SpeedDebugColor = GetDebugColorForSpeed(SpeedAtLineSegmentStart, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
-			::DrawDebugLine(InWorld, LineSegmentStart, LineSegmentEnd, SpeedDebugColor, false, LifeTime, 0, Thickness);
+			const FColor SpeedDebugColor = GetDebugColorForSpeed(SpeedAtLineSegmentStart, InInitialSpeed, InFullSpeedColor, InNoSpeedColor).ToFColor(true);
+			::DrawDebugLine(InWorld, LineSegmentStart, LineSegmentEnd, SpeedDebugColor, false, InLifeTime, 0, InThickness);
 		}
 		else // there are hits (penetrations) within this segment so we will draw multible lines for this segment to give more accurate colors
 		{
@@ -347,8 +347,8 @@ void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugLine(const UWor
 			{
 				const FVector DebugLineStart = LineSegmentStart;
 				const FVector DebugLineEnd = HitsWithinLineSegment[0].Location;
-				const FColor SpeedDebugColor = GetDebugColorForSpeed(SpeedAtLineSegmentStart, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
-				::DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedDebugColor, false, LifeTime, 0, Thickness);
+				const FColor SpeedDebugColor = GetDebugColorForSpeed(SpeedAtLineSegmentStart, InInitialSpeed, InFullSpeedColor, InNoSpeedColor).ToFColor(true);
+				::DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedDebugColor, false, InLifeTime, 0, InThickness);
 			}
 
 			// Debug lines from hit to hit
@@ -361,16 +361,16 @@ void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugLine(const UWor
 
 				const FVector DebugLineStart = HitsWithinLineSegment[j].Location;
 				const FVector DebugLineEnd = HitsWithinLineSegment[j + 1].Location;
-				const FColor SpeedDebugColor = GetDebugColorForSpeed(HitsWithinLineSegment[j].Speed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
-				::DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedDebugColor, false, LifeTime, 0, Thickness);
+				const FColor SpeedDebugColor = GetDebugColorForSpeed(HitsWithinLineSegment[j].Speed, InInitialSpeed, InFullSpeedColor, InNoSpeedColor).ToFColor(true);
+				::DrawDebugLine(InWorld, DebugLineStart, DebugLineEnd, SpeedDebugColor, false, InLifeTime, 0, InThickness);
 			}
 
 			// Debug line from the last hit to the line segment end
 			{
 				const FVector DebugLineStart = HitsWithinLineSegment.Last().Location;
 				const FVector DebugLineEnd = LineSegmentEnd;
-				const FColor SpeedDebugColor = GetDebugColorForSpeed(HitsWithinLineSegment.Last().Speed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
-				::DrawDebugLine(InWorld, HitsWithinLineSegment.Last().Location, LineSegmentEnd, SpeedDebugColor, false, LifeTime, 0, Thickness);
+				const FColor SpeedDebugColor = GetDebugColorForSpeed(HitsWithinLineSegment.Last().Speed, InInitialSpeed, InFullSpeedColor, InNoSpeedColor).ToFColor(true);
+				::DrawDebugLine(InWorld, HitsWithinLineSegment.Last().Location, LineSegmentEnd, SpeedDebugColor, false, InLifeTime, 0, InThickness);
 			}
 		}
 	}
@@ -398,9 +398,9 @@ void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebug(const UWo
 	}
 }
 
-FLinearColor FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(const float InSpeed, const float InInitialSpeed, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor)
+FLinearColor FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(const float InSpeed, const float InInitialSpeed, const FLinearColor& InFullSpeedColor, const FLinearColor& InNoSpeedColor)
 {
-	return FLinearColor::LerpUsingHSV(FullSpeedColor, NoSpeedColor, 1 - (InSpeed / InInitialSpeed));
+	return FLinearColor::LerpUsingHSV(InFullSpeedColor, InNoSpeedColor, 1 - (InSpeed / InInitialSpeed));
 }
 
 void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawFullDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bInPersistentLines, const float InLifeTime, const uint8 InDepthPriority, const float InThickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& InFullSpeedColor, const FLinearColor& InNoSpeedColor) const

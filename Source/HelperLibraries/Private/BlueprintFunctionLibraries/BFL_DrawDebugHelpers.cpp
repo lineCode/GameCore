@@ -7,37 +7,37 @@
 
 
 
-void UBFL_DrawDebugHelpers::DrawDebugCollisionShape(const UWorld* InWorld, const FVector& Center, const FCollisionShape& CollisionShape, const FQuat& Rotation, const FColor& Color, const int32 Segments, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness)
+void UBFL_DrawDebugHelpers::DrawDebugCollisionShape(const UWorld* InWorld, const FVector& InCenter, const FCollisionShape& InCollisionShape, const FQuat& InRotation, const FColor& InColor, const int32 InSegments, const bool bInPersistentLines, const float InLifeTime, const uint8 InDepthPriority, const float InThickness)
 {
 #if ENABLE_DRAW_DEBUG
-	switch (CollisionShape.ShapeType)
+	switch (InCollisionShape.ShapeType)
 	{
 		case ECollisionShape::Box:
 		{
-			DrawDebugBox(InWorld, Center, CollisionShape.GetExtent(), Rotation, Color, bPersistentLines, LifeTime, DepthPriority, Thickness);
+			DrawDebugBox(InWorld, InCenter, InCollisionShape.GetExtent(), InRotation, InColor, bInPersistentLines, InLifeTime, InDepthPriority, InThickness);
 			break;
 		}
 		case  ECollisionShape::Sphere:
 		{
-			DrawDebugSphere(InWorld, Center, CollisionShape.GetSphereRadius(), Segments, Color, bPersistentLines, LifeTime, DepthPriority, Thickness);
+			DrawDebugSphere(InWorld, InCenter, InCollisionShape.GetSphereRadius(), InSegments, InColor, bInPersistentLines, InLifeTime, InDepthPriority, InThickness);
 			break;
 		}
 		case ECollisionShape::Capsule:
 		{
 			// NOTE: Segments is not used here because DrawDebugCapsule() hard codes it
-			DrawDebugCapsule(InWorld, Center, CollisionShape.GetCapsuleHalfHeight(), CollisionShape.GetCapsuleRadius(), Rotation, Color, bPersistentLines, LifeTime, DepthPriority, Thickness);
+			DrawDebugCapsule(InWorld, InCenter, InCollisionShape.GetCapsuleHalfHeight(), InCollisionShape.GetCapsuleRadius(), InRotation, InColor, bInPersistentLines, InLifeTime, InDepthPriority, InThickness);
 			break;
 		}
 		case ECollisionShape::Line:
 		{
-			DrawDebugPoint(InWorld, Center, Thickness * 10, Color, bPersistentLines, LifeTime, DepthPriority);
+			DrawDebugPoint(InWorld, InCenter, InThickness * 10, InColor, bInPersistentLines, InLifeTime, InDepthPriority);
 			break;
 		}
 	}
 #endif // ENABLE_DRAW_DEBUG
 }
 
-void UBFL_DrawDebugHelpers::DrawDebugLineDotted(const UWorld* InWorld, const FVector& InStart, const FVector& InEnd, const FColor& Color, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength)
+void UBFL_DrawDebugHelpers::DrawDebugLineDotted(const UWorld* InWorld, const FVector& InStart, const FVector& InEnd, const FColor& InColor, const bool bInPersistentLines, const float InLifeTime, const uint8 InDepthPriority, const float InThickness, const float InSegmentsLength, const float InSegmentsSpacingLength)
 {
 #if ENABLE_DRAW_DEBUG
 	const FVector Direction = (InEnd - InStart).GetSafeNormal();
@@ -56,7 +56,7 @@ void UBFL_DrawDebugHelpers::DrawDebugLineDotted(const UWorld* InWorld, const FVe
 		const FVector LineSegmentStart = InStart + (Direction * DistanceToLineSegmentStart);
 		const FVector LineSegmentEnd = InStart + (Direction * DistanceToLineSegmentEnd);
 
-		DrawDebugLine(InWorld, LineSegmentStart, LineSegmentEnd, Color, bPersistentLines, LifeTime, DepthPriority, Thickness);
+		DrawDebugLine(InWorld, LineSegmentStart, LineSegmentEnd, InColor, bInPersistentLines, InLifeTime, InDepthPriority, InThickness);
 	}
 #endif // ENABLE_DRAW_DEBUG
 }
