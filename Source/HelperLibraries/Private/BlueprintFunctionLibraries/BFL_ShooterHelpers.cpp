@@ -451,28 +451,13 @@ FLinearColor FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorFor
 	return FLinearColor::LerpUsingHSV(InFullSpeedColor, InNoSpeedColor, 1 - (InSpeed / InInitialSpeed));
 }
 
-void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawFullDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bInPersistentLines, const float InLifeTime, const uint8 InDepthPriority, const float InThickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& InFullSpeedColor, const FLinearColor& InNoSpeedColor) const
+void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebugLine(const UWorld* InWorld, const float InInitialSpeed, const bool bInPersistentLines, const float InLifeTime, const uint8 InDepthPriority, const float InThickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& InFullSpeedColor, const FLinearColor& InNoSpeedColor) const
 {
 #if ENABLE_DRAW_DEBUG
 	for (const FPenetrationSceneCastWithExitHitsUsingSpeedResult& PenetrationSceneCastWithExitHitsUsingSpeedResult : PenetrationSceneCastWithExitHitsUsingSpeedResults)
 	{
 		PenetrationSceneCastWithExitHitsUsingSpeedResult.DrawSpeedDebugLine(InWorld, InInitialSpeed, bInPersistentLines, InLifeTime, InDepthPriority, InThickness, InSegmentsLength, InSegmentsSpacingLength, InFullSpeedColor, InNoSpeedColor);
-		PenetrationSceneCastWithExitHitsUsingSpeedResult.DrawCollisionShapeDebug(InWorld, InInitialSpeed, false, InLifeTime, 0, 0, InFullSpeedColor, InNoSpeedColor);
 	}
-
-	// Draw collision shape debug for stop location on a ricochet. We are relying on the penetration casts to draw our stop locations, but if the bullet stops from a ricochet nerf, there won't be a next scene cast, so it's up to us to draw the end
-	if (PenetrationSceneCastWithExitHitsUsingSpeedResults.Num() > 0)
-	{
-		if (SpeedSceneCastInfo.StopLocation == PenetrationSceneCastWithExitHitsUsingSpeedResults.Last().SpeedSceneCastInfo.StopLocation)
-		{
-			const FColor SpeedDebugColor = FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(SpeedSceneCastInfo.StopSpeed, InInitialSpeed, InFullSpeedColor, InNoSpeedColor).ToFColor(true);
-
-			const FVector ShapeDebugLocation = SpeedSceneCastInfo.StopLocation + (PenetrationSceneCastWithExitHitsUsingSpeedResults.Last().SpeedSceneCastInfo.CastDirection * UBFL_CollisionQueryHelpers::SceneCastStartWallAvoidancePadding);
-			UBFL_DrawDebugHelpers::DrawDebugCollisionShape(InWorld, ShapeDebugLocation, SpeedSceneCastInfo.CollisionShapeCasted, SpeedSceneCastInfo.CollisionShapeCastedRotation, SpeedDebugColor, 16, bInPersistentLines, InLifeTime, InDepthPriority, InThickness);
-		}
-	}
-
-	DrawSpeedDebugText(InWorld, InInitialSpeed, InLifeTime, InFullSpeedColor, InNoSpeedColor);
 #endif // ENABLE_DRAW_DEBUG
 }
 void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebugText(const UWorld* InWorld, const float InInitialSpeed, const float InLifeTime, const FLinearColor& InFullSpeedColor, const FLinearColor& InNoSpeedColor) const
@@ -548,6 +533,28 @@ void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebu
 		}
 
 		PreviousRicochetTextOffsetDirection = RicochetTextOffsetDirection;
+	}
+#endif // ENABLE_DRAW_DEBUG
+}
+
+void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawCollisionShapeDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bInPersistentLines, const float InLifeTime, const uint8 InDepthPriority, const float InThickness, const FLinearColor& InFullSpeedColor, const FLinearColor& InNoSpeedColor) const
+{
+#if ENABLE_DRAW_DEBUG
+	for (const FPenetrationSceneCastWithExitHitsUsingSpeedResult& PenetrationSceneCastWithExitHitsUsingSpeedResult : PenetrationSceneCastWithExitHitsUsingSpeedResults)
+	{
+		PenetrationSceneCastWithExitHitsUsingSpeedResult.DrawCollisionShapeDebug(InWorld, InInitialSpeed, false, InLifeTime, 0, 0, InFullSpeedColor, InNoSpeedColor);
+	}
+
+	// Draw collision shape debug for stop location on a ricochet. We are relying on the penetration casts to draw our stop locations, but if the bullet stops from a ricochet nerf, there won't be a next scene cast, so it's up to us to draw the end
+	if (PenetrationSceneCastWithExitHitsUsingSpeedResults.Num() > 0)
+	{
+		if (SpeedSceneCastInfo.StopLocation == PenetrationSceneCastWithExitHitsUsingSpeedResults.Last().SpeedSceneCastInfo.StopLocation)
+		{
+			const FColor SpeedDebugColor = FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(SpeedSceneCastInfo.StopSpeed, InInitialSpeed, InFullSpeedColor, InNoSpeedColor).ToFColor(true);
+
+			const FVector ShapeDebugLocation = SpeedSceneCastInfo.StopLocation + (PenetrationSceneCastWithExitHitsUsingSpeedResults.Last().SpeedSceneCastInfo.CastDirection * UBFL_CollisionQueryHelpers::SceneCastStartWallAvoidancePadding);
+			UBFL_DrawDebugHelpers::DrawDebugCollisionShape(InWorld, ShapeDebugLocation, SpeedSceneCastInfo.CollisionShapeCasted, SpeedSceneCastInfo.CollisionShapeCastedRotation, SpeedDebugColor, 16, bInPersistentLines, InLifeTime, InDepthPriority, InThickness);
+		}
 	}
 #endif // ENABLE_DRAW_DEBUG
 }
