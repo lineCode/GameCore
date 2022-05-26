@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "BlueprintFunctionLibraries/BFL_CollisionQueryHelpers.h"
+#include "BlueprintFunctionLibraries/CollisionQuery/BFL_CollisionQueries.h"
 
-#include "BFL_ShooterHelpers.generated.h"
+#include "BFL_StrengthCollisionQueries.generated.h"
 
 
 
@@ -153,7 +153,7 @@ struct HELPERLIBRARIES_API FRicochetingPenetrationSceneCastWithExitHitsUsingSpee
  * Shooting related collision queries
  */
 UCLASS()
-class HELPERLIBRARIES_API UBFL_ShooterHelpers : public UBlueprintFunctionLibrary
+class HELPERLIBRARIES_API UBFL_StrengthCollisionQueries : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
@@ -183,10 +183,10 @@ public:
 	 */
 	static FShooterHitResult* PenetrationSceneCastWithExitHitsUsingSpeed(const float InInitialSpeed, TArray<float>& InOutPerCmSpeedNerfStack, const UWorld* InWorld, FPenetrationSceneCastWithExitHitsUsingSpeedResult& OutResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam,
 		const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf = DefaultGetPenetrationSpeedNerf,
-		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = UBFL_CollisionQueryHelpers::DefaultIsHitImpenetrable);
+		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = UBFL_CollisionQueries::DefaultIsHitImpenetrable);
 	static FShooterHitResult* PenetrationSceneCastWithExitHitsUsingSpeed(const float InInitialSpeed, const float InRangeFalloffNerf, const UWorld* InWorld, FPenetrationSceneCastWithExitHitsUsingSpeedResult& OutResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam,
 		const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf = DefaultGetPenetrationSpeedNerf,
-		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = UBFL_CollisionQueryHelpers::DefaultIsHitImpenetrable);
+		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = UBFL_CollisionQueries::DefaultIsHitImpenetrable);
 	//  END Custom query
 
 

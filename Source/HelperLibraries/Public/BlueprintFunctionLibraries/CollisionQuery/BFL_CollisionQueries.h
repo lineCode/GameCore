@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
-#include "BFL_CollisionQueryHelpers.generated.h"
+#include "BFL_CollisionQueries.generated.h"
 
 
 
@@ -35,7 +35,7 @@ struct HELPERLIBRARIES_API FExitAwareHitResult : public FHitResult
  * A collection of our custom collision queries
  */
 UCLASS()
-class HELPERLIBRARIES_API UBFL_CollisionQueryHelpers : public UBlueprintFunctionLibrary
+class HELPERLIBRARIES_API UBFL_CollisionQueries : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	
