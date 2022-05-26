@@ -71,22 +71,23 @@ public:
 	 *  This is effectively a linetrace/sweep multi that is not stopped by blocking hits and instead gets stopped by whatever condition the
 	 *  caller provides while still preserving the hits' collision responses.
 	 *  
-	 *  @param  InWorld                   The world to scene cast in
-	 *  @param  OutHits                   Array of hits (overlap and blocking) that were found until IsHitImpenetrable condition is met
-	 *  @param  InStart                   Start location of the scene cast
-	 *  @param  InEnd                     End location of the scene cast
-	 *  @param  InRotation                Rotation of the collision shape (needed for sweeps)
-	 *  @param  InTraceChannel            The trace channel for this scene cast. Unlike the default UWorld sweeps/traces, blocking hits for this channel don't stop us, but instead are used only for preserving the CollisionResponse of each hit.
-	 *  @param  InCollisionShape          Generic collision shape for sweeps/traces (FCollisionShape::LineShape for a line trace)
-	 *  @param  InCollisionQueryParams    Additional parameters used for the scene cast
-	 *  @param  IsHitImpenetrable         TFunction where caller indicates whether provided HitResult should stop us. Since we penetrate blocking hits, caller might want to define when to stop.
+	 *  @param  InWorld                      The world to scene cast in
+	 *  @param  OutHits                      Array of hits (overlap and blocking) that were found until IsHitImpenetrable condition is met
+	 *  @param  InStart                      Start location of the scene cast
+	 *  @param  InEnd                        End location of the scene cast
+	 *  @param  InRotation                   Rotation of the collision shape (needed for sweeps)
+	 *  @param  InTraceChannel               The trace channel for this scene cast. Unlike the default UWorld sweeps/traces, blocking hits for this channel don't stop us, but instead are used only for preserving the CollisionResponse of each hit.
+	 *  @param  InCollisionShape             Generic collision shape for sweeps/traces (FCollisionShape::LineShape for a line trace)
+	 *  @param  InCollisionQueryParams       Additional parameters used for the scene cast
+	 *  @param  InCollisionResponseParams    List of this scene cast's responses to certain collision channels
+	 *  @param  IsHitImpenetrable            TFunction where caller indicates whether provided HitResult should stop us. Since we penetrate blocking hits, caller might want to define when to stop.
 	 *  @return The impenetrable hit if we hit one
 	 */
-	static FHitResult* PenetrationSceneCast(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+	static FHitResult* PenetrationSceneCast(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam,
 		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = DefaultIsHitImpenetrable);
-	static FHitResult* PenetrationLineTrace(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+	static FHitResult* PenetrationLineTrace(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam,
 		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = DefaultIsHitImpenetrable);
-	static FHitResult* PenetrationSweep(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+	static FHitResult* PenetrationSweep(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam,
 		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = DefaultIsHitImpenetrable);
 	//  END Custom query
 
@@ -100,15 +101,15 @@ public:
 	 * @param  IsHitImpenetrable         TFunction where caller indicates whether provided HitResult should stop us. Since we penetrate blocking hits, caller might want to define when to stop.
 	 * @return The impenetrable hit if we hit one (will always be an entrance hit)
 	 */
-	static FExitAwareHitResult* PenetrationSceneCastWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+	static FExitAwareHitResult* PenetrationSceneCastWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam,
 		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = DefaultIsHitImpenetrable,
 		const bool bOptimizeBackwardsSceneCastLength = false,
 		const bool bDrawDebugForBackwardsStart = false);
-	static FExitAwareHitResult* PenetrationLineTraceWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+	static FExitAwareHitResult* PenetrationLineTraceWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam,
 		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = DefaultIsHitImpenetrable,
 		const bool bOptimizeBackwardsSceneCastLength = false,
 		const bool bDrawDebugForBackwardsStart = false);
-	static FExitAwareHitResult* PenetrationSweepWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam,
+	static FExitAwareHitResult* PenetrationSweepWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam,
 		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = DefaultIsHitImpenetrable,
 		const bool bOptimizeBackwardsSceneCastLength = false,
 		const bool bDrawDebugForBackwardsStart = false);
@@ -125,14 +126,18 @@ public:
 
 private:
 	/**
-	 * Modifies existing HitResults to respond appropriately to the caller's ECollisionChannel and FCollisionQueryParams.
+	 * Modifies existing HitResults to respond appropriately to the caller's ECollisionChannel, FCollisionQueryParams, and FCollisionResponseParams.
 	 * Outputs modified hits and potentially removes some.
 	 * 
-	 * @param  InOutHits					Hits to modify
-	 * @param  InTraceChannel				The collision channel in which the hits will conform to (e.g. setting FHitResult::bBlockingHit to true because of the hit component's response to our trace channel)
-	 * @param  InCollisionQueryParams		The collision query params in which the hits will conform to (e.g. removing blocking hits because of FCollisionQueryParams::bIgnoreBlocks)
+	 * @param  InOutHits                    Hits to modify
+	 * @param  InTraceChannel               The collision channel in which the hits will conform to (e.g. setting FHitResult::bBlockingHit to true because of the hit component's response to our trace channel)
+	 * @param  InCollisionQueryParams       The collision query params in which the hits will conform to (e.g. removing blocking hits because of FCollisionQueryParams::bIgnoreBlocks)
+	 * @param  InCollisionResponseParams    The trace's response params
 	 */
-	static void ChangeHitsResponseData(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam);
+	static void ChangeHitsResponseData(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam);
+
+	/** Determine the resulting response for a trace hitting a component */
+	static ECollisionResponse GetCollisionResponseForHitComponent(const UPrimitiveComponent* InHitComponent, const ECollisionChannel InTraceChannel, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam);
 
 
 	/** Returns the start point of our backwards scene cast based on information from the forwards cast */
