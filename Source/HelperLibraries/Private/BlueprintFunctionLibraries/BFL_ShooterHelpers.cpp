@@ -19,6 +19,7 @@ FShooterHitResult* UBFL_ShooterHelpers::PenetrationSceneCastWithExitHitsUsingSpe
 	const TFunctionRef<float(const FHitResult&)>& GetPenetrationSpeedNerf,
 	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable)
 {
+	OutResult.CollisionShapeCasted = InCollisionShape;
 	OutResult.StartLocation = InStart;
 	OutResult.StartSpeed = InInitialSpeed;
 	OutResult.CastDirection = (InEnd - InStart).GetSafeNormal();
@@ -173,6 +174,7 @@ void UBFL_ShooterHelpers::RicochetingPenetrationSceneCastWithExitHitsUsingSpeed(
 	const TFunctionRef<float(const FHitResult&)>& GetRicochetSpeedNerf,
 	const TFunctionRef<bool(const FHitResult&)>& IsHitRicochetable)
 {
+	OutResult.CollisionShapeCasted = InCollisionShape;
 	FVector CurrentSceneCastStart = InStart;
 	FVector CurrentSceneCastDirection = InDirection;
 	float DistanceTraveled = 0.f;

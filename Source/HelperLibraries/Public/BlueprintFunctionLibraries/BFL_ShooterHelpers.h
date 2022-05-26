@@ -71,6 +71,8 @@ struct HELPERLIBRARIES_API FPenetrationSceneCastWithExitHitsUsingSpeedResult
 	{
 	}
 
+	/** The shape we used for the query (line trace if ECollisionShape::Line) */
+	FCollisionShape CollisionShapeCasted;
 	/** Hit results in this scene cast */
 	TArray<FShooterHitResult> HitResults;
 	/** The direction casted in */
@@ -111,6 +113,8 @@ struct HELPERLIBRARIES_API FRicochetingPenetrationSceneCastWithExitHitsUsingSpee
 	{
 	}
 
+	/** The shape we used for the query (line trace if ECollisionShape::Line) */
+	FCollisionShape CollisionShapeCasted;
 	/** Penetration with speed scene casts. The initial and ricochets. */
 	TArray<FPenetrationSceneCastWithExitHitsUsingSpeedResult> PenetrationSceneCastWithExitHitsUsingSpeedResults;
 	/** The speed when we stopped */
