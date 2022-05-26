@@ -375,7 +375,7 @@ void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugLine(const UWor
 		}
 	}
 }
-void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
+void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebug(const UWorld* InWorld, const float InInitialSpeed, const float InLifeTime, const FLinearColor& InFullSpeedColor, const FLinearColor& InNoSpeedColor) const
 {
 	TArray<TPair<FVector, float>> LocationsWithSpeeds;
 
@@ -390,11 +390,11 @@ void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebug(const UWo
 	const FVector OffsetDirection = FVector::UpVector;
 	for (const TPair<FVector, float>& LocationWithSpeed : LocationsWithSpeeds)
 	{
-		const FColor SpeedDebugColor = GetDebugColorForSpeed(LocationWithSpeed.Value, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
+		const FColor SpeedDebugColor = GetDebugColorForSpeed(LocationWithSpeed.Value, InInitialSpeed, InFullSpeedColor, InNoSpeedColor).ToFColor(true);
 
 		const FVector StringLocation = LocationWithSpeed.Key/* + (OffsetDirection * 10.f)*/;
 		const FString DebugString = FString::Printf(TEXT("%.2f"), LocationWithSpeed.Value);
-		::DrawDebugString(InWorld, StringLocation, DebugString, nullptr, SpeedDebugColor, LifeTime);
+		::DrawDebugString(InWorld, StringLocation, DebugString, nullptr, SpeedDebugColor, InLifeTime);
 	}
 }
 
@@ -403,16 +403,16 @@ FLinearColor FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorFor
 	return FLinearColor::LerpUsingHSV(FullSpeedColor, NoSpeedColor, 1 - (InSpeed / InInitialSpeed));
 }
 
-void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawFullDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
+void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawFullDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bInPersistentLines, const float InLifeTime, const uint8 InDepthPriority, const float InThickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& InFullSpeedColor, const FLinearColor& InNoSpeedColor) const
 {
 	for (const FPenetrationSceneCastWithExitHitsUsingSpeedResult& PenetrationSceneCastWithExitHitsUsingSpeedResult : PenetrationSceneCastWithExitHitsUsingSpeedResults)
 	{
-		PenetrationSceneCastWithExitHitsUsingSpeedResult.DrawDebugLine(InWorld, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
+		PenetrationSceneCastWithExitHitsUsingSpeedResult.DrawDebugLine(InWorld, InInitialSpeed, bInPersistentLines, InLifeTime, InDepthPriority, InThickness, InSegmentsLength, InSegmentsSpacingLength, InFullSpeedColor, InNoSpeedColor);
 	}
 
-	DrawSpeedDebug(InWorld, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
+	DrawSpeedDebug(InWorld, InInitialSpeed, InLifeTime, InFullSpeedColor, InNoSpeedColor);
 }
-void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
+void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebug(const UWorld* InWorld, const float InInitialSpeed, const float InLifeTime, const FLinearColor& InFullSpeedColor, const FLinearColor& InNoSpeedColor) const
 {
 	FVector PreviousRicochetTextOffsetDirection = FVector::ZeroVector;
 	for (int32 i = 0; i < PenetrationSceneCastWithExitHitsUsingSpeedResults.Num(); ++i)
@@ -446,7 +446,7 @@ void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebu
 				continue;
 			}
 
-			const FColor SpeedDebugColor = FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(LocationsWithSpeeds[j].Value, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
+			const FColor SpeedDebugColor = FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(LocationsWithSpeeds[j].Value, InInitialSpeed, InFullSpeedColor, InNoSpeedColor).ToFColor(true);
 			FVector StringLocation = LocationsWithSpeeds[j].Key;
 
 			if (j == LocationsWithSpeeds.Num() - 1) // if we are the stop location
@@ -461,10 +461,10 @@ void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebu
 					if (i == PenetrationSceneCastWithExitHitsUsingSpeedResults.Num() - 1)
 					{
 						// Then just debug the post-ricochet speed here
-						const FColor ExtraEndSpeedDebugColor = FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(EndSpeed, InInitialSpeed, FullSpeedColor, NoSpeedColor).ToFColor(true);
+						const FColor ExtraEndSpeedDebugColor = FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorForSpeed(EndSpeed, InInitialSpeed, InFullSpeedColor, InNoSpeedColor).ToFColor(true);
 						const FVector ExtraEndStringLocation = LocationsWithSpeeds[j].Key + (RicochetTextOffsetDirection * RicochetOffsetAmount);
 						const FString ExtraEndDebugString = FString::Printf(TEXT("%.2f"), EndSpeed);
-						::DrawDebugString(InWorld, ExtraEndStringLocation, ExtraEndDebugString, nullptr, ExtraEndSpeedDebugColor, LifeTime);
+						::DrawDebugString(InWorld, ExtraEndStringLocation, ExtraEndDebugString, nullptr, ExtraEndSpeedDebugColor, InLifeTime);
 					}
 				}
 			}
@@ -480,7 +480,7 @@ void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebu
 
 			// Debug this location's speed
 			const FString DebugString = FString::Printf(TEXT("%.2f"), LocationsWithSpeeds[j].Value);
-			::DrawDebugString(InWorld, StringLocation, DebugString, nullptr, SpeedDebugColor, LifeTime);
+			::DrawDebugString(InWorld, StringLocation, DebugString, nullptr, SpeedDebugColor, InLifeTime);
 		}
 
 		PreviousRicochetTextOffsetDirection = RicochetTextOffsetDirection;
