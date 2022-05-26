@@ -196,79 +196,79 @@ void UBFL_CollisionQueryHelpers::ChangeHitsResponseData(TArray<FHitResult>& InOu
 {
 	for (int32 i = 0; i < InOutHits.Num(); ++i)
 	{
-		// Emulate the use of a trace channel by manually setting FHitResult::bBlockingHit and removing any hits that are ignored by the InTraceChannel
+		// Emulate the use of a Trace Channel and Collision Response Params by manually assigning FHitResult::bBlockingHit and removing any hits that are ignored
 		if (const UPrimitiveComponent* PrimitiveComponent = InOutHits[i].Component.Get())
 		{
-			ECollisionResponse ResponseForHit = GetCollisionResponseForHitComponent(PrimitiveComponent, InTraceChannel, InCollisionResponseParams);
-			if (ResponseForHit == ECollisionResponse::ECR_Block)
+			if (const FBodyInstance* HitBody = PrimitiveComponent->GetBodyInstance(InOutHits[i].BoneName))
 			{
-				// This hit component blocks our InTraceChannel (or our trace collision response params block the component)
-				InOutHits[i].bBlockingHit = true;
-
-				if (InCollisionQueryParams.bIgnoreBlocks)
+				const ECollisionResponse ResponseForHit = GetCollisionResponseForQueryOnBodyInstance(*HitBody, InTraceChannel, InCollisionResponseParams);
+				if (ResponseForHit == ECollisionResponse::ECR_Block)
 				{
-					// Ignore block
+					// This hit component blocks our InTraceChannel (or our trace's collision response params block the component)
+					InOutHits[i].bBlockingHit = true;
+
+					if (InCollisionQueryParams.bIgnoreBlocks)
+					{
+						// Ignore block
+						InOutHits.RemoveAt(i);
+						--i;
+						continue;
+					}
+				}
+				else if (ResponseForHit == ECollisionResponse::ECR_Overlap)
+				{
+					// This hit component overlaps our InTraceChannel (or our trace's collision response params overlap the component)
+					InOutHits[i].bBlockingHit = false;
+
+					if (InCollisionQueryParams.bIgnoreTouches)
+					{
+						// Ignore touch
+						InOutHits.RemoveAt(i);
+						--i;
+						continue;
+					}
+				}
+				else if (ResponseForHit == ECollisionResponse::ECR_Ignore)
+				{
+					// This hit component is ignored by our InTraceChannel (or our trace's collision response params ignore the component)
+
+					// Ignore this hit
 					InOutHits.RemoveAt(i);
 					--i;
 					continue;
 				}
-			}
-			else if (ResponseForHit == ECollisionResponse::ECR_Overlap)
-			{
-				// This hit component overlaps our InTraceChannel (or our trace collision response params overlap the component)
-				InOutHits[i].bBlockingHit = false;
-
-				if (InCollisionQueryParams.bIgnoreTouches)
-				{
-					// Ignore touch
-					InOutHits.RemoveAt(i);
-					--i;
-					continue;
-				}
-			}
-			else if (ResponseForHit == ECollisionResponse::ECR_Ignore)
-			{
-				// This hit component is ignored by our InTraceChannel (or our trace collision response params ignore the component)
-
-				// Ignore this hit
-				InOutHits.RemoveAt(i);
-				--i;
-				continue;
 			}
 		}
 	}
 }
 
-ECollisionResponse UBFL_CollisionQueryHelpers::GetCollisionResponseForHitComponent(const UPrimitiveComponent* InHitComponent, const ECollisionChannel InTraceChannel, const FCollisionResponseParams& InCollisionResponseParams)
+ECollisionResponse UBFL_CollisionQueryHelpers::GetCollisionResponseForQueryOnBodyInstance(const FBodyInstance& InBodyInstance, const ECollisionChannel InQueryCollisionChannel, const FCollisionResponseParams& InQueryCollisionResponseParams)
 {
-	if (IsValid(InHitComponent))
+	const bool bBodyQueryEnabled = ::CollisionEnabledHasQuery(InBodyInstance.GetCollisionEnabled());
+	if (bBodyQueryEnabled)
 	{
-		const FCollisionResponseParams ComponentCollisionResponseParams = InHitComponent->GetCollisionResponseToChannels();
-		const ECollisionChannel ComponentCollisionChannel = InHitComponent->GetCollisionObjectType();
+		const ECollisionChannel BodyCollisionChannel = InBodyInstance.GetObjectType();
+		const FCollisionResponseParams BodyCollisionResponseParams = InBodyInstance.GetResponseToChannels();
 
-		const ECollisionResponse ComponentResponse = ComponentCollisionResponseParams.CollisionResponse.GetResponse(InTraceChannel); // the component's response to the trace channel
-		const ECollisionResponse TraceResponse = InCollisionResponseParams.CollisionResponse.GetResponse(ComponentCollisionChannel); // the trace's response to the component channel
+		const ECollisionResponse QueryResponse = InQueryCollisionResponseParams.CollisionResponse.GetResponse(BodyCollisionChannel); // the trace's response to the component channel
+		const ECollisionResponse BodyResponse = BodyCollisionResponseParams.CollisionResponse.GetResponse(InQueryCollisionChannel); // the component's response to the trace channel
 
-
-		if (TraceResponse == ECollisionResponse::ECR_Ignore || ComponentResponse == ECollisionResponse::ECR_Ignore)
+		if (QueryResponse == ECollisionResponse::ECR_Ignore || BodyResponse == ECollisionResponse::ECR_Ignore)
 		{
 			return ECollisionResponse::ECR_Ignore;
 		}
-
-		if (TraceResponse == ECollisionResponse::ECR_Overlap || ComponentResponse == ECollisionResponse::ECR_Overlap)
+		if (QueryResponse == ECollisionResponse::ECR_Overlap || BodyResponse == ECollisionResponse::ECR_Overlap)
 		{
 			return ECollisionResponse::ECR_Overlap;
 		}
-
-		if (TraceResponse == ECollisionResponse::ECR_Block || ComponentResponse == ECollisionResponse::ECR_Block)
+		if (QueryResponse == ECollisionResponse::ECR_Block || BodyResponse == ECollisionResponse::ECR_Block)
 		{
 			return ECollisionResponse::ECR_Block;
 		}
 	}
 
-	// Return the default response to this trace channel
-	const ECollisionResponse DefaultResponseToTraceChannel = FCollisionResponseParams::DefaultResponseParam.CollisionResponse.GetResponse(InTraceChannel);
-	return DefaultResponseToTraceChannel;
+	// Query disabled for the given body
+	return ECollisionResponse::ECR_Ignore;
 }
 
 FVector UBFL_CollisionQueryHelpers::DetermineBackwardsSceneCastStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FHitResult* InHitStoppedAt, const bool bOptimizeBackwardsSceneCastLength, const float SweepShapeBoundingSphereRadius)

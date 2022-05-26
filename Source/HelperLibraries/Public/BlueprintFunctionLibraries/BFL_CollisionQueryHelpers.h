@@ -136,8 +136,8 @@ private:
 	 */
 	static void ChangeHitsResponseData(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam);
 
-	/** Determine the resulting response for a trace hitting a component */
-	static ECollisionResponse GetCollisionResponseForHitComponent(const UPrimitiveComponent* InHitComponent, const ECollisionChannel InTraceChannel, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam);
+	/** Determine the resulting response for a query hitting a body instance */
+	static ECollisionResponse GetCollisionResponseForQueryOnBodyInstance(const FBodyInstance& InBodyInstance, const ECollisionChannel InQueryCollisionChannel, const FCollisionResponseParams& InQueryCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam);
 
 
 	/** Returns the start point of our backwards scene cast based on information from the forwards cast */
