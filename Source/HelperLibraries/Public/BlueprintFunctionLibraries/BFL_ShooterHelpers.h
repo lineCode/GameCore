@@ -120,7 +120,7 @@ struct HELPERLIBRARIES_API FRicochetingPenetrationSceneCastWithExitHitsUsingSpee
 
 
 	/** Drawn representation of this query */
-	void Debug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& FullSpeedColor = FLinearColor::Green, const FLinearColor& NoSpeedColor = FLinearColor::Red) const;
+	void DrawFullDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& FullSpeedColor = FLinearColor::Green, const FLinearColor& NoSpeedColor = FLinearColor::Red) const;
 
 	/** Draws text representing this scene cast, indicating speed at significant points */
 	void DrawSpeedDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines = false, const float LifeTime = -1.f, const uint8 DepthPriority = 0, const float Thickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& FullSpeedColor = FLinearColor::Green, const FLinearColor& NoSpeedColor = FLinearColor::Red) const;

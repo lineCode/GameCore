@@ -401,7 +401,7 @@ FLinearColor FPenetrationSceneCastWithExitHitsUsingSpeedResult::GetDebugColorFor
 	return FLinearColor::LerpUsingHSV(FullSpeedColor, NoSpeedColor, 1 - (InSpeed / InInitialSpeed));
 }
 
-void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::Debug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
+void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawFullDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
 {
 	for (const FPenetrationSceneCastWithExitHitsUsingSpeedResult& PenetrationSceneCastWithExitHitsUsingSpeedResult : PenetrationSceneCastWithExitHitsUsingSpeedResults)
 	{
