@@ -373,7 +373,7 @@ void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugLine(const UWor
 		}
 	}
 }
-void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugText(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
+void FPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
 {
 	TArray<TPair<FVector, float>> LocationsWithSpeeds;
 
@@ -408,9 +408,9 @@ void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::Debug(const U
 		PenetrationSceneCastWithExitHitsUsingSpeedResult.DrawDebugLine(InWorld, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
 	}
 
-	DrawDebugText(InWorld, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
+	DrawSpeedDebug(InWorld, InInitialSpeed, bPersistentLines, LifeTime, DepthPriority, Thickness, InSegmentsLength, InSegmentsSpacingLength, FullSpeedColor, NoSpeedColor);
 }
-void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawDebugText(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
+void FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult::DrawSpeedDebug(const UWorld* InWorld, const float InInitialSpeed, const bool bPersistentLines, const float LifeTime, const uint8 DepthPriority, const float Thickness, const float InSegmentsLength, const float InSegmentsSpacingLength, const FLinearColor& FullSpeedColor, const FLinearColor& NoSpeedColor) const
 {
 	FVector PreviousRicochetTextOffsetDirection = FVector::ZeroVector;
 	for (int32 i = 0; i < PenetrationSceneCastWithExitHitsUsingSpeedResults.Num(); ++i)
