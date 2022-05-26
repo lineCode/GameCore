@@ -52,15 +52,16 @@ struct HELPERLIBRARIES_API FShooterHitResult : public FExitAwareHitResult
 };
 
 /**
- * Struct describing a PenetrationSceneCastWithExitHitsUsingSpeed()
+ * Describes a scene cast that uses speed. Since we have multible speed-related queries, this data is needed by each of them.
  */
 USTRUCT()
-struct HELPERLIBRARIES_API FPenetrationSceneCastWithExitHitsUsingSpeedResult
+struct HELPERLIBRARIES_API FSpeedSceneCastInfo
 {
 	GENERATED_BODY()
 
-	FPenetrationSceneCastWithExitHitsUsingSpeedResult()
-		: HitResults(TArray<FShooterHitResult>())
+	FSpeedSceneCastInfo()
+		: CollisionShapeCasted(FCollisionShape())
+		, CollisionShapeCastedRotation(FQuat::Identity)
 		, CastDirection(FVector::ZeroVector)
 		, StartLocation(FVector::ZeroVector)
 		, StartSpeed(0.f)
@@ -73,8 +74,8 @@ struct HELPERLIBRARIES_API FPenetrationSceneCastWithExitHitsUsingSpeedResult
 
 	/** The shape we used for the query (line trace if ECollisionShape::Line) */
 	FCollisionShape CollisionShapeCasted;
-	/** Hit results in this scene cast */
-	TArray<FShooterHitResult> HitResults;
+	/** Casted shape's rotation */
+	FQuat CollisionShapeCastedRotation;
 	/** The direction casted in */
 	FVector CastDirection;
 	/** The location where this scene cast began */
@@ -89,6 +90,26 @@ struct HELPERLIBRARIES_API FPenetrationSceneCastWithExitHitsUsingSpeedResult
 	float DistanceToStop;
 	/** The time where we were stopped */
 	float TimeAtStop;
+};
+
+/**
+ * Struct describing a PenetrationSceneCastWithExitHitsUsingSpeed()
+ */
+USTRUCT()
+struct HELPERLIBRARIES_API FPenetrationSceneCastWithExitHitsUsingSpeedResult
+{
+	GENERATED_BODY()
+
+	FPenetrationSceneCastWithExitHitsUsingSpeedResult()
+		: SpeedSceneCastInfo(FSpeedSceneCastInfo())
+		, HitResults(TArray<FShooterHitResult>())
+	{
+	}
+
+	/** Info about the scene cast that uses speed */
+	FSpeedSceneCastInfo SpeedSceneCastInfo;
+	/** Hit results in this scene cast */
+	TArray<FShooterHitResult> HitResults;
 
 
 	/** Draws line representing this scene cast, representing speed in color */
@@ -107,20 +128,15 @@ struct HELPERLIBRARIES_API FRicochetingPenetrationSceneCastWithExitHitsUsingSpee
 	GENERATED_BODY()
 
 	FRicochetingPenetrationSceneCastWithExitHitsUsingSpeedResult()
-		: PenetrationSceneCastWithExitHitsUsingSpeedResults(TArray<FPenetrationSceneCastWithExitHitsUsingSpeedResult>())
-		, EndSpeed(0.f)
-		, DistanceTraveled(0.f)
+		: SpeedSceneCastInfo(FSpeedSceneCastInfo())
+		, PenetrationSceneCastWithExitHitsUsingSpeedResults(TArray<FPenetrationSceneCastWithExitHitsUsingSpeedResult>())
 	{
 	}
 
-	/** The shape we used for the query (line trace if ECollisionShape::Line) */
-	FCollisionShape CollisionShapeCasted;
+	/** Info about the scene cast that uses speed */
+	FSpeedSceneCastInfo SpeedSceneCastInfo;
 	/** Penetration with speed scene casts. The initial and ricochets. */
 	TArray<FPenetrationSceneCastWithExitHitsUsingSpeedResult> PenetrationSceneCastWithExitHitsUsingSpeedResults;
-	/** The speed when we stopped */
-	float EndSpeed;
-	/** Distance traveled */
-	float DistanceTraveled;
 
 
 	/** Drawn representation of this query */
