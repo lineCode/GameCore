@@ -110,16 +110,6 @@ struct HELPERLIBRARIES_API FPenetrationSceneCastWithExitHitsUsingStrengthResult
 	FStrengthSceneCastInfo StrengthSceneCastInfo;
 	/** Hit results in this scene cast */
 	TArray<FStrengthHitResult> HitResults;
-
-
-	/** Draws line representing this scene cast, representing strength in color */
-	void DrawStrengthDebugLine(const UWorld* InWorld, const float InInitialStrength, const bool bInPersistentLines = false, const float InLifeTime = -1.f, const uint8 InDepthPriority = 0, const float InThickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& InFullStrengthColor = FLinearColor::Green, const FLinearColor& InNoStrengthColor = FLinearColor::Red) const;
-	/** Draws text representing this scene cast, indicating strength at significant points */
-	void DrawStrengthDebugText(const UWorld* InWorld, const float InInitialStrength, const float InLifeTime = -1.f, const FLinearColor& InFullStrengthColor = FLinearColor::Green, const FLinearColor& InNoStrengthColor = FLinearColor::Red) const;
-	/** Draws casted collision shape at significant points */
-	void DrawCollisionShapeDebug(const UWorld* InWorld, const float InInitialStrength, const bool bInPersistentLines = false, const float InLifeTime = -1.f, const uint8 InDepthPriority = 0, const float InThickness = 0.f, const FLinearColor& InFullStrengthColor = FLinearColor::Green, const FLinearColor& InNoStrengthColor = FLinearColor::Red) const;
-
-	static FLinearColor GetDebugColorForStrength(const float InStrength, const float InInitialStrength, const FLinearColor& InFullStrengthColor = FLinearColor::Green, const FLinearColor& InNoStrengthColor = FLinearColor::Red);
 };
 /**
  * Struct describing a RicochetingPenetrationSceneCastWithExitHitsUsingStrength()
@@ -139,14 +129,6 @@ struct HELPERLIBRARIES_API FRicochetingPenetrationSceneCastWithExitHitsUsingStre
 	FStrengthSceneCastInfo StrengthSceneCastInfo;
 	/** Penetration with strength scene casts. The initial and ricochets. */
 	TArray<FPenetrationSceneCastWithExitHitsUsingStrengthResult> PenetrationSceneCastWithExitHitsUsingStrengthResults;
-
-
-	/** Draws line representing this scene cast, representing strength in color */
-	void DrawStrengthDebugLine(const UWorld* InWorld, const float InInitialStrength, const bool bInPersistentLines = false, const float InLifeTime = -1.f, const uint8 InDepthPriority = 0, const float InThickness = 0.f, const float InSegmentsLength = 10.f, const float InSegmentsSpacingLength = 0.f, const FLinearColor& InFullStrengthColor = FLinearColor::Green, const FLinearColor& InNoStrengthColor = FLinearColor::Red) const;
-	/** Draws text representing this scene cast, indicating strength at significant points */
-	void DrawStrengthDebugText(const UWorld* InWorld, const float InInitialStrength, const float InLifeTime = -1.f, const FLinearColor& InFullStrengthColor = FLinearColor::Green, const FLinearColor& InNoStrengthColor = FLinearColor::Red) const;
-	/** Draws casted collision shape at significant points */
-	void DrawCollisionShapeDebug(const UWorld* InWorld, const float InInitialStrength, const bool bInPersistentLines = false, const float InLifeTime = -1.f, const uint8 InDepthPriority = 0, const float InThickness = 0.f, const FLinearColor& InFullStrengthColor = FLinearColor::Green, const FLinearColor& InNoStrengthColor = FLinearColor::Red) const;
 };
 
 /**

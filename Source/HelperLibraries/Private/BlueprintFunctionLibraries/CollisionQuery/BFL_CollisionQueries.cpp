@@ -5,7 +5,7 @@
 
 #include "BlueprintFunctionLibraries/BFL_MathHelpers.h"
 #include "BlueprintFunctionLibraries/BFL_ArrayHelpers.h"
-#include "BlueprintFunctionLibraries/BFL_DrawDebugHelpers.h"
+#include "BlueprintFunctionLibraries/Debugging/BFL_DrawDebugHelpers.h"
 #include "DrawDebugHelpers.h"
 #include "BlueprintFunctionLibraries/BFL_HitResultHelpers.h"
 
