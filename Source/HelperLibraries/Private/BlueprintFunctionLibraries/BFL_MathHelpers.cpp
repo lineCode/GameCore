@@ -46,16 +46,17 @@ float UBFL_MathHelpers::GetBoxBoundingSphereRadius(const FVector& BoxExtent)
 	return Diameter / 2;
 }
 
-bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& SegmentStart, const FVector& SegmentEnd, const FVector& Point, const float Tolerance)
+
+bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& InSegmentStart, const FVector& InSegmentEnd, const FVector& InPoint, const float InTolerance)
 {
-	if (PointsAreCollinear(SegmentStart, SegmentEnd, Point, Tolerance))
+	if (PointsAreCollinear({ InSegmentStart, InSegmentEnd, InPoint }, InTolerance))
 	{
 		// The point is on the line that start and end is on
 
-		const FVector StartToPointDirectionUnnormalized = (Point - SegmentStart);
-		const FVector PointToEndDirectionUnnormalized = (SegmentEnd - Point);
+		const FVector StartToPointDirectionUnnormalized = (InPoint - InSegmentStart);
+		const FVector PointToEndDirectionUnnormalized = (InSegmentEnd - InPoint);
 
-		const FVector SegmentDirectionUnnormalized = (SegmentEnd - SegmentStart);
+		const FVector SegmentDirectionUnnormalized = (InSegmentEnd - InSegmentStart);
 		const bool StartIsBeforePoint = (FVector::DotProduct(StartToPointDirectionUnnormalized, SegmentDirectionUnnormalized) >= 0);
 		const bool PointIsBeforeEnd = (FVector::DotProduct(PointToEndDirectionUnnormalized, SegmentDirectionUnnormalized) >= 0);
 
@@ -70,48 +71,34 @@ bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& SegmentStart, const FVe
 	return false;
 }
 
-bool UBFL_MathHelpers::PointsAreCollinear(const FVector& A, const FVector& B, const FVector& C, const float Tolerance)
+bool UBFL_MathHelpers::PointsAreCollinear(const TArray<FVector>& InPoints, const float InTolerance)
 {
-	const FVector AToB = (B - A).GetSafeNormal();
-	const FVector BToC = (C - B).GetSafeNormal();
-
-	const bool bSameDirection = FMath::IsNearlyEqual(FVector::DotProduct(AToB, BToC), 1, Tolerance);
-	const bool bOppositeDirection = FMath::IsNearlyEqual(FVector::DotProduct(AToB, BToC), -1, Tolerance);
-	if (bSameDirection || bOppositeDirection) // parallel
+	if (InPoints.Num() <= 2)
 	{
-		// Collinear:
-		// 
-		//       B
-		//       |
-		// C     C
-		// |     |
-		// |     |
-		// |     |
-		// B     |
-		// |     |
-		// |     |
-		// |     |
-		// A     A
-		// 
-
+		// Two points are always collinear
 		return true;
 	}
 
-	// Not collinear:
-	// 
-	// C
-	//  \
-	//   \
-	//    \
-	//     B
-	//    /
-	//   /
-	//  /
-	// A
-	// 
+	const FVector LineDirection = (InPoints[1] - InPoints[0]).GetSafeNormal();
 
-	return false;
+	for (int32 i = 2; i < InPoints.Num(); ++i) // skip the first two points
+	{
+		const FVector DirectionToPoint = (InPoints[i] - InPoints[0]).GetSafeNormal();
+
+		const bool bSameDirection = FMath::IsNearlyEqual(FVector::DotProduct(DirectionToPoint, LineDirection), 1, InTolerance);
+		const bool bOppositeDirection = FMath::IsNearlyEqual(FVector::DotProduct(DirectionToPoint, LineDirection), -1, InTolerance);
+		const bool bParallel = (bSameDirection || bOppositeDirection);
+		if (!bParallel)
+		{
+			// Not collinear
+			return false;
+		}
+	}
+
+	// All points lie on the same line
+	return true;
 }
+
 
 FVector UBFL_MathHelpers::GetLocationAimDirection(const UWorld* World, const FCollisionQueryParams& QueryParams, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location)
 {
