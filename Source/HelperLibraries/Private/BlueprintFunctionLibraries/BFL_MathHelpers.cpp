@@ -99,6 +99,32 @@ bool UBFL_MathHelpers::PointsAreCollinear(const TArray<FVector>& InPoints, const
 	return true;
 }
 
+bool UBFL_MathHelpers::PointsAreCoplanar(const TArray<FVector>& InPoints, const float InTolerance)
+{
+	if (InPoints.Num() <= 3)
+	{
+		// Three points are always coplanar
+		return true;
+	}
+
+	const FVector PlaneNormal = FVector::CrossProduct((InPoints[2] - InPoints[0]), (InPoints[1] - InPoints[0])).GetSafeNormal();
+
+	for (int32 i = 3; i < InPoints.Num(); ++i) // skip the first three points
+	{
+		const FVector DirectionToPoint = (InPoints[i] - InPoints[0]).GetSafeNormal();
+
+		const bool bPerpendicular = FMath::IsNearlyEqual(FVector::DotProduct(DirectionToPoint, PlaneNormal), 0, InTolerance);
+		if (!bPerpendicular)
+		{
+			// Not coplanar
+			return false;
+		}
+	}
+
+	// All points lie on the same plane
+	return true;
+}
+
 
 FVector UBFL_MathHelpers::GetLocationAimDirection(const UWorld* World, const FCollisionQueryParams& QueryParams, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location)
 {

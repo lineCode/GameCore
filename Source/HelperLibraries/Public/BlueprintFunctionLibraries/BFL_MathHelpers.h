@@ -42,6 +42,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "MathHelpers|VectorMath")
 		static bool PointsAreCollinear(const TArray<FVector>& InPoints, const float InTolerance = 1.e-4f); // InTolerance = KINDA_SMALL_NUMBER
 
+	/**
+	 * Given four points, do they exist on the same plane?
+	 */
+	UFUNCTION(BlueprintPure, Category = "MathHelpers|VectorMath")
+		static bool PointsAreCoplanar(const TArray<FVector>& InPoints, const float InTolerance = 1.e-4f); // InTolerance = KINDA_SMALL_NUMBER
+
 
 	/**
 	 * Gets the direction from the Location to the point that AimDir is looking at.
