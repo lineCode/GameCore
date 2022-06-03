@@ -32,10 +32,15 @@ public:
 
 	/**
 	 * Given a segment and a point, does that point lie on the segment?
-	 * NOTE: Does 3 distance calculations (3 sqrts)
 	 */
 	UFUNCTION(BlueprintPure, Category = "MathHelpers|VectorMath")
-		static bool PointLiesOnSegment(const FVector& Start, const FVector& End, const FVector& Point);
+		static bool PointLiesOnSegment(const FVector& SegmentStart, const FVector& SegmentEnd, const FVector& Point, const float Tolerance = 1.e-4f); // Tolerance = KINDA_SMALL_NUMBER
+
+	/**
+	 * Given three points, do they exist on the same line?
+	 */
+	UFUNCTION(BlueprintPure, Category = "MathHelpers|VectorMath")
+		static bool PointsAreCollinear(const FVector& A, const FVector& B, const FVector& C, const float Tolerance = 1.e-4f); // Tolerance = KINDA_SMALL_NUMBER
 
 	/**
 	 * Gets the direction from the Location to the point that AimDir is looking at.

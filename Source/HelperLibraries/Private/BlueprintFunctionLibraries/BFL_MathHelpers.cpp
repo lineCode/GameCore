@@ -46,20 +46,71 @@ float UBFL_MathHelpers::GetBoxBoundingSphereRadius(const FVector& BoxExtent)
 	return Diameter / 2;
 }
 
-bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& SegmentStart, const FVector& SegmentEnd, const FVector& Point)
+bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& SegmentStart, const FVector& SegmentEnd, const FVector& Point, const float Tolerance)
 {
-    const float SegmentDistance = FVector::Distance(SegmentStart, SegmentEnd);
-    const float SegmentStartToPointDistance = FVector::Distance(SegmentStart, Point);
-    const float PointToSegmentEndDistance = FVector::Distance(Point, SegmentEnd);
+	if (PointsAreCollinear(SegmentStart, SegmentEnd, Point, Tolerance))
+	{
+		// The point is on the line that start and end is on
 
-    // If SegmentEnd, SegmentEnd, and Point do not form a triangle, then Point is on the segment
-    if (FMath::IsNearlyEqual(SegmentStartToPointDistance + PointToSegmentEndDistance, SegmentDistance))
-    {
-        return true;
-    }
+		const FVector StartToPointDirectionUnnormalized = (Point - SegmentStart);
+		const FVector PointToEndDirectionUnnormalized = (SegmentEnd - Point);
 
-    // Point is not on the segment
-    return false;
+		const FVector SegmentDirectionUnnormalized = (SegmentEnd - SegmentStart);
+		const bool StartIsBeforePoint = (FVector::DotProduct(StartToPointDirectionUnnormalized, SegmentDirectionUnnormalized) >= 0);
+		const bool PointIsBeforeEnd = (FVector::DotProduct(PointToEndDirectionUnnormalized, SegmentDirectionUnnormalized) >= 0);
+
+		if (StartIsBeforePoint && PointIsBeforeEnd)
+		{
+			// The point is within start and end
+			return true;
+		}
+	}
+
+	// Point is not on the segment
+	return false;
+}
+
+bool UBFL_MathHelpers::PointsAreCollinear(const FVector& A, const FVector& B, const FVector& C, const float Tolerance)
+{
+	const FVector AToB = (B - A).GetSafeNormal();
+	const FVector BToC = (C - B).GetSafeNormal();
+
+	const bool bSameDirection = FMath::IsNearlyEqual(FVector::DotProduct(AToB, BToC), 1, Tolerance);
+	const bool bOppositeDirection = FMath::IsNearlyEqual(FVector::DotProduct(AToB, BToC), -1, Tolerance);
+	if (bSameDirection || bOppositeDirection) // parallel
+	{
+		// Collinear:
+		// 
+		//       B
+		//       |
+		// C     C
+		// |     |
+		// |     |
+		// |     |
+		// B     |
+		// |     |
+		// |     |
+		// |     |
+		// A     A
+		// 
+
+		return true;
+	}
+
+	// Not collinear:
+	// 
+	// C
+	//  \
+	//   \
+	//    \
+	//     B
+	//    /
+	//   /
+	//  /
+	// A
+	// 
+
+	return false;
 }
 
 FVector UBFL_MathHelpers::GetLocationAimDirection(const UWorld* World, const FCollisionQueryParams& QueryParams, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location)
