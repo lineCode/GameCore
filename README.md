@@ -1,4 +1,6 @@
 # UEHelperLibraries
+Current engine version: 5.0.2
+
 Unreal Engine C++ plugin containing static helper functions
 
 
