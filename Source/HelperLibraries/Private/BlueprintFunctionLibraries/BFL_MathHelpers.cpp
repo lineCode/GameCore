@@ -47,24 +47,52 @@ float UBFL_MathHelpers::GetBoxBoundingSphereRadius(const FVector& BoxExtent)
 }
 
 
+bool UBFL_MathHelpers::DirectionIsBetween(const FVector& InA, const FVector& InB, const bool bInInclusive, const FVector& InDirection, const float InTolerance)
+{
+	// Get the normals
+	// 
+	// InA ^
+	//     |        InDirection
+	//     |          ^
+	//     | NormalA /
+	//     |        /
+	//     |       /
+	//     |      /
+	//     |     /
+	//     |    /
+	//     |   /  NormalB
+	//     |  /
+	//     | /
+	//     |/_____________>
+	//                    InB
+	// 
+	const FVector NormalA = FVector::CrossProduct(InA, InDirection).GetSafeNormal();
+	const FVector NormalB = FVector::CrossProduct(InDirection, InB).GetSafeNormal();
+
+	// If we are inclusive, check if the direction is on one of the bounding directions
+	if (bInInclusive)
+	{
+		// Cross product of zero means that the direction is on the bound
+		if (NormalA.IsNearlyZero(InTolerance) || NormalB.IsNearlyZero(InTolerance))
+		{
+			return true;
+		}
+	}
+
+	// If the two normals are not opposites, then we are within the bounding directions
+	const bool bSameNormals = FMath::IsNearlyEqual(FVector::DotProduct(NormalA, NormalB), 1.f, InTolerance);
+	return bSameNormals;
+}
+
 bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& InSegmentStart, const FVector& InSegmentEnd, const FVector& InPoint, const float InTolerance)
 {
 	if (PointsAreCollinear({ InSegmentStart, InSegmentEnd, InPoint }, InTolerance))
 	{
 		// The point is on the line that start and end is on
 
-		const FVector StartToPointDirectionUnnormalized = (InPoint - InSegmentStart);
-		const FVector PointToEndDirectionUnnormalized = (InSegmentEnd - InPoint);
-
-		const FVector SegmentDirectionUnnormalized = (InSegmentEnd - InSegmentStart);
-		const bool StartIsBeforePoint = (FVector::DotProduct(StartToPointDirectionUnnormalized, SegmentDirectionUnnormalized) >= 0);
-		const bool PointIsBeforeEnd = (FVector::DotProduct(PointToEndDirectionUnnormalized, SegmentDirectionUnnormalized) >= 0);
-
-		if (StartIsBeforePoint && PointIsBeforeEnd)
-		{
-			// The point is within start and end
-			return true;
-		}
+		const FVector StartToPoint = (InPoint - InSegmentStart);
+		const FVector EndToPoint = (InPoint - InSegmentEnd);
+		return (FVector::DotProduct(StartToPoint, EndToPoint) <= 0); // true if they are opposite directions
 	}
 
 	// Point is not on the segment
@@ -99,30 +127,45 @@ bool UBFL_MathHelpers::PointsAreCollinear(const TArray<FVector>& InPoints, const
 	return true;
 }
 
-bool UBFL_MathHelpers::PointsAreCoplanar(const TArray<FVector>& InPoints, const float InTolerance)
+bool UBFL_MathHelpers::PointLiesOnTriangle(const FVector& InA, const FVector& InB, const FVector& InC, const FVector& InPoint, const float InTolerance)
 {
-	if (InPoints.Num() <= 3)
+	if (FMath::PointsAreCoplanar({ InA, InB, InC, InPoint }, InTolerance))
 	{
-		// Three points are always coplanar
-		return true;
-	}
+		// The point is on the same plane that the triangle is on
 
-	const FVector PlaneNormal = FVector::CrossProduct((InPoints[2] - InPoints[0]), (InPoints[1] - InPoints[0])).GetSafeNormal();
+		const FVector AToPoint = (InPoint - InA);
+		const FVector BToPoint = (InPoint - InB);
+		const FVector CToPoint = (InPoint - InC);
 
-	for (int32 i = 3; i < InPoints.Num(); ++i) // skip the first three points
-	{
-		const FVector DirectionToPoint = (InPoints[i] - InPoints[0]).GetSafeNormal();
-
-		const bool bPerpendicular = FMath::IsNearlyEqual(FVector::DotProduct(DirectionToPoint, PlaneNormal), 0, InTolerance);
-		if (!bPerpendicular)
+		const bool bPointIsBetweenBAndC = DirectionIsBetween((InB - InA), (InC - InA), true, AToPoint, InTolerance);
+		const bool bPointIsBetweenAAndC = DirectionIsBetween((InA - InB), (InC - InB), true, BToPoint, InTolerance);
+		if (bPointIsBetweenBAndC && bPointIsBetweenAAndC)
 		{
-			// Not coplanar
-			return false;
+			// Point is on the triangle
+			// 
+			//          C
+			//         / \
+			//        /   \
+			//       / o   \
+			//      /       \
+			//     /         \
+			//    A _________ B
+			// 
+			return true;
 		}
 	}
 
-	// All points lie on the same plane
-	return true;
+	// Point is not on the triangle
+	// 
+	//          C
+	//         / \
+	//      o /   \
+	//       /     \
+	//      /       \
+	//     /         \
+	//    A _________ B
+	// 
+	return false;
 }
 
 

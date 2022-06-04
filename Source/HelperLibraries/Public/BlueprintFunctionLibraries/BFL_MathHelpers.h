@@ -31,6 +31,13 @@ public:
 
 
 	/**
+	 * Given two bounding directions A and B and a test direction, does the direction lie between them?
+	 * Only can return true if the three directions are coplanar.
+	 */
+	UFUNCTION(BlueprintPure, Category = "MathHelpers|VectorMath")
+		static bool DirectionIsBetween(const FVector& InA, const FVector& InB, const bool bInInclusive, const FVector& InDirection, const float InTolerance = 1.e-4f); // InTolerance = KINDA_SMALL_NUMBER
+	
+	/**
 	 * Given a segment and a point, does that point lie on the segment?
 	 */
 	UFUNCTION(BlueprintPure, Category = "MathHelpers|VectorMath")
@@ -43,10 +50,10 @@ public:
 		static bool PointsAreCollinear(const TArray<FVector>& InPoints, const float InTolerance = 1.e-4f); // InTolerance = KINDA_SMALL_NUMBER
 
 	/**
-	 * Given four points, do they exist on the same plane?
+	 * Given a triangle and a point, does that point lie on the triangle?
 	 */
 	UFUNCTION(BlueprintPure, Category = "MathHelpers|VectorMath")
-		static bool PointsAreCoplanar(const TArray<FVector>& InPoints, const float InTolerance = 1.e-4f); // InTolerance = KINDA_SMALL_NUMBER
+		static bool PointLiesOnTriangle(const FVector& InA, const FVector& InB, const FVector& InC, const FVector& InPoint, const float InTolerance = 1.e-4f); // InTolerance = KINDA_SMALL_NUMBER
 
 
 	/**
