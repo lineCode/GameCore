@@ -47,7 +47,7 @@ float UBFL_MathHelpers::GetBoxBoundingSphereRadius(const FVector& BoxExtent)
 }
 
 
-bool UBFL_MathHelpers::DirectionIsBetween(const FVector& InA, const FVector& InB, const bool bInInclusive, const FVector& InDirection, const float InTolerance)
+bool UBFL_MathHelpers::DirectionIsBetween(const FVector& InA, const FVector& InB, const bool bInInclusive, const FVector& InDirection, const float InErrorTolerance)
 {
 	// Get the normals
 	// 
@@ -73,20 +73,20 @@ bool UBFL_MathHelpers::DirectionIsBetween(const FVector& InA, const FVector& InB
 	if (bInInclusive)
 	{
 		// Cross product of zero means that the direction is on the bound
-		if (NormalA.IsNearlyZero(InTolerance) || NormalB.IsNearlyZero(InTolerance))
+		if (NormalA.IsNearlyZero(InErrorTolerance) || NormalB.IsNearlyZero(InErrorTolerance))
 		{
 			return true;
 		}
 	}
 
 	// If the two normals are not opposites, then we are within the bounding directions
-	const bool bSameNormals = FMath::IsNearlyEqual(FVector::DotProduct(NormalA, NormalB), 1.f, InTolerance);
+	const bool bSameNormals = FMath::IsNearlyEqual(FVector::DotProduct(NormalA, NormalB), 1.f, InErrorTolerance);
 	return bSameNormals;
 }
 
-bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& InSegmentStart, const FVector& InSegmentEnd, const FVector& InPoint, const float InTolerance)
+bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& InSegmentStart, const FVector& InSegmentEnd, const FVector& InPoint, const float InErrorTolerance)
 {
-	if (PointsAreCollinear({ InSegmentStart, InSegmentEnd, InPoint }, InTolerance))
+	if (PointsAreCollinear({ InSegmentStart, InSegmentEnd, InPoint }, InErrorTolerance))
 	{
 		// The point is on the line that start and end is on
 
@@ -99,7 +99,7 @@ bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& InSegmentStart, const F
 	return false;
 }
 
-bool UBFL_MathHelpers::PointsAreCollinear(const TArray<FVector>& InPoints, const float InTolerance)
+bool UBFL_MathHelpers::PointsAreCollinear(const TArray<FVector>& InPoints, const float InErrorTolerance)
 {
 	if (InPoints.Num() <= 2)
 	{
@@ -113,8 +113,8 @@ bool UBFL_MathHelpers::PointsAreCollinear(const TArray<FVector>& InPoints, const
 	{
 		const FVector DirectionToPoint = (InPoints[i] - InPoints[0]).GetSafeNormal();
 
-		const bool bSameDirection = FMath::IsNearlyEqual(FVector::DotProduct(DirectionToPoint, LineDirection), 1, InTolerance);
-		const bool bOppositeDirection = FMath::IsNearlyEqual(FVector::DotProduct(DirectionToPoint, LineDirection), -1, InTolerance);
+		const bool bSameDirection = FMath::IsNearlyEqual(FVector::DotProduct(DirectionToPoint, LineDirection), 1, InErrorTolerance);
+		const bool bOppositeDirection = FMath::IsNearlyEqual(FVector::DotProduct(DirectionToPoint, LineDirection), -1, InErrorTolerance);
 		const bool bParallel = (bSameDirection || bOppositeDirection);
 		if (!bParallel)
 		{
@@ -127,32 +127,33 @@ bool UBFL_MathHelpers::PointsAreCollinear(const TArray<FVector>& InPoints, const
 	return true;
 }
 
-bool UBFL_MathHelpers::PointLiesOnTriangle(const FVector& InA, const FVector& InB, const FVector& InC, const FVector& InPoint, const float InTolerance)
+bool UBFL_MathHelpers::PointLiesOnTriangle(const FVector& InA, const FVector& InB, const FVector& InC, const FVector& InPoint, const float InErrorTolerance)
 {
-	if (FMath::PointsAreCoplanar({ InA, InB, InC, InPoint }, InTolerance))
+	// Whether the point is within A's angle
+	const FVector AToPoint = (InPoint - InA);
+	const FVector AToB = (InB - InA);
+	const FVector AToC = (InC - InA);
+	const bool bPointIsBetweenBAndC = DirectionIsBetween(AToB, AToC, true, AToPoint, InErrorTolerance);
+
+	// Whether the point is within B's angle
+	const FVector BToPoint = (InPoint - InB);
+	const FVector BToA = (InA - InB);
+	const FVector BToC = (InC - InB);
+	const bool bPointIsBetweenAAndC = DirectionIsBetween(BToA, BToC, true, BToPoint, InErrorTolerance);
+
+	if (bPointIsBetweenBAndC && bPointIsBetweenAAndC)
 	{
-		// The point is on the same plane that the triangle is on
-
-		const FVector AToPoint = (InPoint - InA);
-		const FVector BToPoint = (InPoint - InB);
-		const FVector CToPoint = (InPoint - InC);
-
-		const bool bPointIsBetweenBAndC = DirectionIsBetween((InB - InA), (InC - InA), true, AToPoint, InTolerance);
-		const bool bPointIsBetweenAAndC = DirectionIsBetween((InA - InB), (InC - InB), true, BToPoint, InTolerance);
-		if (bPointIsBetweenBAndC && bPointIsBetweenAAndC)
-		{
-			// Point is on the triangle
-			// 
-			//          C
-			//         / \
-			//        /   \
-			//       / o   \
-			//      /       \
-			//     /         \
-			//    A _________ B
-			// 
-			return true;
-		}
+		// Point is on the triangle
+		// 
+		//          C
+		//         / \
+		//        /   \
+		//       / o   \
+		//      /       \
+		//     /         \
+		//    A _________ B
+		// 
+		return true;
 	}
 
 	// Point is not on the triangle

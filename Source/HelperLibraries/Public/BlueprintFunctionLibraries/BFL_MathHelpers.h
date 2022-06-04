@@ -35,25 +35,25 @@ public:
 	 * Only can return true if the three directions are coplanar.
 	 */
 	UFUNCTION(BlueprintPure, Category = "MathHelpers|VectorMath")
-		static bool DirectionIsBetween(const FVector& InA, const FVector& InB, const bool bInInclusive, const FVector& InDirection, const float InTolerance = 1.e-4f); // InTolerance = KINDA_SMALL_NUMBER
+		static bool DirectionIsBetween(const FVector& InA, const FVector& InB, const bool bInInclusive, const FVector& InDirection, const float InErrorTolerance = 1.e-4f); // InErrorTolerance = KINDA_SMALL_NUMBER
 	
 	/**
 	 * Given a segment and a point, does that point lie on the segment?
 	 */
 	UFUNCTION(BlueprintPure, Category = "MathHelpers|VectorMath")
-		static bool PointLiesOnSegment(const FVector& InSegmentStart, const FVector& InSegmentEnd, const FVector& InPoint, const float InTolerance = 1.e-4f); // InTolerance = KINDA_SMALL_NUMBER
+		static bool PointLiesOnSegment(const FVector& InSegmentStart, const FVector& InSegmentEnd, const FVector& InPoint, const float InErrorTolerance = 1.e-4f); // InErrorTolerance = KINDA_SMALL_NUMBER
 
 	/**
 	 * Given three points, do they exist on the same line?
 	 */
 	UFUNCTION(BlueprintPure, Category = "MathHelpers|VectorMath")
-		static bool PointsAreCollinear(const TArray<FVector>& InPoints, const float InTolerance = 1.e-4f); // InTolerance = KINDA_SMALL_NUMBER
+		static bool PointsAreCollinear(const TArray<FVector>& InPoints, const float InErrorTolerance = 1.e-4f); // InErrorTolerance = KINDA_SMALL_NUMBER
 
 	/**
 	 * Given a triangle and a point, does that point lie on the triangle?
 	 */
 	UFUNCTION(BlueprintPure, Category = "MathHelpers|VectorMath")
-		static bool PointLiesOnTriangle(const FVector& InA, const FVector& InB, const FVector& InC, const FVector& InPoint, const float InTolerance = 1.e-4f); // InTolerance = KINDA_SMALL_NUMBER
+		static bool PointLiesOnTriangle(const FVector& InA, const FVector& InB, const FVector& InC, const FVector& InPoint, const float InErrorTolerance = 1.e-4f); // InErrorTolerance = KINDA_SMALL_NUMBER
 
 
 	/**
