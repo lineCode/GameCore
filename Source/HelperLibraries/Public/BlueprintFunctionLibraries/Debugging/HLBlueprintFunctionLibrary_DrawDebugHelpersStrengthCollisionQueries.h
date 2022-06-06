@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
-#include "BFL_StrengthCollisionQueriesDrawDebugHelpers.generated.h"
+#include "HLBlueprintFunctionLibrary_DrawDebugHelpersStrengthCollisionQueries.generated.h"
 
 
 struct FPenetrationSceneCastWithExitHitsUsingStrengthResult;
@@ -14,10 +14,10 @@ struct FRicochetingPenetrationSceneCastWithExitHitsUsingStrengthResult;
 
 
 /**
- * Draw debug functions for BFL_StrengthCollisionQueries
+ * Draw debug functions for HLBlueprintFunctionLibrary_StrengthCollisionQueries
  */
 UCLASS()
-class HELPERLIBRARIES_API UBFL_StrengthCollisionQueriesDrawDebugHelpers : public UBlueprintFunctionLibrary
+class HELPERLIBRARIES_API UHLBlueprintFunctionLibrary_DrawDebugHelpersStrengthCollisionQueries : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

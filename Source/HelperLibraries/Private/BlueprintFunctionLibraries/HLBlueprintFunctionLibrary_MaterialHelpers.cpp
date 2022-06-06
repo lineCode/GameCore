@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BlueprintFunctionLibraries/BFL_MaterialHelpers.h"
+#include "BlueprintFunctionLibraries/HLBlueprintFunctionLibrary_MaterialHelpers.h"
 
 
 
-int32 UBFL_MaterialHelpers::GetMaterialIndexFromSectionIndex(const UStaticMeshComponent* StaticMeshComponent, const int32 SectionIndex)
+int32 UHLBlueprintFunctionLibrary_MaterialHelpers::GetMaterialIndexFromSectionIndex(const UStaticMeshComponent* StaticMeshComponent, const int32 SectionIndex)
 {
     // Adapted from GetMaterialFromCollisionFaceIndex()
     const UStaticMesh* Mesh = StaticMeshComponent->GetStaticMesh();

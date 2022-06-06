@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
-#include "BFL_ArrayHelpers.generated.h"
+#include "HLBlueprintFunctionLibrary_ArrayHelpers.generated.h"
 
 
 
@@ -13,7 +13,7 @@
  * A collection of helpful functions related to TArrays
  */
 UCLASS()
-class HELPERLIBRARIES_API UBFL_ArrayHelpers : public UBlueprintFunctionLibrary
+class HELPERLIBRARIES_API UHLBlueprintFunctionLibrary_ArrayHelpers : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

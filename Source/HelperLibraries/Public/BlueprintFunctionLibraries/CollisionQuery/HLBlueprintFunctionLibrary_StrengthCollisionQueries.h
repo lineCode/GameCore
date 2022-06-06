@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "BlueprintFunctionLibraries/CollisionQuery/BFL_CollisionQueries.h"
+#include "BlueprintFunctionLibraries/CollisionQuery/HLBlueprintFunctionLibrary_CollisionQueries.h"
 
-#include "BFL_StrengthCollisionQueries.generated.h"
+#include "HLBlueprintFunctionLibrary_StrengthCollisionQueries.generated.h"
 
 
 
@@ -135,7 +135,7 @@ struct HELPERLIBRARIES_API FRicochetingPenetrationSceneCastWithExitHitsUsingStre
  * Queries that go as far as their strength allows
  */
 UCLASS()
-class HELPERLIBRARIES_API UBFL_StrengthCollisionQueries : public UBlueprintFunctionLibrary
+class HELPERLIBRARIES_API UHLBlueprintFunctionLibrary_StrengthCollisionQueries : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
@@ -165,10 +165,10 @@ public:
 	 */
 	static FStrengthHitResult* PenetrationSceneCastWithExitHitsUsingStrength(const float InInitialStrength, TArray<float>& InOutPerCmStrengthNerfStack, const UWorld* InWorld, FPenetrationSceneCastWithExitHitsUsingStrengthResult& OutResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam,
 		const TFunctionRef<float(const FHitResult&)>& GetPenetrationStrengthNerf = DefaultGetPenetrationStrengthNerf,
-		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = UBFL_CollisionQueries::DefaultIsHitImpenetrable);
+		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = UHLBlueprintFunctionLibrary_CollisionQueries::DefaultIsHitImpenetrable);
 	static FStrengthHitResult* PenetrationSceneCastWithExitHitsUsingStrength(const float InInitialStrength, const float InRangeFalloffNerf, const UWorld* InWorld, FPenetrationSceneCastWithExitHitsUsingStrengthResult& OutResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam,
 		const TFunctionRef<float(const FHitResult&)>& GetPenetrationStrengthNerf = DefaultGetPenetrationStrengthNerf,
-		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = UBFL_CollisionQueries::DefaultIsHitImpenetrable);
+		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = UHLBlueprintFunctionLibrary_CollisionQueries::DefaultIsHitImpenetrable);
 	//  END Custom query
 
 

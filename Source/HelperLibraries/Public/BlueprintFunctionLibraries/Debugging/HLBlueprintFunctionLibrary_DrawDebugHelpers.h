@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 
-#include "BFL_DrawDebugHelpers.generated.h"
+#include "HLBlueprintFunctionLibrary_DrawDebugHelpers.generated.h"
 
 
 
@@ -12,7 +12,7 @@
  * 
  */
 UCLASS()
-class HELPERLIBRARIES_API UBFL_DrawDebugHelpers : public UBlueprintFunctionLibrary
+class HELPERLIBRARIES_API UHLBlueprintFunctionLibrary_DrawDebugHelpers : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	

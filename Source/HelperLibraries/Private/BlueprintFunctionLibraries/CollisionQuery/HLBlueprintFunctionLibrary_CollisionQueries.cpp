@@ -1,22 +1,22 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BlueprintFunctionLibraries/CollisionQuery/BFL_CollisionQueries.h"
+#include "BlueprintFunctionLibraries/CollisionQuery/HLBlueprintFunctionLibrary_CollisionQueries.h"
 
-#include "BlueprintFunctionLibraries/BFL_MathHelpers.h"
-#include "BlueprintFunctionLibraries/BFL_ArrayHelpers.h"
-#include "BlueprintFunctionLibraries/Debugging/BFL_DrawDebugHelpers.h"
+#include "BlueprintFunctionLibraries/HLBlueprintFunctionLibrary_MathHelpers.h"
+#include "BlueprintFunctionLibraries/HLBlueprintFunctionLibrary_ArrayHelpers.h"
+#include "BlueprintFunctionLibraries/Debugging/HLBlueprintFunctionLibrary_DrawDebugHelpers.h"
 #include "DrawDebugHelpers.h"
-#include "BlueprintFunctionLibraries/BFL_HitResultHelpers.h"
+#include "BlueprintFunctionLibraries/HLBlueprintFunctionLibrary_HitResultHelpers.h"
 
 
 
-const float UBFL_CollisionQueries::SceneCastStartWallAvoidancePadding = .01f; // good number for bumping a scene cast start location away from the surface of geometry
-const TFunctionRef<bool(const FHitResult&)>& UBFL_CollisionQueries::DefaultIsHitImpenetrable = [](const FHitResult&) { return false; };
+const float UHLBlueprintFunctionLibrary_CollisionQueries::SceneCastStartWallAvoidancePadding = .01f; // good number for bumping a scene cast start location away from the surface of geometry
+const TFunctionRef<bool(const FHitResult&)>& UHLBlueprintFunctionLibrary_CollisionQueries::DefaultIsHitImpenetrable = [](const FHitResult&) { return false; };
 
 
 //  BEGIN Custom query
-bool UBFL_CollisionQueries::SceneCastMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams, const bool bOptimizeBackwardsSceneCastLength, const bool bDrawDebugForBackwardsStart)
+bool UHLBlueprintFunctionLibrary_CollisionQueries::SceneCastMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams, const bool bOptimizeBackwardsSceneCastLength, const bool bDrawDebugForBackwardsStart)
 {
 	// FORWARDS SCENE CAST to get our entrance hits
 	TArray<FHitResult> EntranceHitResults;
@@ -28,7 +28,7 @@ bool UBFL_CollisionQueries::SceneCastMultiWithExitHits(const UWorld* InWorld, TA
 
 
 	// BACKWARDS SCENE CAST to get our exit hits
-	const FVector BackwardsStart = DetermineBackwardsSceneCastStart(EntranceHitResults, InStart, InEnd, (bHitBlockingHit ? &EntranceHitResults.Last() : nullptr), bOptimizeBackwardsSceneCastLength, UBFL_MathHelpers::GetCollisionShapeBoundingSphereRadius(InCollisionShape));
+	const FVector BackwardsStart = DetermineBackwardsSceneCastStart(EntranceHitResults, InStart, InEnd, (bHitBlockingHit ? &EntranceHitResults.Last() : nullptr), bOptimizeBackwardsSceneCastLength, UHLBlueprintFunctionLibrary_MathHelpers::GetCollisionShapeBoundingSphereRadius(InCollisionShape));
 #if ENABLE_DRAW_DEBUG
 	if (bDrawDebugForBackwardsStart)
 	{
@@ -52,12 +52,12 @@ bool UBFL_CollisionQueries::SceneCastMultiWithExitHits(const UWorld* InWorld, TA
 
 	return bHitBlockingHit;
 }
-bool UBFL_CollisionQueries::LineTraceMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams, const bool bOptimizeBackwardsSceneCastLength, const bool bDrawDebugForBackwardsStart)
+bool UHLBlueprintFunctionLibrary_CollisionQueries::LineTraceMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams, const bool bOptimizeBackwardsSceneCastLength, const bool bDrawDebugForBackwardsStart)
 {
 	FCollisionShape LineShape = FCollisionShape();
 	return SceneCastMultiWithExitHits(InWorld, OutHits, InTraceStart, InTraceEnd, FQuat::Identity, InTraceChannel, LineShape, InCollisionQueryParams, InCollisionResponseParams, bOptimizeBackwardsSceneCastLength, bDrawDebugForBackwardsStart);
 }
-bool UBFL_CollisionQueries::SweepMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams, const bool bOptimizeBackwardsSceneCastLength, const bool bDrawDebugForBackwardsStart)
+bool UHLBlueprintFunctionLibrary_CollisionQueries::SweepMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams, const bool bOptimizeBackwardsSceneCastLength, const bool bDrawDebugForBackwardsStart)
 {
 	UE_CLOG(InCollisionShape.IsLine(), LogCollisionQueries, Warning, TEXT("%s() was used with a FCollisionShape::LineShape. Use the linetrace version if you want a line traces."), ANSI_TO_TCHAR(__FUNCTION__));
 	return SceneCastMultiWithExitHits(InWorld, OutHits, InSweepStart, InSweepEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InCollisionResponseParams, bOptimizeBackwardsSceneCastLength, bDrawDebugForBackwardsStart);
@@ -66,7 +66,7 @@ bool UBFL_CollisionQueries::SweepMultiWithExitHits(const UWorld* InWorld, TArray
 
 
 //  BEGIN Custom query
-FHitResult* UBFL_CollisionQueries::PenetrationSceneCast(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
+FHitResult* UHLBlueprintFunctionLibrary_CollisionQueries::PenetrationSceneCast(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
 	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable)
 {
 	// Use ECR_Overlap to have this scene cast overlap through blocking hits. Our CollisionResponseParams overrides blocking responses to overlap.
@@ -93,7 +93,7 @@ FHitResult* UBFL_CollisionQueries::PenetrationSceneCast(const UWorld* InWorld, T
 			// Remove the rest if there are any
 			if (OutHits.IsValidIndex(i + 1))
 			{
-				UBFL_ArrayHelpers::RemoveTheRestAt(OutHits, i + 1);
+				UHLBlueprintFunctionLibrary_ArrayHelpers::RemoveTheRestAt(OutHits, i + 1);
 			}
 
 			return &OutHits[i];
@@ -103,13 +103,13 @@ FHitResult* UBFL_CollisionQueries::PenetrationSceneCast(const UWorld* InWorld, T
 	// No impenetrable hits stopped us
 	return nullptr;
 }
-FHitResult* UBFL_CollisionQueries::PenetrationLineTrace(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
+FHitResult* UHLBlueprintFunctionLibrary_CollisionQueries::PenetrationLineTrace(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
 	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable)
 {
 	FCollisionShape LineShape = FCollisionShape(); // default constructor makes a line shape for us. I would want to use their FCollisionShape::LineShape but the engine doesn't seem to expose it for modules
 	return PenetrationSceneCast(InWorld, OutHits, InTraceStart, InTraceEnd, FQuat::Identity, InTraceChannel, LineShape, InCollisionQueryParams, InCollisionResponseParams, IsHitImpenetrable);
 }
-FHitResult* UBFL_CollisionQueries::PenetrationSweep(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
+FHitResult* UHLBlueprintFunctionLibrary_CollisionQueries::PenetrationSweep(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
 	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable)
 {
 	UE_CLOG(InCollisionShape.IsLine(), LogCollisionQueries, Warning, TEXT("%s() was used with a FCollisionShape::LineShape. Use the linetrace version if you want a line traces."), ANSI_TO_TCHAR(__FUNCTION__));
@@ -119,7 +119,7 @@ FHitResult* UBFL_CollisionQueries::PenetrationSweep(const UWorld* InWorld, TArra
 
 
 //  BEGIN Custom query
-FExitAwareHitResult* UBFL_CollisionQueries::PenetrationSceneCastWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
+FExitAwareHitResult* UHLBlueprintFunctionLibrary_CollisionQueries::PenetrationSceneCastWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
 	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable,
 	const bool bOptimizeBackwardsSceneCastLength,
 	const bool bDrawDebugForBackwardsStart)
@@ -132,7 +132,7 @@ FExitAwareHitResult* UBFL_CollisionQueries::PenetrationSceneCastWithExitHits(con
 	}
 
 
-	const FVector BackwardsStart = DetermineBackwardsSceneCastStart(EntranceHitResults, InStart, InEnd, ImpenetrableHit, bOptimizeBackwardsSceneCastLength, UBFL_MathHelpers::GetCollisionShapeBoundingSphereRadius(InCollisionShape));
+	const FVector BackwardsStart = DetermineBackwardsSceneCastStart(EntranceHitResults, InStart, InEnd, ImpenetrableHit, bOptimizeBackwardsSceneCastLength, UHLBlueprintFunctionLibrary_MathHelpers::GetCollisionShapeBoundingSphereRadius(InCollisionShape));
 #if ENABLE_DRAW_DEBUG
 	if (bDrawDebugForBackwardsStart)
 	{
@@ -159,7 +159,7 @@ FExitAwareHitResult* UBFL_CollisionQueries::PenetrationSceneCastWithExitHits(con
 	}
 	return &OutHits.Last();
 }
-FExitAwareHitResult* UBFL_CollisionQueries::PenetrationLineTraceWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
+FExitAwareHitResult* UHLBlueprintFunctionLibrary_CollisionQueries::PenetrationLineTraceWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InTraceStart, const FVector& InTraceEnd, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
 	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable,
 	const bool bOptimizeBackwardsSceneCastLength,
 	const bool bDrawDebugForBackwardsStart)
@@ -167,7 +167,7 @@ FExitAwareHitResult* UBFL_CollisionQueries::PenetrationLineTraceWithExitHits(con
 	FCollisionShape LineShape = FCollisionShape();
 	return PenetrationSceneCastWithExitHits(InWorld, OutHits, InTraceStart, InTraceEnd, FQuat::Identity, InTraceChannel, LineShape, InCollisionQueryParams, InCollisionResponseParams, IsHitImpenetrable, bOptimizeBackwardsSceneCastLength, bDrawDebugForBackwardsStart);
 }
-FExitAwareHitResult* UBFL_CollisionQueries::PenetrationSweepWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
+FExitAwareHitResult* UHLBlueprintFunctionLibrary_CollisionQueries::PenetrationSweepWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
 	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable,
 	const bool bOptimizeBackwardsSceneCastLength,
 	const bool bDrawDebugForBackwardsStart)
@@ -178,7 +178,7 @@ FExitAwareHitResult* UBFL_CollisionQueries::PenetrationSweepWithExitHits(const U
 //  END Custom query
 
 
-bool UBFL_CollisionQueries::SceneCastMultiByChannel(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams)
+bool UHLBlueprintFunctionLibrary_CollisionQueries::SceneCastMultiByChannel(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams)
 {
 	// UWorld has SweepMultiByChannel() which already checks for zero extent shapes, but it doesn't explicitly check for ECollisionChannel::LineShape and its name can lead you to think that it doesn't support line traces
 	if (InCollisionShape.IsLine())
@@ -191,7 +191,7 @@ bool UBFL_CollisionQueries::SceneCastMultiByChannel(const UWorld* InWorld, TArra
 	}
 }
 
-ECollisionResponse UBFL_CollisionQueries::GetCollisionResponseForQueryOnBodyInstance(const FBodyInstance& InBodyInstance, const ECollisionChannel InQueryCollisionChannel, const FCollisionResponseParams& InQueryCollisionResponseParams)
+ECollisionResponse UHLBlueprintFunctionLibrary_CollisionQueries::GetCollisionResponseForQueryOnBodyInstance(const FBodyInstance& InBodyInstance, const ECollisionChannel InQueryCollisionChannel, const FCollisionResponseParams& InQueryCollisionResponseParams)
 {
 	const bool bHasQueryEnabled = CollisionEnabledHasQuery(InBodyInstance.GetCollisionEnabled());
 	if (bHasQueryEnabled)
@@ -221,7 +221,7 @@ ECollisionResponse UBFL_CollisionQueries::GetCollisionResponseForQueryOnBodyInst
 }
 
 //  BEGIN private functions
-void UBFL_CollisionQueries::ChangeHitsResponseData(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams)
+void UHLBlueprintFunctionLibrary_CollisionQueries::ChangeHitsResponseData(TArray<FHitResult>& InOutHits, const ECollisionChannel InTraceChannel, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams)
 {
 	for (int32 i = 0; i < InOutHits.Num(); ++i)
 	{
@@ -271,7 +271,7 @@ void UBFL_CollisionQueries::ChangeHitsResponseData(TArray<FHitResult>& InOutHits
 	}
 }
 
-FVector UBFL_CollisionQueries::DetermineBackwardsSceneCastStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FHitResult* InHitStoppedAt, const bool bOptimizeBackwardsSceneCastLength, const float SweepShapeBoundingSphereRadius)
+FVector UHLBlueprintFunctionLibrary_CollisionQueries::DetermineBackwardsSceneCastStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FHitResult* InHitStoppedAt, const bool bOptimizeBackwardsSceneCastLength, const float SweepShapeBoundingSphereRadius)
 {
 	const FVector ForwardDir = (InForwardsEnd - InForwardsStart).GetSafeNormal();
 	
@@ -331,24 +331,24 @@ FVector UBFL_CollisionQueries::DetermineBackwardsSceneCastStart(const TArray<FHi
 	return OptimizedBackwardsSceneCastStart;
 }
 
-void UBFL_CollisionQueries::MakeBackwardsHitsDataRelativeToForwadsSceneCast(TArray<FHitResult>& InOutBackwardsHitResults, const TArray<FHitResult>& InForwardsHitResults)
+void UHLBlueprintFunctionLibrary_CollisionQueries::MakeBackwardsHitsDataRelativeToForwadsSceneCast(TArray<FHitResult>& InOutBackwardsHitResults, const TArray<FHitResult>& InForwardsHitResults)
 {
 	if (InOutBackwardsHitResults.Num() > 0)
 	{
 		const FHitResult& AForwardHit = InForwardsHitResults.Last();
 
-		const float ForwardsSceneCastLength = UBFL_HitResultHelpers::CheapCalculateTraceLength(AForwardHit);
-		const float BackwardsSceneCastLength = UBFL_HitResultHelpers::CheapCalculateTraceLength(InOutBackwardsHitResults.Last());
+		const float ForwardsSceneCastLength = UHLBlueprintFunctionLibrary_HitResultHelpers::CheapCalculateTraceLength(AForwardHit);
+		const float BackwardsSceneCastLength = UHLBlueprintFunctionLibrary_HitResultHelpers::CheapCalculateTraceLength(InOutBackwardsHitResults.Last());
 
 		for (FHitResult& HitResult : InOutBackwardsHitResults)
 		{
 			// Switch TraceStart and TraceEnd
-			UBFL_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(HitResult, 1, 0);
+			UHLBlueprintFunctionLibrary_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(HitResult, 1, 0);
 
 			// Now make the hit's trace length the same as the forwards scene cast length
 			// The backwards length is different when the optimization shortened it OR if we hit a stopping hit and it got shortened by wall avoidance padding
 			const float TimeAtNewTraceEnd = ForwardsSceneCastLength / BackwardsSceneCastLength;
-			UBFL_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(HitResult, 0, TimeAtNewTraceEnd);
+			UHLBlueprintFunctionLibrary_HitResultHelpers::AdjustTraceDataBySlidingTraceStartAndEndByTime(HitResult, 0, TimeAtNewTraceEnd);
 
 			// Although we just calculated TraceStart and TraceEnd, our forwards hits already have TraceStart and TraceEnd without any floating point errors. May as well use them.
 			HitResult.TraceStart = AForwardHit.TraceStart;
@@ -357,7 +357,7 @@ void UBFL_CollisionQueries::MakeBackwardsHitsDataRelativeToForwadsSceneCast(TArr
 	}
 }
 
-void UBFL_CollisionQueries::OrderHitResultsInForwardsDirection(TArray<FExitAwareHitResult>& OutOrderedHitResults, const TArray<FHitResult>& InEntranceHitResults, const TArray<FHitResult>& InExitHitResults, const FVector& InForwardsDirection)
+void UHLBlueprintFunctionLibrary_CollisionQueries::OrderHitResultsInForwardsDirection(TArray<FExitAwareHitResult>& OutOrderedHitResults, const TArray<FHitResult>& InEntranceHitResults, const TArray<FHitResult>& InExitHitResults, const FVector& InForwardsDirection)
 {
 	OutOrderedHitResults.Reserve(InEntranceHitResults.Num() + InExitHitResults.Num());
 
@@ -400,7 +400,7 @@ void UBFL_CollisionQueries::OrderHitResultsInForwardsDirection(TArray<FExitAware
 	}
 }
 
-void UBFL_CollisionQueries::DrawDebugForBackwardsStart(const UWorld* InWorld, const FCollisionShape& InCollisionShape, const FQuat& InRotation, const FVector& InBackwardsStart, const FVector& InBackwardsDir)
+void UHLBlueprintFunctionLibrary_CollisionQueries::DrawDebugForBackwardsStart(const UWorld* InWorld, const FCollisionShape& InCollisionShape, const FQuat& InRotation, const FVector& InBackwardsStart, const FVector& InBackwardsDir)
 {
 #if ENABLE_DRAW_DEBUG
 	const FColor DebugColor = FColor::Cyan;
@@ -409,7 +409,7 @@ void UBFL_CollisionQueries::DrawDebugForBackwardsStart(const UWorld* InWorld, co
 	if (InCollisionShape.IsLine() == false)
 	{
 		// Draw scene cast shape
-		UBFL_DrawDebugHelpers::DrawDebugCollisionShape(InWorld, InBackwardsStart, InCollisionShape, InRotation, DebugColor, 16, false, DebugLifetime, 0, 1.f);
+		UHLBlueprintFunctionLibrary_DrawDebugHelpers::DrawDebugCollisionShape(InWorld, InBackwardsStart, InCollisionShape, InRotation, DebugColor, 16, false, DebugLifetime, 0, 1.f);
 	}
 
 	// Draw backwards arrow

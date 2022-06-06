@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
-#include "BFL_MathHelpers.generated.h"
+#include "HLBlueprintFunctionLibrary_MathHelpers.generated.h"
 
 
 
@@ -13,7 +13,7 @@
  * A collection of common math helpers
  */
 UCLASS()
-class HELPERLIBRARIES_API UBFL_MathHelpers : public UBlueprintFunctionLibrary
+class HELPERLIBRARIES_API UHLBlueprintFunctionLibrary_MathHelpers : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	

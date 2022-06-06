@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
-#include "BFL_MaterialHelpers.generated.h"
+#include "HLBlueprintFunctionLibrary_MaterialHelpers.generated.h"
 
 
 
@@ -13,7 +13,7 @@
  * A collection of helper functions related to Materials
  */
 UCLASS()
-class HELPERLIBRARIES_API UBFL_MaterialHelpers : public UBlueprintFunctionLibrary
+class HELPERLIBRARIES_API UHLBlueprintFunctionLibrary_MaterialHelpers : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

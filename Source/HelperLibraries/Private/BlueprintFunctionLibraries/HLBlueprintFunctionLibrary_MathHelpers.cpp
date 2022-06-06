@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BlueprintFunctionLibraries/BFL_MathHelpers.h"
+#include "BlueprintFunctionLibraries/HLBlueprintFunctionLibrary_MathHelpers.h"
 
 
 
-float UBFL_MathHelpers::GetCollisionShapeBoundingSphereRadius(const FCollisionShape& CollisionShape)
+float UHLBlueprintFunctionLibrary_MathHelpers::GetCollisionShapeBoundingSphereRadius(const FCollisionShape& CollisionShape)
 {
 	switch (CollisionShape.ShapeType)
 	{
@@ -32,7 +32,7 @@ float UBFL_MathHelpers::GetCollisionShapeBoundingSphereRadius(const FCollisionSh
 	return 0.f;
 }
 
-float UBFL_MathHelpers::GetBoxBoundingSphereRadius(const FVector& BoxExtent)
+float UHLBlueprintFunctionLibrary_MathHelpers::GetBoxBoundingSphereRadius(const FVector& BoxExtent)
 {
 	const float LengthSquared = (BoxExtent.X * BoxExtent.X);
 	const float WidthSquared  = (BoxExtent.Y * BoxExtent.Y);
@@ -47,7 +47,7 @@ float UBFL_MathHelpers::GetBoxBoundingSphereRadius(const FVector& BoxExtent)
 }
 
 
-bool UBFL_MathHelpers::DirectionIsBetween(const FVector& InA, const FVector& InB, const bool bInInclusive, const FVector& InDirection, const float InErrorTolerance)
+bool UHLBlueprintFunctionLibrary_MathHelpers::DirectionIsBetween(const FVector& InA, const FVector& InB, const bool bInInclusive, const FVector& InDirection, const float InErrorTolerance)
 {
 	// Get the normals
 	// 
@@ -84,7 +84,7 @@ bool UBFL_MathHelpers::DirectionIsBetween(const FVector& InA, const FVector& InB
 	return bSameNormals;
 }
 
-bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& InSegmentStart, const FVector& InSegmentEnd, const FVector& InPoint, const float InErrorTolerance)
+bool UHLBlueprintFunctionLibrary_MathHelpers::PointLiesOnSegment(const FVector& InSegmentStart, const FVector& InSegmentEnd, const FVector& InPoint, const float InErrorTolerance)
 {
 	if (PointsAreCollinear({ InSegmentStart, InSegmentEnd, InPoint }, InErrorTolerance))
 	{
@@ -99,7 +99,7 @@ bool UBFL_MathHelpers::PointLiesOnSegment(const FVector& InSegmentStart, const F
 	return false;
 }
 
-bool UBFL_MathHelpers::PointsAreCollinear(const TArray<FVector>& InPoints, const float InErrorTolerance)
+bool UHLBlueprintFunctionLibrary_MathHelpers::PointsAreCollinear(const TArray<FVector>& InPoints, const float InErrorTolerance)
 {
 	if (InPoints.Num() <= 2)
 	{
@@ -127,7 +127,7 @@ bool UBFL_MathHelpers::PointsAreCollinear(const TArray<FVector>& InPoints, const
 	return true;
 }
 
-bool UBFL_MathHelpers::PointLiesOnTriangle(const FVector& InA, const FVector& InB, const FVector& InC, const FVector& InPoint, const float InErrorTolerance)
+bool UHLBlueprintFunctionLibrary_MathHelpers::PointLiesOnTriangle(const FVector& InA, const FVector& InB, const FVector& InC, const FVector& InPoint, const float InErrorTolerance)
 {
 	// Whether the point is within A's angle
 	const FVector AToPoint = (InPoint - InA);
@@ -170,7 +170,7 @@ bool UBFL_MathHelpers::PointLiesOnTriangle(const FVector& InA, const FVector& In
 }
 
 
-FVector UBFL_MathHelpers::GetLocationAimDirection(const UWorld* World, const FCollisionQueryParams& QueryParams, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location)
+FVector UHLBlueprintFunctionLibrary_MathHelpers::GetLocationAimDirection(const UWorld* World, const FCollisionQueryParams& QueryParams, const FVector& AimPoint, const FVector& AimDir, const float& MaxRange, const FVector& Location)
 {
 	if (Location.Equals(AimPoint))
 	{

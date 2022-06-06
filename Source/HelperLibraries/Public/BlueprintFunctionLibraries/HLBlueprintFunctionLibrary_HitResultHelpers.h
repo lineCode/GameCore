@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
-#include "BFL_HitResultHelpers.generated.h"
+#include "HLBlueprintFunctionLibrary_HitResultHelpers.generated.h"
 
 
 
@@ -14,7 +14,7 @@
  * Helpful for getting certain data from Hit Results and more.
  */
 UCLASS()
-class HELPERLIBRARIES_API UBFL_HitResultHelpers : public UBlueprintFunctionLibrary
+class HELPERLIBRARIES_API UHLBlueprintFunctionLibrary_HitResultHelpers : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	

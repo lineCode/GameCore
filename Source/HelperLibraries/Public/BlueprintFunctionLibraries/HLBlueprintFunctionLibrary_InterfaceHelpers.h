@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
-#include "BFL_InterfaceHelpers.generated.h"
+#include "HLBlueprintFunctionLibrary_InterfaceHelpers.generated.h"
 
 
 
@@ -13,7 +13,7 @@
  * A collection of common Interface helpers
  */
 UCLASS()
-class HELPERLIBRARIES_API UBFL_InterfaceHelpers : public UBlueprintFunctionLibrary
+class HELPERLIBRARIES_API UHLBlueprintFunctionLibrary_InterfaceHelpers : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	
@@ -36,12 +36,12 @@ protected:
 
 
 template <typename InterfaceType, typename UInterfaceType, typename T>
-InterfaceType* UBFL_InterfaceHelpers::GetInterfaceTypedOuter(const T* Object)
+InterfaceType* UHLBlueprintFunctionLibrary_InterfaceHelpers::GetInterfaceTypedOuter(const T* Object)
 {
 	return GetInterfaceTypedOuter<InterfaceType>(Object, UInterfaceType::StaticClass());
 }
 template <typename InterfaceType, typename T>
-InterfaceType* UBFL_InterfaceHelpers::GetInterfaceTypedOuter(const T* Object, const UClass* InterfaceClass)
+InterfaceType* UHLBlueprintFunctionLibrary_InterfaceHelpers::GetInterfaceTypedOuter(const T* Object, const UClass* InterfaceClass)
 {
 	InterfaceType* RetVal = nullptr;
 
