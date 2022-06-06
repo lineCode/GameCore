@@ -140,8 +140,8 @@ class HELPERLIBRARIES_API UHLBlueprintFunctionLibrary_StrengthCollisionQueries :
 	GENERATED_BODY()
 
 public:
-	static const TFunctionRef<float(const FHitResult&)>& DefaultGetPenetrationStrengthNerf;
-	static const TFunctionRef<float(const FHitResult&)>& DefaultGetRicochetStrengthNerf;
+	static const TFunctionRef<float(const FHitResult&)>& DefaultGetPerCmPenetrationNerf;
+	static const TFunctionRef<float(const FHitResult&)>& DefaultGetRicochetNerf;
 	static const TFunctionRef<bool(const FHitResult&)>& DefaultIsHitRicochetable;
 
 
@@ -150,7 +150,7 @@ public:
 	 * Given an initial strength, perform a scene cast, applying strength nerfs to the query as it penetrates through blocking hits.
 	 *
 	 * @param  InInitialStrength              Initial strength of the scene cast.
-	 * @param  InOutPerCmStrengthNerfStack    Stack of values that nerf the query's strength per cm. Top of stack represents the most recent nerf (in penetration terminology, the most recent/inner object currently being penetrated).
+	 * @param  InOutPerCmNerfStack            Stack of values that nerf the query's strength per cm. Top of stack represents the most recent nerf (in penetration terminology, the most recent/inner object currently being penetrated).
 	 * @param  InWorld                        The world to scene cast in
 	 * @param  OutResult                      Struct that fully describes this query
 	 * @param  InStart                        Start location of the scene cast
@@ -159,15 +159,15 @@ public:
 	 * @param  InTraceChannel                 The trace channel for this scene cast
 	 * @param  InCollisionShape               Generic collision shape for sweeps/traces (FCollisionShape::LineShape for a line trace)
 	 * @param  InCollisionQueryParams         Additional parameters used for the scene cast
-	 * @param  GetPenetrationStrengthNerf     TFunction where caller indicates a per cm strength nerf to apply when entering geometry given a hit
+	 * @param  GetPerCmPenetrationNerf        TFunction where caller indicates a per cm strength nerf to apply when entering geometry given a hit
 	 * @param  IsHitImpenetrable              TFunction where caller indicates whether provided HitResult should stop us
 	 * @return The impenetrable hit if we hit one
 	 */
-	static FStrengthHitResult* PenetrationSceneCastWithExitHitsUsingStrength(const float InInitialStrength, TArray<float>& InOutPerCmStrengthNerfStack, const UWorld* InWorld, FPenetrationSceneCastWithExitHitsUsingStrengthResult& OutResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam,
-		const TFunctionRef<float(const FHitResult&)>& GetPenetrationStrengthNerf = DefaultGetPenetrationStrengthNerf,
+	static FStrengthHitResult* PenetrationSceneCastWithExitHitsUsingStrength(const float InInitialStrength, TArray<float>& InOutPerCmNerfStack, const UWorld* InWorld, FPenetrationSceneCastWithExitHitsUsingStrengthResult& OutResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam,
+		const TFunctionRef<float(const FHitResult&)>& GetPerCmPenetrationNerf = DefaultGetPerCmPenetrationNerf,
 		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = UHLBlueprintFunctionLibrary_CollisionQueries::DefaultIsHitImpenetrable);
 	static FStrengthHitResult* PenetrationSceneCastWithExitHitsUsingStrength(const float InInitialStrength, const float InRangeFalloffNerf, const UWorld* InWorld, FPenetrationSceneCastWithExitHitsUsingStrengthResult& OutResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam,
-		const TFunctionRef<float(const FHitResult&)>& GetPenetrationStrengthNerf = DefaultGetPenetrationStrengthNerf,
+		const TFunctionRef<float(const FHitResult&)>& GetPerCmPenetrationNerf = DefaultGetPerCmPenetrationNerf,
 		const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable = UHLBlueprintFunctionLibrary_CollisionQueries::DefaultIsHitImpenetrable);
 	//  END Custom query
 
@@ -180,16 +180,16 @@ public:
 	 * @param  InStart                    Start location of the scene cast
 	 * @param  InDirection                The direction to scene cast
 	 * @param  InDistanceCap              The max distance to travel (performance wise, length of the cast will be this large and get smaller as we travel from ricochets)
-	 * @param  GetRicochetStrengthNerf    TFunction where caller indicates strength nerf to apply when hitting a ricochetable hit
+	 * @param  GetRicochetNerf            TFunction where caller indicates strength nerf to apply when hitting a ricochetable hit
 	 * @param  IsHitRicochetable          TFunction where caller indicates whether we should ricochet off of the HitResult
 	 */
-	static void RicochetingPenetrationSceneCastWithExitHitsUsingStrength(const float InInitialStrength, TArray<float>& InOutPerCmStrengthNerfStack, const UWorld* InWorld, FRicochetingPenetrationSceneCastWithExitHitsUsingStrengthResult& OutResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam, const int32 InRicochetCap = -1,
-		const TFunctionRef<float(const FHitResult&)>& GetPenetrationStrengthNerf = DefaultGetPenetrationStrengthNerf,
-		const TFunctionRef<float(const FHitResult&)>& GetRicochetStrengthNerf = DefaultGetRicochetStrengthNerf,
+	static void RicochetingPenetrationSceneCastWithExitHitsUsingStrength(const float InInitialStrength, TArray<float>& InOutPerCmNerfStack, const UWorld* InWorld, FRicochetingPenetrationSceneCastWithExitHitsUsingStrengthResult& OutResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam, const int32 InRicochetCap = -1,
+		const TFunctionRef<float(const FHitResult&)>& GetPerCmPenetrationNerf = DefaultGetPerCmPenetrationNerf,
+		const TFunctionRef<float(const FHitResult&)>& GetRicochetNerf = DefaultGetRicochetNerf,
 		const TFunctionRef<bool(const FHitResult&)>& IsHitRicochetable = DefaultIsHitRicochetable);
 	static void RicochetingPenetrationSceneCastWithExitHitsUsingStrength(const float InInitialStrength, const float InRangeFalloffNerf, const UWorld* InWorld, FRicochetingPenetrationSceneCastWithExitHitsUsingStrengthResult& OutResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam, const int32 InRicochetCap = -1,
-		const TFunctionRef<float(const FHitResult&)>& GetPenetrationStrengthNerf = DefaultGetPenetrationStrengthNerf,
-		const TFunctionRef<float(const FHitResult&)>& GetRicochetStrengthNerf = DefaultGetRicochetStrengthNerf,
+		const TFunctionRef<float(const FHitResult&)>& GetPerCmPenetrationNerf = DefaultGetPerCmPenetrationNerf,
+		const TFunctionRef<float(const FHitResult&)>& GetRicochetNerf = DefaultGetRicochetNerf,
 		const TFunctionRef<bool(const FHitResult&)>& IsHitRicochetable = DefaultIsHitRicochetable);
 	//  END Custom query
 

@@ -8,13 +8,13 @@
 
 
 
-const TFunctionRef<float(const FHitResult&)>& UHLBlueprintFunctionLibrary_StrengthCollisionQueries::DefaultGetPenetrationStrengthNerf = [](const FHitResult&) { return 0.f; };
-const TFunctionRef<float(const FHitResult&)>& UHLBlueprintFunctionLibrary_StrengthCollisionQueries::DefaultGetRicochetStrengthNerf = [](const FHitResult&) { return 0.f; };
+const TFunctionRef<float(const FHitResult&)>& UHLBlueprintFunctionLibrary_StrengthCollisionQueries::DefaultGetPerCmPenetrationNerf = [](const FHitResult&) { return 0.f; };
+const TFunctionRef<float(const FHitResult&)>& UHLBlueprintFunctionLibrary_StrengthCollisionQueries::DefaultGetRicochetNerf = [](const FHitResult&) { return 0.f; };
 const TFunctionRef<bool(const FHitResult&)>& UHLBlueprintFunctionLibrary_StrengthCollisionQueries::DefaultIsHitRicochetable = [](const FHitResult&) { return false; };
 
 //  BEGIN Custom query
-FStrengthHitResult* UHLBlueprintFunctionLibrary_StrengthCollisionQueries::PenetrationSceneCastWithExitHitsUsingStrength(const float InInitialStrength, TArray<float>& InOutPerCmStrengthNerfStack, const UWorld* InWorld, FPenetrationSceneCastWithExitHitsUsingStrengthResult& OutResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
-	const TFunctionRef<float(const FHitResult&)>& GetPenetrationStrengthNerf,
+FStrengthHitResult* UHLBlueprintFunctionLibrary_StrengthCollisionQueries::PenetrationSceneCastWithExitHitsUsingStrength(const float InInitialStrength, TArray<float>& InOutPerCmNerfStack, const UWorld* InWorld, FPenetrationSceneCastWithExitHitsUsingStrengthResult& OutResult, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
+	const TFunctionRef<float(const FHitResult&)>& GetPerCmPenetrationNerf,
 	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable)
 {
 	OutResult.StrengthSceneCastInfo.CollisionShapeCasted = InCollisionShape;
@@ -47,9 +47,9 @@ FStrengthHitResult* UHLBlueprintFunctionLibrary_StrengthCollisionQueries::Penetr
 		}
 
 		// Calculate how much strength per cm we should be taking away for this segment
-		// Accumulate all of the strength nerfs from the InOutPerCmStrengthNerfStack
+		// Accumulate all of the strength nerfs from the InOutPerCmNerfStack
 		float StrengthToTakeAwayPerCm = 0.f;
-		for (const float& StrengthNerf : InOutPerCmStrengthNerfStack)
+		for (const float& StrengthNerf : InOutPerCmNerfStack)
 		{
 			StrengthToTakeAwayPerCm += StrengthNerf;
 		}
@@ -94,18 +94,18 @@ FStrengthHitResult* UHLBlueprintFunctionLibrary_StrengthCollisionQueries::Penetr
 				return &AddedStrengthHit;
 			}
 
-			// Update the InOutPerCmStrengthNerfStack with this hit
+			// Update the InOutPerCmNerfStack with this hit
 			if (AddedStrengthHit.bIsExitHit == false)		// Add new nerf if we are entering something
 			{
-				InOutPerCmStrengthNerfStack.Push(GetPenetrationStrengthNerf(AddedStrengthHit));
+				InOutPerCmNerfStack.Push(GetPerCmPenetrationNerf(AddedStrengthHit));
 			}
 			else										// Remove most recent nerf if we are exiting something
 			{
-				const int32 IndexOfNerfThatWeAreExiting = InOutPerCmStrengthNerfStack.FindLast(GetPenetrationStrengthNerf(AddedStrengthHit));
+				const int32 IndexOfNerfThatWeAreExiting = InOutPerCmNerfStack.FindLast(GetPerCmPenetrationNerf(AddedStrengthHit));
 
 				if (IndexOfNerfThatWeAreExiting != INDEX_NONE)
 				{
-					InOutPerCmStrengthNerfStack.RemoveAt(IndexOfNerfThatWeAreExiting);
+					InOutPerCmNerfStack.RemoveAt(IndexOfNerfThatWeAreExiting);
 				}
 				else
 				{
@@ -129,9 +129,9 @@ FStrengthHitResult* UHLBlueprintFunctionLibrary_StrengthCollisionQueries::Penetr
 				}
 
 				// Calculate how much strength per cm we should be taking away for this segment
-				// Accumulate all of the strength nerfs from the InOutPerCmStrengthNerfStack
+				// Accumulate all of the strength nerfs from the InOutPerCmNerfStack
 				float StrengthToTakeAwayPerCm = 0.f;
-				for (const float& StrengthNerf : InOutPerCmStrengthNerfStack)
+				for (const float& StrengthNerf : InOutPerCmNerfStack)
 				{
 					StrengthToTakeAwayPerCm += StrengthNerf;
 				}
@@ -169,8 +169,8 @@ FStrengthHitResult* UHLBlueprintFunctionLibrary_StrengthCollisionQueries::Penetr
 
 //  BEGIN Custom query
 void UHLBlueprintFunctionLibrary_StrengthCollisionQueries::RicochetingPenetrationSceneCastWithExitHitsUsingStrength(const float InInitialStrength, TArray<float>& InOutPerCmStrengthNerfStack, const UWorld* InWorld, FRicochetingPenetrationSceneCastWithExitHitsUsingStrengthResult& OutResult, const FVector& InStart, const FVector& InDirection, const float InDistanceCap, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams, const int32 InRicochetCap,
-	const TFunctionRef<float(const FHitResult&)>& GetPenetrationStrengthNerf,
-	const TFunctionRef<float(const FHitResult&)>& GetRicochetStrengthNerf,
+	const TFunctionRef<float(const FHitResult&)>& GetPerCmPenetrationNerf,
+	const TFunctionRef<float(const FHitResult&)>& GetRicochetNerf,
 	const TFunctionRef<bool(const FHitResult&)>& IsHitRicochetable)
 {
 	if (InDistanceCap <= 0.f)
@@ -196,7 +196,7 @@ void UHLBlueprintFunctionLibrary_StrengthCollisionQueries::RicochetingPenetratio
 		const FVector SceneCastEnd = CurrentSceneCastStart + (CurrentSceneCastDirection * (InDistanceCap - DistanceTraveled));
 
 		FPenetrationSceneCastWithExitHitsUsingStrengthResult& PenetrationSceneCastWithExitHitsUsingStrengthResult = OutResult.PenetrationSceneCastWithExitHitsUsingStrengthResults.AddDefaulted_GetRef();
-		FStrengthHitResult* RicochetableHit = PenetrationSceneCastWithExitHitsUsingStrength(CurrentStrength, InOutPerCmStrengthNerfStack, InWorld, PenetrationSceneCastWithExitHitsUsingStrengthResult, CurrentSceneCastStart, SceneCastEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InCollisionResponseParams, GetPenetrationStrengthNerf, IsHitRicochetable);
+		FStrengthHitResult* RicochetableHit = PenetrationSceneCastWithExitHitsUsingStrength(CurrentStrength, InOutPerCmStrengthNerfStack, InWorld, PenetrationSceneCastWithExitHitsUsingStrengthResult, CurrentSceneCastStart, SceneCastEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InCollisionResponseParams, GetPerCmPenetrationNerf, IsHitRicochetable);
 
 		DistanceTraveled += PenetrationSceneCastWithExitHitsUsingStrengthResult.StrengthSceneCastInfo.DistanceToStop;
 		CurrentStrength = PenetrationSceneCastWithExitHitsUsingStrengthResult.StrengthSceneCastInfo.StopStrength;
@@ -220,7 +220,7 @@ void UHLBlueprintFunctionLibrary_StrengthCollisionQueries::RicochetingPenetratio
 		// Apply ricochet strength nerf
 		if (RicochetableHit)
 		{
-			CurrentStrength -= GetRicochetStrengthNerf(*RicochetableHit);
+			CurrentStrength -= GetRicochetNerf(*RicochetableHit);
 		}
 
 		// Check if we should end here
