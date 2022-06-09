@@ -7,7 +7,7 @@ public class HelperLibraries : ModuleRules
 	public HelperLibraries(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-		PrivatePCHHeaderFile = "Private/HelperLibrariesPCH.h";
+		PrivatePCHHeaderFile = "Private/HelperLibrariesPrivatePCH.h";
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core" });
 		PrivateDependencyModuleNames.AddRange(
