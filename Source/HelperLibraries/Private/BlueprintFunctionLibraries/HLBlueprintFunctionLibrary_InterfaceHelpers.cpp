@@ -6,23 +6,28 @@
 
 
 // NOTE: This code is nearly duplicate from UHLBlueprintFunctionLibrary_ActorHelpers::GetTypedOwner() - if you change one, change the other
-UObject* UHLBlueprintFunctionLibrary_InterfaceHelpers::GetInterfaceTypedOuter(const UObject* InObject, const TSubclassOf<UInterface> InOuterClass)
+UObject* UHLBlueprintFunctionLibrary_InterfaceHelpers::GetInterfaceTypedOuter(const UObject* InSelfObject, const TSubclassOf<UInterface> InOuterClass)
 {
-	if (InObject == nullptr)
+	if (IsValid(InSelfObject))
 	{
-		return nullptr;
-	}
-
-	UObject* Result = nullptr;
-
-	// Works similar to UObjectBaseUtility::GetTypedOuter()
-	for (UObject* NextOuter = InObject->GetOuter(); (Result == nullptr && NextOuter != nullptr); NextOuter = NextOuter->GetOuter())
-	{
-		if (NextOuter->GetClass()->ImplementsInterface(InOuterClass))
+		// Works similar to UObjectBaseUtility::GetTypedOuter()
+		for (UObject* NextOuter = InSelfObject->GetOuter(); IsValid(NextOuter); NextOuter = NextOuter->GetOuter())
 		{
-			Result = NextOuter;
+			if (NextOuter->GetClass()->ImplementsInterface(InOuterClass))
+			{
+				return NextOuter;
+			}
 		}
 	}
 
-	return Result;
+	return nullptr;
+}
+UObject* UHLBlueprintFunctionLibrary_InterfaceHelpers::GetInterfaceTypedOuterIncludingSelf(UObject* InSelfObject, const TSubclassOf<UInterface> InOuterClass)
+{
+	if (IsValid(InSelfObject) && InSelfObject->GetClass()->ImplementsInterface(InOuterClass))
+	{
+		return InSelfObject;
+	}
+
+	return GetInterfaceTypedOuter(InSelfObject, InOuterClass);
 }

@@ -6,23 +6,28 @@
 
 
 // NOTE: This code is nearly duplicate from UHLBlueprintFunctionLibrary_InterfaceHelpers::GetInterfaceTypedOuter() - if you change one, change the other.
-AActor* UHLBlueprintFunctionLibrary_ActorHelpers::GetTypedOwner(const AActor* InActor, const TSubclassOf<AActor> InOwnerClass)
+AActor* UHLBlueprintFunctionLibrary_ActorHelpers::GetTypedOwner(const AActor* InSelfActor, const TSubclassOf<AActor> InOwnerClass)
 {
-	if (InActor == nullptr)
+	if (IsValid(InSelfActor))
 	{
-		return nullptr;
-	}
-
-	AActor* Result = nullptr;
-
-	// Works similar to UObjectBaseUtility::GetTypedOuter()
-	for (AActor* NextOwner = InActor->GetOwner(); (Result == nullptr && NextOwner != nullptr); NextOwner = NextOwner->GetOwner())
-	{
-		if (NextOwner->IsA(InOwnerClass))
+		// Works similar to UObjectBaseUtility::GetTypedOuter()
+		for (AActor* NextOwner = InSelfActor->GetOwner(); IsValid(NextOwner); NextOwner = NextOwner->GetOwner())
 		{
-			Result = NextOwner;
+			if (NextOwner->IsA(InOwnerClass))
+			{
+				return NextOwner;
+			}
 		}
 	}
 
-	return Result;
+	return nullptr;
+}
+AActor* UHLBlueprintFunctionLibrary_ActorHelpers::GetTypedOwnerIncludingSelf(AActor* InSelfActor, const TSubclassOf<AActor> InOwnerClass)
+{
+	if (IsValid(InSelfActor) && InSelfActor->IsA(InOwnerClass))
+	{
+		return InSelfActor;
+	}
+
+	return GetTypedOwner(InSelfActor, InOwnerClass);
 }

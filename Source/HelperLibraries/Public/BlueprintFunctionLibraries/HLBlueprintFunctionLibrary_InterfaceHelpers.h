@@ -24,19 +24,34 @@ public:
 	 * Takes in UClass for the outer type.
 	 */
 	UFUNCTION(BlueprintPure, Category = "InterfaceHelpers")
-		static UObject* GetInterfaceTypedOuter(const UObject* InObject, const TSubclassOf<UInterface> InOuterClass);
+		static UObject* GetInterfaceTypedOuter(const UObject* InSelfObject, const TSubclassOf<UInterface> InOuterClass);
+	/**
+	 * Version of GetInterfaceTypedOuter() that includes the self object for consideration.
+	 */
+	UFUNCTION(BlueprintPure, Category = "InterfaceHelpers")
+		static UObject* GetInterfaceTypedOuterIncludingSelf(UObject* InSelfObject, const TSubclassOf<UInterface> InOuterClass);
 
 	/**
 	 * Version of GetInterfaceTypedOuter() that returns the result in its type.
 	 */
 	template <class IInterfaceType, class UInterfaceType>
-	static IInterfaceType* GetInterfaceTypedOuterCasted(const UObject* InObject);
+	static IInterfaceType* GetInterfaceTypedOuterCasted(const UObject* InSelfObject);
+	/**
+	 * Version of GetInterfaceTypedOuterIncludingSelf() that returns the result in its type.
+	 */
+	template <class IInterfaceType, class UInterfaceType>
+	static IInterfaceType* GetInterfaceTypedOuterIncludingSelfCasted(UObject* InSelfObject);
 
 };
 
 
 template <class IInterfaceType, class UInterfaceType>
-IInterfaceType* UHLBlueprintFunctionLibrary_InterfaceHelpers::GetInterfaceTypedOuterCasted(const UObject* InObject)
+IInterfaceType* UHLBlueprintFunctionLibrary_InterfaceHelpers::GetInterfaceTypedOuterCasted(const UObject* InSelfObject)
 {
-	return Cast<IInterfaceType>(GetInterfaceTypedOuter(InObject, UInterfaceType::StaticClass()));
+	return Cast<IInterfaceType>(GetInterfaceTypedOuter(InSelfObject, UInterfaceType::StaticClass()));
+}
+template <class IInterfaceType, class UInterfaceType>
+IInterfaceType* UHLBlueprintFunctionLibrary_InterfaceHelpers::GetInterfaceTypedOuterIncludingSelfCasted(UObject* InSelfObject)
+{
+	return Cast<IInterfaceType>(GetInterfaceTypedOuterIncludingSelf(InSelfObject, UInterfaceType::StaticClass()));
 }
