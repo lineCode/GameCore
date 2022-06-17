@@ -31,3 +31,12 @@ AActor* UHLBlueprintFunctionLibrary_ActorHelpers::GetTypedOwnerIncludingSelf(AAc
 
 	return GetTypedOwner(InSelfActor, InOwnerClass);
 }
+AActor* UHLBlueprintFunctionLibrary_ActorHelpers::GetTypedOwnerOfComponent(const UActorComponent* InSelfComponent, const TSubclassOf<AActor> InOwnerClass)
+{
+	if (IsValid(InSelfComponent))
+	{
+		return GetTypedOwnerIncludingSelf(InSelfComponent->GetOwner(), InOwnerClass);
+	}
+
+	return nullptr;
+}
