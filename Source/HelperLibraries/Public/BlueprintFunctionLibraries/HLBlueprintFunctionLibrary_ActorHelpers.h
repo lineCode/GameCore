@@ -30,6 +30,12 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, Category = "ActorHelpers")
 		static AActor* GetTypedOwnerIncludingSelf(AActor* InSelfActor, const TSubclassOf<AActor> InOwnerClass);
+	/**
+	 * Version of GetTypedOwner() for actor components.
+	 */
+	UFUNCTION(BlueprintPure, Category = "ActorHelpers")
+		static AActor* GetTypedOwnerOfComponent(const UActorComponent* InSelfComponent, const TSubclassOf<AActor> InOwnerClass);
+
 
 	/**
 	 * Version of GetTypedOwner() that returns the result in its type.
@@ -41,6 +47,11 @@ public:
 	 */
 	template <class T>
 	static T* GetTypedOwnerIncludingSelfCasted(AActor* InSelfActor);
+	/**
+	 * Version of GetTypedOwnerOfComponent() that returns the result in its type.
+	 */
+	template <class T>
+	static T* GetTypedOwnerOfComponentCasted(const UActorComponent* InSelfComponent);
 
 };
 
@@ -54,4 +65,9 @@ template <class T>
 T* UHLBlueprintFunctionLibrary_ActorHelpers::GetTypedOwnerIncludingSelfCasted(AActor* InSelfActor)
 {
 	return Cast<T>(GetTypedOwnerIncludingSelf(InSelfActor, T::StaticClass()));
+}
+template <class T>
+T* UHLBlueprintFunctionLibrary_ActorHelpers::GetTypedOwnerOfComponentCasted(const UActorComponent* InSelfComponent)
+{
+	return Cast<T>(GetTypedOwnerOfComponent(InSelfComponent, T::StaticClass()));
 }
