@@ -59,7 +59,7 @@ bool UHLBlueprintFunctionLibrary_CollisionQueries::LineTraceMultiWithExitHits(co
 }
 bool UHLBlueprintFunctionLibrary_CollisionQueries::SweepMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams, const bool bOptimizeBackwardsSceneCastLength, const bool bDrawDebugForBackwardsStart)
 {
-	UE_CLOG(InCollisionShape.IsLine(), LogCollisionQueries, Warning, TEXT("%s() was used with a FCollisionShape::LineShape. Use the linetrace version if you want a line traces."), ANSI_TO_TCHAR(__FUNCTION__));
+	UE_CLOG(InCollisionShape.IsLine(), LogHLCollisionQueries, Warning, TEXT("%s() was used with a FCollisionShape::LineShape. Use the linetrace version if you want a line traces."), ANSI_TO_TCHAR(__FUNCTION__));
 	return SceneCastMultiWithExitHits(InWorld, OutHits, InSweepStart, InSweepEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InCollisionResponseParams, bOptimizeBackwardsSceneCastLength, bDrawDebugForBackwardsStart);
 }
 //  END Custom query
@@ -112,7 +112,7 @@ FHitResult* UHLBlueprintFunctionLibrary_CollisionQueries::PenetrationLineTrace(c
 FHitResult* UHLBlueprintFunctionLibrary_CollisionQueries::PenetrationSweep(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InSweepStart, const FVector& InSweepEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams,
 	const TFunctionRef<bool(const FHitResult&)>& IsHitImpenetrable)
 {
-	UE_CLOG(InCollisionShape.IsLine(), LogCollisionQueries, Warning, TEXT("%s() was used with a FCollisionShape::LineShape. Use the linetrace version if you want a line traces."), ANSI_TO_TCHAR(__FUNCTION__));
+	UE_CLOG(InCollisionShape.IsLine(), LogHLCollisionQueries, Warning, TEXT("%s() was used with a FCollisionShape::LineShape. Use the linetrace version if you want a line traces."), ANSI_TO_TCHAR(__FUNCTION__));
 	return PenetrationSceneCast(InWorld, OutHits, InSweepStart, InSweepEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InCollisionResponseParams, IsHitImpenetrable);
 }
 //  END Custom query
@@ -172,7 +172,7 @@ FExitAwareHitResult* UHLBlueprintFunctionLibrary_CollisionQueries::PenetrationSw
 	const bool bOptimizeBackwardsSceneCastLength,
 	const bool bDrawDebugForBackwardsStart)
 {
-	UE_CLOG(InCollisionShape.IsLine(), LogCollisionQueries, Warning, TEXT("%s() was used with a FCollisionShape::LineShape. Use the linetrace version if you want a line traces."), ANSI_TO_TCHAR(__FUNCTION__));
+	UE_CLOG(InCollisionShape.IsLine(), LogHLCollisionQueries, Warning, TEXT("%s() was used with a FCollisionShape::LineShape. Use the linetrace version if you want a line traces."), ANSI_TO_TCHAR(__FUNCTION__));
 	return PenetrationSceneCastWithExitHits(InWorld, OutHits, InSweepStart, InSweepEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InCollisionResponseParams, IsHitImpenetrable, bOptimizeBackwardsSceneCastLength, bDrawDebugForBackwardsStart);
 }
 //  END Custom query

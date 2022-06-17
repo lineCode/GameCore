@@ -24,7 +24,7 @@ public:
 	{
 		if (InOutArray.IsValidIndex(Index) == false)
 		{
-			UE_LOG(LogArrayHelpers, Error, TEXT("%s() was given an invalid index [%d]"), ANSI_TO_TCHAR(__FUNCTION__), Index);
+			UE_LOG(LogHLArrayHelpers, Error, TEXT("%s() was given an invalid index [%d]"), ANSI_TO_TCHAR(__FUNCTION__), Index);
 			check(0);
 		}
 
@@ -38,12 +38,12 @@ public:
 	{
 		if (InOutArray.IsValidIndex(FromIndex) == false)
 		{
-			UE_LOG(LogArrayHelpers, Error, TEXT("%s() was given an invalid FromIndex [%d]"), ANSI_TO_TCHAR(__FUNCTION__), FromIndex);
+			UE_LOG(LogHLArrayHelpers, Error, TEXT("%s() was given an invalid FromIndex [%d]"), ANSI_TO_TCHAR(__FUNCTION__), FromIndex);
 			check(0);
 		}
 		if (InOutArray.IsValidIndex(ToIndex) == false)
 		{
-			UE_LOG(LogArrayHelpers, Error, TEXT("%s() was given an invalid ToIndex [%d]"), ANSI_TO_TCHAR(__FUNCTION__), ToIndex);
+			UE_LOG(LogHLArrayHelpers, Error, TEXT("%s() was given an invalid ToIndex [%d]"), ANSI_TO_TCHAR(__FUNCTION__), ToIndex);
 			check(0);
 		}
 

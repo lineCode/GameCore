@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+	// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BlueprintFunctionLibraries/HLBlueprintFunctionLibrary_HitResultHelpers.h"
@@ -24,7 +24,7 @@ float UHLBlueprintFunctionLibrary_HitResultHelpers::CheapCalculateTraceLength(co
 
 	if (InHit.Time == 0.f)
 	{
-		UE_LOG(LogHitResultHelpers, Verbose, TEXT("%s() Cannot cheaply calculate trace length from a hit result with time of 0. Fall back on normal (more expensive) method for calculating"), ANSI_TO_TCHAR(__FUNCTION__));
+		UE_LOG(LogHLHitResultHelpers, Verbose, TEXT("%s() Cannot cheaply calculate trace length from a hit result with time of 0. Fall back on normal (more expensive) method for calculating"), ANSI_TO_TCHAR(__FUNCTION__));
 		return FVector::Distance(InHit.TraceStart, InHit.TraceEnd);
 	}
 	
@@ -61,7 +61,7 @@ void UHLBlueprintFunctionLibrary_HitResultHelpers::AdjustTraceDataBySlidingTrace
 
 	if (InOutHit.Time < 0.f || InOutHit.Time > 1.f)
 	{
-		UE_LOG(LogHitResultHelpers, Error, TEXT("%s(): The new TraceStart and TraceEnd has put the hit out of range of the trace"), ANSI_TO_TCHAR(__FUNCTION__));
+		UE_LOG(LogHLHitResultHelpers, Error, TEXT("%s(): The new TraceStart and TraceEnd has put the hit out of range of the trace"), ANSI_TO_TCHAR(__FUNCTION__));
 		check(0);
 	}
 }

@@ -80,7 +80,7 @@ FStrengthHitResult* UHLBlueprintFunctionLibrary_StrengthCollisionQueries::Penetr
 			{
 				// Initial overlaps would mess up our PerCmStrengthNerfStack so skip it
 				// Btw this is only a thing for simple collision queries
-				UE_LOG(LogStrengthCollisionQueries, Verbose, TEXT("%s() Penetration strength query started inside of something. Make sure to not start this query inside of geometry. We will not consider this hit for the penetration strength nerf stack but it will still be included in the outputed hits. Hit Actor: [%s]."), ANSI_TO_TCHAR(__FUNCTION__), GetData(HitResults[i].GetActor()->GetName()));
+				UE_LOG(LogHLStrengthCollisionQueries, Verbose, TEXT("%s() Penetration strength query started inside of something. Make sure to not start this query inside of geometry. We will not consider this hit for the penetration strength nerf stack but it will still be included in the outputed hits. Hit Actor: [%s]."), ANSI_TO_TCHAR(__FUNCTION__), GetData(HitResults[i].GetActor()->GetName()));
 				continue;
 			}
 
@@ -109,7 +109,7 @@ FStrengthHitResult* UHLBlueprintFunctionLibrary_StrengthCollisionQueries::Penetr
 				}
 				else
 				{
-					UE_LOG(LogStrengthCollisionQueries, Error, TEXT("%s() Exited a penetration nerf that was never entered. This must be the callers fault by his GetPenetrationStrengthNerf() not having consistent strength nerfs for entrances and exits. Hit Actor: [%s]."), ANSI_TO_TCHAR(__FUNCTION__), GetData(AddedStrengthHit.GetActor()->GetName()));
+					UE_LOG(LogHLStrengthCollisionQueries, Error, TEXT("%s() Exited a penetration nerf that was never entered. This must be the callers fault by his GetPenetrationStrengthNerf() not having consistent strength nerfs for entrances and exits. Hit Actor: [%s]."), ANSI_TO_TCHAR(__FUNCTION__), GetData(AddedStrengthHit.GetActor()->GetName()));
 				}
 			}
 

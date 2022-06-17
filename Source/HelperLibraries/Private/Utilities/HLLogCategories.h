@@ -6,9 +6,9 @@
 
 
 
-DECLARE_LOG_CATEGORY_EXTERN(LogDrawDebugHelpers, Log, All)
-DECLARE_LOG_CATEGORY_EXTERN(LogMathHelpers, Log, All)
-DECLARE_LOG_CATEGORY_EXTERN(LogArrayHelpers, Log, All)
-DECLARE_LOG_CATEGORY_EXTERN(LogCollisionQueries, Log, All)
-DECLARE_LOG_CATEGORY_EXTERN(LogHitResultHelpers, Log, All)
-DECLARE_LOG_CATEGORY_EXTERN(LogStrengthCollisionQueries, Log, All)
+DECLARE_LOG_CATEGORY_EXTERN(LogHLDrawDebugHelpers, Log, All)
+DECLARE_LOG_CATEGORY_EXTERN(LogHLMathHelpers, Log, All)
+DECLARE_LOG_CATEGORY_EXTERN(LogHLArrayHelpers, Log, All)
+DECLARE_LOG_CATEGORY_EXTERN(LogHLCollisionQueries, Log, All)
+DECLARE_LOG_CATEGORY_EXTERN(LogHLHitResultHelpers, Log, All)
+DECLARE_LOG_CATEGORY_EXTERN(LogHLStrengthCollisionQueries, Log, All)

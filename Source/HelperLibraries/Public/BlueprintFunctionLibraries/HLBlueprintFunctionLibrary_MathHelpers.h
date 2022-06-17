@@ -68,7 +68,7 @@ public:
 	{
 		if (InValues.Num() <= 0)
 		{
-			UE_LOG(/*LogMathHelpers*/LogTemp, Warning, TEXT("%s() was not given any values to lerp between! Returning a default value."), ANSI_TO_TCHAR(__FUNCTION__)); // NOTE: could not figure out how to use the private LogMathHelpers log category in this templated function so we are just using LogTemp
+			UE_LOG(/*LogHLMathHelpers*/LogTemp, Warning, TEXT("%s() was not given any values to lerp between! Returning a default value."), ANSI_TO_TCHAR(__FUNCTION__)); // NOTE: could not figure out how to use the private LogHLMathHelpers log category in this templated function so we are just using LogTemp
 			return T();
 		}
 
