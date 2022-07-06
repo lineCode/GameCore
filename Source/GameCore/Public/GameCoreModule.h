@@ -3,11 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Modules/ModuleManager.h"
 
 
 
-class FGameCoreModule : public IModuleInterface
+class FGameCoreModule : public FDefaultModuleImpl
 {
 public:
 
