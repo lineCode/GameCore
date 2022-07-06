@@ -14,7 +14,8 @@ public class GameCore : ModuleRules
 			new string[]
 			{
 				"CoreUObject",
-				"Engine"
+				"Engine",
+				"NetCore" // for push model
 			}
 		);
 	}
