@@ -39,13 +39,11 @@ public:
 	float operator=(const float& NewValue);
 
 
+	virtual UScriptStruct* GetScriptStruct() const { return StaticStruct(); }
+
 	/** Our custom replication for this struct (we only want to replicate Value) */
 	virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess);
 
-	virtual UScriptStruct* GetScriptStruct() const
-	{
-		return StaticStruct();
-	}
 
 	/** Broadcasted whenever Value changes */
 	FFloatValueChange ValueChangeDelegate;
