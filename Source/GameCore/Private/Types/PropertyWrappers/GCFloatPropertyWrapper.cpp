@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Types\PropertyWrappers\GCFloatPropertyWrapper.h"
+#include "Types/PropertyWrappers/GCFloatPropertyWrapper.h"
 
 #include "Net/Core/PushModel/PushModel.h"
 
@@ -36,7 +36,7 @@ FGCFloatPropertyWrapper::FGCFloatPropertyWrapper(UObject* InPropertyOwner, const
 		UE_LOG(LogGCPropertyWrapper, Error, TEXT("%s(): The given FProperty ``%s::%s`` is not a(n) %s!"), ANSI_TO_TCHAR(__FUNCTION__), *(InPropertyOwner->GetClass()->GetName()), *(Property->GetFName().ToString()), *(FGCFloatPropertyWrapper::StaticStruct()->GetName()));
 		check(0);
 	}
-#endif
+#endif // !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 }
 
 
@@ -62,7 +62,7 @@ void FGCFloatPropertyWrapper::MarkNetDirty()
 {
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	// Ensure this property is replicated
-	if (!IS_PROPERTY_REPLICATED(Property))
+	if (!Property->HasAnyPropertyFlags(EPropertyFlags::CPF_Net)) // i want to use IS_PROPERTY_REPLICATED() here but, in non-Editor target, we for some reason get an "error C3861: 'IS_PROPERTY_REPLICATED': identifier not found"
 	{
 		UE_LOG(LogGCPropertyWrapper, Error, TEXT("%s(): Tried to mark property net dirty to replicate, but ``%s::%s`` is not replicated! Cannot replicate!"), ANSI_TO_TCHAR(__FUNCTION__), GetData(PropertyOwner->GetClass()->GetName()), GetData(Property->GetName()));
 	}
@@ -71,7 +71,7 @@ void FGCFloatPropertyWrapper::MarkNetDirty()
 	{
 		UE_LOG(LogGCPropertyWrapper, Error, TEXT("%s(): Tried to mark property ``%s::%s`` net dirty, but Push Model is disabled! Cannot replicate!"), ANSI_TO_TCHAR(__FUNCTION__), GetData(PropertyOwner->GetClass()->GetName()), GetData(Property->GetName()));
 	}
-#endif
+#endif // !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 
 	MARK_PROPERTY_DIRTY(PropertyOwner, Property);
 }
