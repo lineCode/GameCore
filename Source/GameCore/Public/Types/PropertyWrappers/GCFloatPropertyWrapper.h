@@ -68,7 +68,7 @@ private:
 		TFieldPath<FProperty> Property;
 
 	/** The pointer to our outer - needed for replication */
-	UPROPERTY()
+	UPROPERTY(Transient)
 		TWeakObjectPtr<UObject> PropertyOwner;
 
 	/** The actual value of this float property */

@@ -10,11 +10,11 @@ public class GameCore : ModuleRules
 		PrivatePCHHeaderFile = "Private/GameCorePrivatePCH.h";
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "CoreUObject", "Engine" });
+
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"CoreUObject",
-				"Engine",
 				"NetCore" // for push model
 			}
 		);

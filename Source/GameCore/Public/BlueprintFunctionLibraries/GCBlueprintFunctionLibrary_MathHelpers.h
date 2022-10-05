@@ -16,7 +16,7 @@ UCLASS()
 class GAMECORE_API UGCBlueprintFunctionLibrary_MathHelpers : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-	
+
 public:
 	/**
 	 * Gets the radius of a collision shape's bounding sphere

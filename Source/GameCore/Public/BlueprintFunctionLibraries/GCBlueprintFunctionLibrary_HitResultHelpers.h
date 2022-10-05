@@ -17,7 +17,7 @@ UCLASS()
 class GAMECORE_API UGCBlueprintFunctionLibrary_HitResultHelpers : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-	
+
 public:
 	/** Returns true if the two given hits were from the same trace */
 	UFUNCTION(BlueprintPure, Category = "HitResultHelpers")

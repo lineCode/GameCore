@@ -38,7 +38,7 @@ UCLASS()
 class GAMECORE_API UGCBlueprintFunctionLibrary_CollisionQueries : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-	
+
 public:
 	static const float SceneCastStartWallAvoidancePadding;
 	static const TFunctionRef<bool(const FHitResult&)>& DefaultIsHitImpenetrable;
