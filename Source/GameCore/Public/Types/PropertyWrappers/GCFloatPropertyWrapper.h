@@ -25,8 +25,7 @@ struct GAMECORE_API FGCFloatPropertyWrapper
 {
 	GENERATED_BODY()
 
-public:
-	GC_PROPERTY_WRAPPER_MEMBERS_PUBLIC(float, Float, 0.f);
+	GC_PROPERTY_WRAPPER_MEMBERS(float, Float, 0.f);
 
 private:
 	/** The pointer to the FProperty on our outer's UClass */
