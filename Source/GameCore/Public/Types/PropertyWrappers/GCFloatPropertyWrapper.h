@@ -64,7 +64,7 @@ public:
 
 private:
 	/** The pointer to the FProperty on our outer's UClass */
-	UPROPERTY(VisibleDefaultsOnly)
+	UPROPERTY(Transient)
 		TFieldPath<FProperty> Property;
 
 	/** The pointer to our outer - needed for replication */
