@@ -8,31 +8,32 @@
 
 
 
+// Types used
 #define GC_VALUE_CHANGE_DELEGATE_TYPE(ValueTypeName) PREPROCESSOR_JOIN(FGC, PREPROCESSOR_JOIN(ValueTypeName, ValueChange))
 #define GC_PROPERTY_WRAPPER_TYPE(ValueTypeName) PREPROCESSOR_JOIN(FGC, PREPROCESSOR_JOIN(ValueTypeName, PropertyWrapper))
 
 
-//  BEGIN Property wrapper member variables
-#define GC_PROPERTY_WRAPPER_MEMBER_VARIABLE_VALUE_CHANGE_DELEGATE(ValueType, ValueTypeName) \
+/** Include this in your TStructOpsTypeTraits<GC_PROPERTY_WRAPPER_TYPE()>::enum */
+#define CG_PROPERTY_WRAPPER_STRUCT_OPS_TYPE_TRAITS_ENUMERATORS \
+WithNetSerializer = true
+
+
+/** Include this in the public section of your struct body. */
+#define GC_PROPERTY_WRAPPER_MEMBERS_PUBLIC(ValueType, ValueTypeName, DefaultValue) \
 /** Broadcasted whenever Value changes */\
-GC_VALUE_CHANGE_DELEGATE_TYPE(ValueTypeName) ValueChangeDelegate;
-
-#define GC_PROPERTY_WRAPPER_MEMBER_VARIABLE_B_MARK_NET_DIRTY_ON_CHANGE \
+GC_VALUE_CHANGE_DELEGATE_TYPE(ValueTypeName) ValueChangeDelegate;\
+\
 /** If true, will MARK_PROPERTY_DIRTY() when Value is set */\
-uint8 bMarkNetDirtyOnChange : 1;
-//  END Property wrapper member variables
-
-//  BEGIN Property wrapper member functions
-#define GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_CONSTRUCTOR_DEFAULT(ValueType, ValueTypeName, DefaultValue) \
+uint8 bMarkNetDirtyOnChange : 1;\
+\
 GC_PROPERTY_WRAPPER_TYPE(ValueTypeName)()\
 	: bMarkNetDirtyOnChange(false)\
 	, Property(nullptr)\
 	, PropertyOwner(nullptr)\
 	, Value(DefaultValue)\
 {\
-}
-
-#define GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_CONSTRUCTOR(ValueType, ValueTypeName, DefaultValue) \
+}\
+\
 GC_PROPERTY_WRAPPER_TYPE(ValueTypeName)(UObject* InPropertyOwner, const FName& PropertyName, const ValueType& InValue = DefaultValue)\
 	: FGCFloatPropertyWrapper()\
 {\
@@ -57,19 +58,16 @@ GC_PROPERTY_WRAPPER_TYPE(ValueTypeName)(UObject* InPropertyOwner, const FName& P
 			check(0);\
 		}\
 	}\
-}
-
-#define GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_DESTRUCTOR(ValueTypeName) \
-virtual ~GC_PROPERTY_WRAPPER_TYPE(ValueTypeName)() { }
-
-#define GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_OPERATOR_IMPLICIT_CONVERSION(ValueType) \
+}\
+\
+virtual ~GC_PROPERTY_WRAPPER_TYPE(ValueTypeName)() { }\
+\
 /** An easy conversion from this struct to ValueType. This allows FGCFloatPropertyWrapper to be treated as a ValueType in code */\
 operator ValueType() const\
 {\
 	return Value;\
-}
-
-#define GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_OPERATOR_EQUALS(ValueType, ValueTypeName) \
+}\
+\
 /** Broadcasts ValueChangeDelegate and does MARK_PROPERTY_DIRTY() */\
 ValueType operator=(const ValueType& NewValue)\
 {\
@@ -87,12 +85,10 @@ ValueType operator=(const ValueType& NewValue)\
 	}\
 	\
 	return Value;\
-}
-
-#define GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_GET_SCRIPT_STRUCT() \
-virtual UScriptStruct* GetScriptStruct() const { return StaticStruct(); }
-
-#define GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_NET_SERIALIZE() \
+}\
+\
+virtual UScriptStruct* GetScriptStruct() const { return StaticStruct(); }\
+\
 /** Our custom replication for this struct (we only want to replicate Value) */\
 virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)\
 {\
@@ -149,9 +145,8 @@ virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSucces
 	\
 	bOutSuccess = true;\
 	return true;\
-}
-
-#define GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_MARK_NET_DIRTY() \
+}\
+\
 /** Marks the property dirty */\
 void MarkNetDirty()\
 {\
@@ -171,9 +166,8 @@ void MarkNetDirty()\
 	\
 	\
 	MARK_PROPERTY_DIRTY(PropertyOwner, Property);\
-}
-
-#define GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_GET_DEBUG_STRING() \
+}\
+\
 /** Debug string displaying the property name and value */\
 FString GetDebugString(bool bDetailedDebugString = false) const\
 {\
@@ -183,34 +177,8 @@ FString GetDebugString(bool bDetailedDebugString = false) const\
 	}\
 	\
 	return Property->GetName() + TEXT(": ") + FString::SanitizeFloat(Value);\
-}
-
-#define GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_GET_PROPERTY() \
-FProperty* GetProperty() const { return Property.Get(); }
-#define GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_GET_PROPERTY_OWNER() \
-UObject* GetPropertyOwner() const { return PropertyOwner.Get(); }
-#define GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_GET_PROPERTY_NAME() \
+}\
+\
+FProperty* GetProperty() const { return Property.Get(); }\
+UObject* GetPropertyOwner() const { return PropertyOwner.Get(); }\
 FName GetPropertyName() const { return Property->GetFName(); }
-//  END Property wrapper member functions
-
-
-/** Include this in the public section of your struct body. */
-#define GC_PROPERTY_WRAPPER_MEMBERS_PUBLIC(ValueType, ValueTypeName, DefaultValue) \
-GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_CONSTRUCTOR_DEFAULT(ValueType, ValueTypeName, DefaultValue)\
-GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_CONSTRUCTOR(ValueType, ValueTypeName, DefaultValue)\
-GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_DESTRUCTOR(ValueTypeName)\
-GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_OPERATOR_IMPLICIT_CONVERSION(ValueType)\
-GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_OPERATOR_EQUALS(ValueType, ValueTypeName)\
-GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_GET_SCRIPT_STRUCT()\
-GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_NET_SERIALIZE()\
-GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_MARK_NET_DIRTY()\
-GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_GET_DEBUG_STRING()\
-GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_GET_PROPERTY()\
-GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_GET_PROPERTY_OWNER()\
-GC_PROPERTY_WRAPPER_MEMBER_FUNCTION_GET_PROPERTY_NAME()\
-GC_PROPERTY_WRAPPER_MEMBER_VARIABLE_VALUE_CHANGE_DELEGATE(ValueType, ValueTypeName)\
-GC_PROPERTY_WRAPPER_MEMBER_VARIABLE_B_MARK_NET_DIRTY_ON_CHANGE
-
-/** Include this in your TStructOpsTypeTraits<GC_PROPERTY_WRAPPER_TYPE()>::enum */
-#define CG_PROPERTY_WRAPPER_STRUCT_OPS_TYPE_TRAITS_ENUMERATORS \
-WithNetSerializer = true
