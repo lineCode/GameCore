@@ -6,14 +6,50 @@
 #include "Net/Core/PushModel/PushModel.h"
 #include "GameCore/Private/Utilities/GCLogCategories.h"
 
+#include "GCPropertyWrapperBase.generated.h"
 
 
-/** Include this in your TStructOpsTypeTraits<TPropertyWrapperType>::enum */
-#define CG_PROPERTY_WRAPPER_STRUCT_OPS_TYPE_TRAITS_ENUMERATORS \
-WithNetSerializer = true
+
+/**
+ * FGCPropertyWrapperBase
+ * 
+ * Property wrappers provide 2 main features
+ *  - Automatic dirtying for push model
+ *  - Automatic delegate broadcasting
+ * 
+ * This base struct holds the non-value-type-related members.
+ * Subclasses are able control the type by declaring the actual Value property.
+ * See GC_PROPERTY_WRAPPER_MEMBERS for boilerplate code and subclass requirements.
+ */
+USTRUCT(BlueprintType)
+struct GAMECORE_API FGCPropertyWrapperBase
+{
+	GENERATED_BODY()
+
+public:
+	FGCPropertyWrapperBase();
+	virtual ~FGCPropertyWrapperBase() { }
+
+	/** If true, will MARK_PROPERTY_DIRTY() when Value is set */
+	uint8 bMarkNetDirtyOnChange : 1;
+
+protected:
+	/** The pointer to the FProperty on our outer's UClass */
+	UPROPERTY(Transient)
+		TFieldPath<FProperty> Property;
+
+	/** The pointer to our outer - needed for replication */
+	UPROPERTY(Transient)
+		TWeakObjectPtr<UObject> PropertyOwner;
+};
 
 
-/** Include this in your struct body. */
+/**
+ * Boilerplate code for subclasses of FGCPropertyWrapperBase. Include this anywhere in your struct body.
+ * Uses your declared Value member.
+ * Uses your defined value change delegate type.
+ * Assumes you have the WithNetSerializer type trait.
+ */
 #define GC_PROPERTY_WRAPPER_MEMBERS(ValueType, ValueTypeName, DefaultValue) \
 private:\
 typedef FGC##ValueTypeName##PropertyWrapper TPropertyWrapperType;\
@@ -25,14 +61,8 @@ public:\
 /** Broadcasted whenever Value changes */\
 TValueChangeDelegateType ValueChangeDelegate;\
 \
-/** If true, will MARK_PROPERTY_DIRTY() when Value is set */\
-uint8 bMarkNetDirtyOnChange : 1;\
-\
 TPropertyWrapperType()\
-	: bMarkNetDirtyOnChange(false)\
-	, Property(nullptr)\
-	, PropertyOwner(nullptr)\
-	, Value(DefaultValue)\
+	: Value(DefaultValue)\
 {\
 }\
 \

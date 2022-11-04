@@ -3,39 +3,23 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GCPropertyWrapper.h"
+#include "GCPropertyWrapperBase.h"
 
 #include "GCFloatPropertyWrapper.generated.h"
 
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGCFloatValueChange, const float&, OldValue, const float&, NewValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGCFloatValueChange, const float&, OldValue, const float&, NewValue); // make the required delegate type for this property wrapper
 
 
-/**
- * FGCFloatPropertyWrapper
- * 
- * A float property that provides 2 features:
- *		- Automatic MARK_PROPERTY_DIRTY() on value change
- *			- This requires Push Model enabled
- *		- Automatic broadcasting of a delegate on value change
- */
 USTRUCT(BlueprintType)
-struct GAMECORE_API FGCFloatPropertyWrapper
+struct GAMECORE_API FGCFloatPropertyWrapper : public FGCPropertyWrapperBase
 {
 	GENERATED_BODY()
 
 	GC_PROPERTY_WRAPPER_MEMBERS(float, Float, 0.f);
 
 private:
-	/** The pointer to the FProperty on our outer's UClass */
-	UPROPERTY(Transient)
-		TFieldPath<FProperty> Property;
-
-	/** The pointer to our outer - needed for replication */
-	UPROPERTY(Transient)
-		TWeakObjectPtr<UObject> PropertyOwner;
-
 	/** The actual value of this float property */
 	UPROPERTY(EditAnywhere)
 		float Value;
@@ -46,6 +30,6 @@ struct TStructOpsTypeTraits<FGCFloatPropertyWrapper> : public TStructOpsTypeTrai
 {
 	enum
 	{
-		CG_PROPERTY_WRAPPER_STRUCT_OPS_TYPE_TRAITS_ENUMERATORS
+		WithNetSerializer = true // required for the property wrapper
 	};
 };
