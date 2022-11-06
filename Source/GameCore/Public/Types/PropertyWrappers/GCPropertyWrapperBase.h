@@ -20,6 +20,8 @@
  * This base struct holds the non-value-type-related members.
  * Subclasses are able control the type by declaring the actual Value property.
  * See GC_PROPERTY_WRAPPER_MEMBERS for boilerplate code and subclass requirements.
+ * 
+ * The reason we need sub-classes to declare the Value member for us is because we want it to be a UPROPERTY and generated code (e.g., custom macros) will not be seen by Unreal Header Tool.
  */
 USTRUCT(BlueprintType)
 struct GAMECORE_API FGCPropertyWrapperBase
