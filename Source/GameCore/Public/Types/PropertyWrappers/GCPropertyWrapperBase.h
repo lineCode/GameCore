@@ -106,6 +106,21 @@ TValueType operator=(const TValueType& NewValue)\
 	return Value;\
 }\
 \
+/** Our custom serialization for this struct */\
+virtual bool Serialize(FArchive& InOutArchive)\
+{\
+	/* It makes more sense to do serialization work in here since the engine uses this more than operator<<().*/\
+	InOutArchive << Value;\
+	return true;\
+}\
+\
+/** Uses our custom serialization */\
+friend FArchive& operator<<(FArchive& InOutArchive, TPropertyWrapperType& InOut##ValueTypeName##PropertyWrapper)\
+{\
+	InOut##ValueTypeName##PropertyWrapper.Serialize(InOutArchive);\
+	return InOutArchive;\
+}\
+\
 virtual UScriptStruct* GetScriptStruct() const { return StaticStruct(); }\
 \
 /** Our custom replication for this struct (we only want to replicate Value) */\

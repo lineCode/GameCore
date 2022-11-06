@@ -30,6 +30,7 @@ struct TStructOpsTypeTraits<FGCFloatPropertyWrapper> : public TStructOpsTypeTrai
 {
 	enum
 	{
+		WithSerializer = true, // required for the property wrapper
 		WithNetSerializer = true // required for the property wrapper
 	};
 };
