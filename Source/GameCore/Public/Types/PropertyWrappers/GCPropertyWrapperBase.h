@@ -29,9 +29,19 @@ struct GAMECORE_API FGCPropertyWrapperBase
 public:
 	FGCPropertyWrapperBase();
 	virtual ~FGCPropertyWrapperBase() { }
+protected:
+	FGCPropertyWrapperBase(UObject* InPropertyOwner, const FName& InPropertyName, const UScriptStruct* InChildScriptStruct); // initialization is intended only for child structs
+public:
 
 	/** If true, will MARK_PROPERTY_DIRTY() when Value is set */
 	uint8 bMarkNetDirtyOnChange : 1;
+
+	/** Marks the property dirty */
+	void MarkNetDirty();
+
+	FProperty* GetProperty() const { return Property.Get(); }
+	UObject* GetPropertyOwner() const { return PropertyOwner.Get(); }
+	FName GetPropertyName() const { return Property->GetFName(); }
 
 protected:
 	/** The pointer to the FProperty on our outer's UClass */
@@ -63,36 +73,11 @@ TValueChangeDelegateType ValueChangeDelegate;\
 \
 TPropertyWrapperType()\
 	: Value(DefaultValue)\
-{\
-}\
-\
-TPropertyWrapperType(UObject* InPropertyOwner, const FName& PropertyName, const TValueType& InValue = DefaultValue)\
-	: TPropertyWrapperType()\
-{\
-	PropertyOwner = InPropertyOwner;\
-	Value = InValue;\
-	\
-	\
-	/* Get the FProperty so we can use push model with it */\
-	Property = FindFProperty<FProperty>(PropertyOwner->GetClass(), PropertyName);\
-	\
-	/* Ensure this property exists on the owner and that this property is a TPropertyWrapperType! */\
-	if constexpr (!(UE_BUILD_SHIPPING || UE_BUILD_TEST))\
-	{\
-		if (!Property.Get())\
-		{\
-			UE_LOG(LogGCPropertyWrapper, Error, TEXT("%s(): The given PropertyName \"%s\" was not found on the PropertyOwner ``%s``. Ensure correct spelling for the property you are looking for and make sure that it is a UPROPERTY so we can find it!"), ANSI_TO_TCHAR(__FUNCTION__), *(PropertyName.ToString()), *(InPropertyOwner->GetName()));\
-			check(0);\
-		}\
-		else if (!(CastField<FStructProperty>(Property.Get()) && CastField<FStructProperty>(Property.Get())->Struct == TPropertyWrapperType::StaticStruct()))\
-		{\
-			UE_LOG(LogGCPropertyWrapper, Error, TEXT("%s(): The given FProperty ``%s::%s`` is not a(n) %s!"), ANSI_TO_TCHAR(__FUNCTION__), *(InPropertyOwner->GetClass()->GetName()), *(Property->GetFName().ToString()), *(TPropertyWrapperType::StaticStruct()->GetName()));\
-			check(0);\
-		}\
-	}\
-}\
-\
-~FGC##ValueTypeName##PropertyWrapper() { }\
+{ }\
+TPropertyWrapperType(UObject* InPropertyOwner, const FName& InPropertyName, const TValueType& InValue = DefaultValue)\
+	: FGCPropertyWrapperBase(InPropertyOwner, InPropertyName, GetScriptStruct())\
+	, Value(InValue)\
+{ }\
 \
 /** An easy conversion from this struct to TValueType. This allows TPropertyWrapperType to be treated as a TValueType in code */\
 operator TValueType() const\
@@ -179,27 +164,6 @@ virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSucces
 	return true;\
 }\
 \
-/** Marks the property dirty */\
-void MarkNetDirty()\
-{\
-	if constexpr (!(UE_BUILD_SHIPPING || UE_BUILD_TEST))\
-	{\
-		/* Ensure this property is replicated */\
-		if (!Property->HasAnyPropertyFlags(EPropertyFlags::CPF_Net)) /* i want to use IS_PROPERTY_REPLICATED() here but, in non-Editor target, we for some reason get an "error C3861: 'IS_PROPERTY_REPLICATED': identifier not found" */\
-		{\
-			UE_LOG(LogGCPropertyWrapper, Error, TEXT("%s(): Tried to mark property net dirty to replicate, but ``%s::%s`` is not replicated! Cannot replicate!"), ANSI_TO_TCHAR(__FUNCTION__), GetData(PropertyOwner->GetClass()->GetName()), GetData(Property->GetName()));\
-		}\
-		/* Ensure Push Model is enabled */\
-		if (!IS_PUSH_MODEL_ENABLED())\
-		{\
-			UE_LOG(LogGCPropertyWrapper, Error, TEXT("%s(): Tried to mark property ``%s::%s`` net dirty, but Push Model is disabled! Cannot replicate!"), ANSI_TO_TCHAR(__FUNCTION__), GetData(PropertyOwner->GetClass()->GetName()), GetData(Property->GetName()));\
-		}\
-	}\
-	\
-	\
-	MARK_PROPERTY_DIRTY(PropertyOwner, Property);\
-}\
-\
 /** Debug string displaying the property name and value */\
 FString GetDebugString(bool bDetailedDebugString = false) const\
 {\
@@ -209,8 +173,4 @@ FString GetDebugString(bool bDetailedDebugString = false) const\
 	}\
 	\
 	return Property->GetName() + TEXT(": ") + FString::SanitizeFloat(Value);\
-}\
-\
-FProperty* GetProperty() const { return Property.Get(); }\
-UObject* GetPropertyOwner() const { return PropertyOwner.Get(); }\
-FName GetPropertyName() const { return Property->GetFName(); }
+}

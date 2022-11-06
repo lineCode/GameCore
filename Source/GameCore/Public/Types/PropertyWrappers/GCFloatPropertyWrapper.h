@@ -12,7 +12,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGCFloatValueChange, const float&, OldValue, const float&, NewValue); // make the required delegate type for this property wrapper
 
 
-USTRUCT(BlueprintType)
+USTRUCT()
 struct GAMECORE_API FGCFloatPropertyWrapper : public FGCPropertyWrapperBase
 {
 	GENERATED_BODY()
