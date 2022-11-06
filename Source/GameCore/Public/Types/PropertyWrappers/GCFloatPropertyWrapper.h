@@ -44,6 +44,20 @@ public:
 	/** Our custom replication for this struct (we only want to replicate Value) */
 	virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess);
 
+	/** Our custom serialization for this struct */
+	virtual bool Serialize(FArchive& InOutArchive)
+	{
+		// It makes more sense to do serialization work in here since the engine uses this more than operator<<().
+		InOutArchive << Value;
+		return true;
+	}
+
+	/** Uses our custom serialization */
+	friend FArchive& operator<<(FArchive& InOutArchive, FGCFloatPropertyWrapper& InOutFloatPropertyWrapper)
+	{
+		InOutFloatPropertyWrapper.Serialize(InOutArchive);
+		return InOutArchive;
+	}
 
 	/** Broadcasted whenever Value changes */
 	FFloatValueChange ValueChangeDelegate;
@@ -81,6 +95,7 @@ struct TStructOpsTypeTraits<FGCFloatPropertyWrapper> : public TStructOpsTypeTrai
 {
 	enum
 	{
+		WithSerializer = true,
 		WithNetSerializer = true
 	};
 };
