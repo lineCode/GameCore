@@ -45,6 +45,16 @@ public:
 	UObject* GetPropertyOwner() const { return PropertyOwner.Get(); }
 	FName GetPropertyName() const { return Property->GetFName(); }
 
+	/**
+	 * Our custom serialization for this struct
+	 * It makes more sense to do serialization work in here since the engine uses this more than operator<<().
+	 */
+	virtual bool Serialize(FArchive& InOutArchive) PURE_VIRTUAL(FGCPropertyWrapperBase::Serialize, return false; );
+
+	/** Our custom replication for this struct (we only want to replicate Value) */
+	virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess) PURE_VIRTUAL(FGCPropertyWrapperBase::NetSerialize, return false; );
+
+	/** Return the ToString() of Value. */
 	virtual FString ToString() const PURE_VIRTUAL(FGCPropertyWrapperBase::ToString, return FString(); );
 
 protected:
@@ -108,6 +118,13 @@ TValueType operator=(const TValueType& NewValue)\
 	}\
 	\
 	return Value;\
+}\
+\
+/** Uses our custom serialization */\
+friend FArchive& operator<<(FArchive& InOutArchive, TPropertyWrapperType& InOut##ValueTypeName##PropertyWrapper)\
+{\
+	InOut##ValueTypeName##PropertyWrapper.Serialize(InOutArchive);\
+	return InOutArchive;\
 }\
 \
 /** Debug string displaying the property name and value */\
