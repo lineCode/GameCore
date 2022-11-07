@@ -20,6 +20,28 @@ struct GAMECORE_API FGCFloatPropertyWrapper : public FGCPropertyWrapperBase
 
 	GC_PROPERTY_WRAPPER_MEMBERS(float, Float, 0.f);
 
+	/** Our custom serialization for this struct */
+	virtual bool Serialize(FArchive& InOutArchive)
+	{
+		// It makes more sense to do serialization work in here since the engine uses this more than operator<<().
+		InOutArchive << Value;
+		return true;
+	}
+
+	/** Uses our custom serialization */
+	friend FArchive& operator<<(FArchive& InOutArchive, FGCFloatPropertyWrapper& InOutFloatPropertyWrapper)
+	{
+		InOutFloatPropertyWrapper.Serialize(InOutArchive);
+		return InOutArchive;
+	}
+
+	/** Our custom replication for this struct (we only want to replicate Value) */
+	virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
+	{
+		Ar << Value;
+		return true;
+	}
+
 private:
 	/** The actual value of this float property */
 	UPROPERTY(EditAnywhere)
@@ -44,6 +66,24 @@ struct GAMECORE_API FGCInt32PropertyWrapper : public FGCPropertyWrapperBase
 	GENERATED_BODY()
 
 	GC_PROPERTY_WRAPPER_MEMBERS(int32, Int32, 0.f);
+
+	virtual bool Serialize(FArchive& InOutArchive)
+	{
+		InOutArchive << Value;
+		return true;
+	}
+
+	friend FArchive& operator<<(FArchive& InOutArchive, FGCInt32PropertyWrapper& InOutFloatPropertyWrapper)
+	{
+		InOutFloatPropertyWrapper.Serialize(InOutArchive);
+		return InOutArchive;
+	}
+
+	virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
+	{
+		Ar << Value;
+		return true;
+	}
 
 private:
 	UPROPERTY(EditAnywhere)

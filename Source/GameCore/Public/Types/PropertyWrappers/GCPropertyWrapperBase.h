@@ -81,6 +81,8 @@ TPropertyWrapperType(UObject* InPropertyOwner, const FName& InPropertyName, cons
 	, Value(InValue)\
 { }\
 \
+virtual UScriptStruct* GetScriptStruct() const { return StaticStruct(); }\
+\
 /** An easy conversion from this struct to TValueType. This allows TPropertyWrapperType to be treated as a TValueType in code */\
 operator TValueType() const\
 {\
@@ -104,81 +106,6 @@ TValueType operator=(const TValueType& NewValue)\
 	}\
 	\
 	return Value;\
-}\
-\
-/** Our custom serialization for this struct */\
-virtual bool Serialize(FArchive& InOutArchive)\
-{\
-	/* It makes more sense to do serialization work in here since the engine uses this more than operator<<().*/\
-	InOutArchive << Value;\
-	return true;\
-}\
-\
-/** Uses our custom serialization */\
-friend FArchive& operator<<(FArchive& InOutArchive, TPropertyWrapperType& InOut##ValueTypeName##PropertyWrapper)\
-{\
-	InOut##ValueTypeName##PropertyWrapper.Serialize(InOutArchive);\
-	return InOutArchive;\
-}\
-\
-virtual UScriptStruct* GetScriptStruct() const { return StaticStruct(); }\
-\
-/** Our custom replication for this struct (we only want to replicate Value) */\
-virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)\
-{\
-	/* We can save on network when the Value is zero by skipping the 4-byte float serialization and instead serialize a single bit indicating whether the Value is zero */\
-	bool bValueEqualsZero = false;\
-	\
-	\
-	uint8 RepBits;\
-	if (Ar.IsSaving())\
-	{\
-		/* We are a writer, so lets find some optimizations and pack them into RepBits */\
-		\
-		if (Value == 0.f)\
-		{\
-			bValueEqualsZero = true;\
-		}\
-		\
-		\
-		RepBits = (bValueEqualsZero << 0);\
-	}\
-	\
-	/* Pack/unpack our RepBits into/outof the Archive */\
-	Ar.SerializeBits(&RepBits, 1);\
-	\
-	if (Ar.IsLoading())\
-	{\
-		/* We are a reader, so lets unpack our optimization bools out of RepBits */\
-		\
-		bValueEqualsZero = (RepBits & (1 << 0));\
-	}\
-	\
-	\
-	if (Ar.IsSaving())\
-	{\
-		if (!bValueEqualsZero) /* no need to serialize Value if it is zero because we have a bit indicating that already */\
-		{\
-			Ar << Value;\
-		}\
-	}\
-	\
-	if (Ar.IsLoading())\
-	{\
-		float NewValue = 0;\
-		if (!bValueEqualsZero) /* do not deserialize Value if it is zero */\
-		{\
-			Ar << NewValue;\
-		}\
-		\
-		/* Assign Value using our operator (so that ValueChangeDelegate may get broadcasted) */\
-		operator=(NewValue);\
-	}\
-	\
-	\
-	\
-	bOutSuccess = true;\
-	return true;\
 }\
 \
 /** Debug string displaying the property name and value */\
