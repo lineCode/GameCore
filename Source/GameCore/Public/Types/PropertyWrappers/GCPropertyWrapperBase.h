@@ -45,6 +45,8 @@ public:
 	UObject* GetPropertyOwner() const { return PropertyOwner.Get(); }
 	FName GetPropertyName() const { return Property->GetFName(); }
 
+	virtual FString ToString() const PURE_VIRTUAL(FGCPropertyWrapperBase::ToString, return FString(); );
+
 protected:
 	/** The pointer to the FProperty on our outer's UClass */
 	UPROPERTY(Transient)
@@ -113,8 +115,8 @@ FString GetDebugString(bool bDetailedDebugString = false) const\
 {\
 	if (bDetailedDebugString)\
 	{\
-		return PropertyOwner->GetPathName(PropertyOwner->GetTypedOuter<ULevel>()) + TEXT(".") + Property->GetName() + TEXT(": ") + FString::SanitizeFloat(Value);\
+		return PropertyOwner->GetPathName(PropertyOwner->GetTypedOuter<ULevel>()) + TEXT(".") + Property->GetName() + TEXT(": ") + ToString();\
 	}\
 	\
-	return Property->GetName() + TEXT(": ") + FString::SanitizeFloat(Value);\
+	return Property->GetName() + TEXT(": ") + ToString();\
 }

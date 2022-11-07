@@ -42,6 +42,8 @@ struct GAMECORE_API FGCFloatPropertyWrapper : public FGCPropertyWrapperBase
 		return true;
 	}
 
+	virtual FString ToString() const override { return FString::SanitizeFloat(Value); }
+
 private:
 	/** The actual value of this float property */
 	UPROPERTY(EditAnywhere)
@@ -83,6 +85,8 @@ struct GAMECORE_API FGCInt32PropertyWrapper : public FGCPropertyWrapperBase
 		Ar << Value;
 		return true;
 	}
+
+	virtual FString ToString() const override { return FString::FromInt(Value); }
 
 private:
 	UPROPERTY(EditAnywhere)
