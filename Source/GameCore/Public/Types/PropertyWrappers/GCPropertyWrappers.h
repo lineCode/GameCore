@@ -59,13 +59,12 @@ struct TStructOpsTypeTraits<FGCFloatPropertyWrapper> : public TStructOpsTypeTrai
 };
 
 
-
 USTRUCT()
 struct GAMECORE_API FGCInt32PropertyWrapper : public FGCPropertyWrapperBase
 {
 	GENERATED_BODY()
 
-	GC_PROPERTY_WRAPPER_MEMBERS(int32, Int32, 0.f);
+	GC_PROPERTY_WRAPPER_MEMBERS(int32, Int32, 0);
 
 	virtual bool Serialize(FArchive& InOutArchive)
 	{
