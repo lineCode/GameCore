@@ -99,7 +99,7 @@ TMulticastDelegate<void(const TValueType&, const TValueType&)> ValueChangeDelega
 \
 virtual UScriptStruct* GetScriptStruct() const { return StaticStruct(); }\
 \
-/** An easy conversion from this struct to TValueType. This allows TPropertyWrapperType to be treated as a TValueType in code */\
+/** Implements implicit conversion from this struct to Value's type. Allows you to treat this struct as its Value's type in code */\
 operator TValueType() const\
 {\
 	return Value;\
@@ -125,9 +125,9 @@ TValueType operator=(const TValueType& NewValue)\
 }\
 \
 /** Uses our custom serialization */\
-friend FArchive& operator<<(FArchive& InOutArchive, TPropertyWrapperType& InOut##ValueTypeName##PropertyWrapper)\
+friend FArchive& operator<<(FArchive& InOutArchive, TPropertyWrapperType& InOutPropertyWrapper)\
 {\
-	InOut##ValueTypeName##PropertyWrapper.Serialize(InOutArchive);\
+	InOutPropertyWrapper.Serialize(InOutArchive);\
 	return InOutArchive;\
 }\
 \
