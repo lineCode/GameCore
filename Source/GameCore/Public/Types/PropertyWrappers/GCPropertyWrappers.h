@@ -14,7 +14,7 @@ struct GAMECORE_API FGCFloatPropertyWrapper : public FGCPropertyWrapperBase
 {
 	GENERATED_BODY()
 
-	GC_PROPERTY_WRAPPER_MEMBERS(float, Float, 0.f);
+	GC_PROPERTY_WRAPPER_BODY(float, Float, 0.f);
 
 	virtual bool Serialize(FArchive& InOutArchive) override
 	{
@@ -52,7 +52,7 @@ struct GAMECORE_API FGCInt32PropertyWrapper : public FGCPropertyWrapperBase
 {
 	GENERATED_BODY()
 
-	GC_PROPERTY_WRAPPER_MEMBERS(int32, Int32, 0);
+	GC_PROPERTY_WRAPPER_BODY(int32, Int32, 0);
 
 	virtual bool Serialize(FArchive& InOutArchive) override
 	{

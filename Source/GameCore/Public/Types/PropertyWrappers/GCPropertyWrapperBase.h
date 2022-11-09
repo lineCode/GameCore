@@ -19,7 +19,7 @@
  * 
  * This base struct holds the non-value-type-related members.
  * Subclasses are able control the type by declaring the actual Value property.
- * See GC_PROPERTY_WRAPPER_MEMBERS for boilerplate code and subclass requirements.
+ * See GC_PROPERTY_WRAPPER_BODY for boilerplate code and subclass requirements.
  * 
  * The reason we need sub-classes to declare the Value member for us is because we want it to be a UPROPERTY and generated code (e.g., custom macros) will not be seen by Unreal Header Tool.
  * 
@@ -78,7 +78,7 @@ protected:
  * Assumes you have the WithSerializer type trait.
  * Assumes you have the WithNetSerializer type trait.
  */
-#define GC_PROPERTY_WRAPPER_MEMBERS(ValueType, ValueTypeName, DefaultValue) \
+#define GC_PROPERTY_WRAPPER_BODY(ValueType, ValueTypeName, DefaultValue) \
 private:\
 typedef FGC##ValueTypeName##PropertyWrapper TPropertyWrapperType;\
 typedef ValueType TValueType;\
