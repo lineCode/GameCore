@@ -22,6 +22,8 @@
  * See GC_PROPERTY_WRAPPER_MEMBERS for boilerplate code and subclass requirements.
  * 
  * The reason we need sub-classes to declare the Value member for us is because we want it to be a UPROPERTY and generated code (e.g., custom macros) will not be seen by Unreal Header Tool.
+ * 
+ * Subclasses implement Serialize(), NetSerialize(), and ToString().
  */
 USTRUCT(BlueprintType)
 struct GAMECORE_API FGCPropertyWrapperBase
@@ -69,9 +71,11 @@ protected:
 
 
 /**
+ * Using this macro with parameters lets us do generic logic in any child class.
  * Boilerplate code for subclasses of FGCPropertyWrapperBase. Include this anywhere in your struct body.
  * Uses your declared Value member.
  * Uses your defined value change delegate type.
+ * Assumes you have the WithSerializer type trait.
  * Assumes you have the WithNetSerializer type trait.
  */
 #define GC_PROPERTY_WRAPPER_MEMBERS(ValueType, ValueTypeName, DefaultValue) \
@@ -81,9 +85,6 @@ typedef ValueType TValueType;\
 typedef FGC##ValueTypeName##ValueChange TValueChangeDelegateType;\
 \
 public:\
-\
-/** Broadcasted whenever Value changes */\
-TValueChangeDelegateType ValueChangeDelegate;\
 \
 TPropertyWrapperType()\
 	: Value(DefaultValue)\
@@ -106,7 +107,7 @@ TValueType operator=(const TValueType& NewValue)\
 {\
 	const TValueType OldValue = Value;\
 	Value = NewValue;\
-	\
+\
 	if (NewValue != OldValue)\
 	{\
 		ValueChangeDelegate.Broadcast(OldValue, NewValue);\
@@ -116,7 +117,7 @@ TValueType operator=(const TValueType& NewValue)\
 			MarkNetDirty();\
 		}\
 	}\
-	\
+\
 	return Value;\
 }\
 \
@@ -134,6 +135,6 @@ FString GetDebugString(bool bDetailedDebugString = false) const\
 	{\
 		return PropertyOwner->GetPathName(PropertyOwner->GetTypedOuter<ULevel>()) + TEXT(".") + Property->GetName() + TEXT(": ") + ToString();\
 	}\
-	\
+\
 	return Property->GetName() + TEXT(": ") + ToString();\
 }

@@ -13,12 +13,16 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGCFloatValueChange, const float&, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGCInt32ValueChange, const int32&, OldValue, const int32&, NewValue);
 
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct GAMECORE_API FGCFloatPropertyWrapper : public FGCPropertyWrapperBase
 {
 	GENERATED_BODY()
 
 	GC_PROPERTY_WRAPPER_MEMBERS(float, Float, 0.f);
+
+	/** Broadcasted whenever Value changes */
+	UPROPERTY(BlueprintAssignable)
+		FGCFloatValueChange ValueChangeDelegate;
 
 	virtual bool Serialize(FArchive& InOutArchive) override
 	{
@@ -51,12 +55,15 @@ struct TStructOpsTypeTraits<FGCFloatPropertyWrapper> : public TStructOpsTypeTrai
 };
 
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct GAMECORE_API FGCInt32PropertyWrapper : public FGCPropertyWrapperBase
 {
 	GENERATED_BODY()
 
 	GC_PROPERTY_WRAPPER_MEMBERS(int32, Int32, 0);
+
+	UPROPERTY(BlueprintAssignable)
+		FGCInt32ValueChange ValueChangeDelegate;
 
 	virtual bool Serialize(FArchive& InOutArchive) override
 	{
