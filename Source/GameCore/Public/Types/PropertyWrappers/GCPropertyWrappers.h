@@ -9,19 +9,12 @@
 
 
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FGCFloatValueChange, const float&, const float&); // make the required delegate type for this property wrapper
-DECLARE_MULTICAST_DELEGATE_TwoParams(FGCInt32ValueChange, const int32&, const int32&);
-
-
 USTRUCT(BlueprintType)
 struct GAMECORE_API FGCFloatPropertyWrapper : public FGCPropertyWrapperBase
 {
 	GENERATED_BODY()
 
 	GC_PROPERTY_WRAPPER_MEMBERS(float, Float, 0.f);
-
-	/** Broadcasted whenever Value changes */
-	FGCFloatValueChange ValueChangeDelegate;
 
 	virtual bool Serialize(FArchive& InOutArchive) override
 	{
@@ -60,8 +53,6 @@ struct GAMECORE_API FGCInt32PropertyWrapper : public FGCPropertyWrapperBase
 	GENERATED_BODY()
 
 	GC_PROPERTY_WRAPPER_MEMBERS(int32, Int32, 0);
-
-	FGCInt32ValueChange ValueChangeDelegate;
 
 	virtual bool Serialize(FArchive& InOutArchive) override
 	{

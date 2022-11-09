@@ -82,7 +82,6 @@ protected:
 private:\
 typedef FGC##ValueTypeName##PropertyWrapper TPropertyWrapperType;\
 typedef ValueType TValueType;\
-typedef FGC##ValueTypeName##ValueChange TValueChangeDelegateType;\
 \
 public:\
 \
@@ -93,6 +92,10 @@ TPropertyWrapperType(UObject* InPropertyOwner, const FName& InPropertyName, cons
 	: FGCPropertyWrapperBase(InPropertyOwner, InPropertyName, GetScriptStruct())\
 	, Value(InValue)\
 { }\
+\
+\
+/** Broadcasted whenever Value changes */\
+TMulticastDelegate<void(const TValueType&, const TValueType&)> ValueChangeDelegate;\
 \
 virtual UScriptStruct* GetScriptStruct() const { return StaticStruct(); }\
 \
