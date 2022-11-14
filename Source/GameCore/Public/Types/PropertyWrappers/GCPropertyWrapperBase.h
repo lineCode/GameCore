@@ -54,7 +54,7 @@ public:
 	virtual bool Serialize(FArchive& InOutArchive) PURE_VIRTUAL(FGCPropertyWrapperBase::Serialize, return false; );
 
 	/** Our custom replication for this struct (we only want to replicate Value) */
-	virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess) PURE_VIRTUAL(FGCPropertyWrapperBase::NetSerialize, return false; );
+	virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) PURE_VIRTUAL(FGCPropertyWrapperBase::NetSerialize, return false; );
 
 	/** Return the ToString() of Value. */
 	virtual FString ToString() const PURE_VIRTUAL(FGCPropertyWrapperBase::ToString, return FString(); );

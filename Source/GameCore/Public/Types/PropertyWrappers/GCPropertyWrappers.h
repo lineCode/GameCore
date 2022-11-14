@@ -22,7 +22,7 @@ struct GAMECORE_API FGCFloatPropertyWrapper : public FGCPropertyWrapperBase
 		return true;
 	}
 
-	virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess) override
+	virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) override
 	{
 		Ar << Value;
 		return true;
@@ -60,7 +60,7 @@ struct GAMECORE_API FGCInt32PropertyWrapper : public FGCPropertyWrapperBase
 		return true;
 	}
 
-	virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess) override
+	virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) override
 	{
 		Ar << Value;
 		return true;
