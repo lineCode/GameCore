@@ -15,6 +15,22 @@ const float UGCBlueprintFunctionLibrary_CollisionQueries::SceneCastStartWallAvoi
 const TFunctionRef<bool(const FHitResult&)>& UGCBlueprintFunctionLibrary_CollisionQueries::DefaultIsHitImpenetrable = [](const FHitResult&) { return false; };
 
 
+
+//  BEGIN Custom query
+bool UGCBlueprintFunctionLibrary_CollisionQueries::SceneCastMultiByChannel(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams)
+{
+	// UWorld has SweepMultiByChannel() which already checks for zero extent shapes, but it doesn't explicitly check for ECollisionChannel::LineShape and its name can lead you to think that it doesn't support line traces
+	if (InCollisionShape.IsLine())
+	{
+		return InWorld->LineTraceMultiByChannel(OutHits, InStart, InEnd, InTraceChannel, InCollisionQueryParams, InCollisionResponseParams);
+	}
+	else
+	{
+		return InWorld->SweepMultiByChannel(OutHits, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InCollisionResponseParams);
+	}
+}
+//  END Custom query
+
 //  BEGIN Custom query
 bool UGCBlueprintFunctionLibrary_CollisionQueries::SceneCastMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams, const bool bOptimizeBackwardsSceneCastLength, const bool bDrawDebugForBackwardsStart)
 {
@@ -176,20 +192,6 @@ FExitAwareHitResult* UGCBlueprintFunctionLibrary_CollisionQueries::PenetrationSw
 	return PenetrationSceneCastWithExitHits(InWorld, OutHits, InSweepStart, InSweepEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InCollisionResponseParams, IsHitImpenetrable, bOptimizeBackwardsSceneCastLength, bDrawDebugForBackwardsStart);
 }
 //  END Custom query
-
-
-bool UGCBlueprintFunctionLibrary_CollisionQueries::SceneCastMultiByChannel(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams)
-{
-	// UWorld has SweepMultiByChannel() which already checks for zero extent shapes, but it doesn't explicitly check for ECollisionChannel::LineShape and its name can lead you to think that it doesn't support line traces
-	if (InCollisionShape.IsLine())
-	{
-		return InWorld->LineTraceMultiByChannel(OutHits, InStart, InEnd, InTraceChannel, InCollisionQueryParams, InCollisionResponseParams);
-	}
-	else
-	{
-		return InWorld->SweepMultiByChannel(OutHits, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InCollisionResponseParams);
-	}
-}
 
 ECollisionResponse UGCBlueprintFunctionLibrary_CollisionQueries::GetCollisionResponseForQueryOnBodyInstance(const FBodyInstance& InBodyInstance, const ECollisionChannel InQueryCollisionChannel, const FCollisionResponseParams& InQueryCollisionResponseParams)
 {

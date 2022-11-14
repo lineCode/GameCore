@@ -43,6 +43,12 @@ public:
 	static const float SceneCastStartWallAvoidancePadding;
 	static const TFunctionRef<bool(const FHitResult&)>& DefaultIsHitImpenetrable;
 
+	/**
+	 * FCollisionShape scene cast.
+	 * This keeps the scene cast generic to sweeps and linetraces, allowing our custom queries to support both sweeps and linetraces without duplicate code.
+	 */
+	static bool SceneCastMultiByChannel(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam);
+
 
 	//  BEGIN Custom query
 	/**
@@ -114,12 +120,6 @@ public:
 	//  END Custom query
 
 
-
-	/**
-	 * FCollisionShape scene cast.
-	 * This keeps the scene cast generic to sweeps and linetraces, allowing our custom queries to support both sweeps and linetraces without duplicate code.
-	 */
-	static bool SceneCastMultiByChannel(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& InCollisionResponseParams = FCollisionResponseParams::DefaultResponseParam);
 
 	/**
 	 * Determine the resulting response for a query hitting a body instance.
