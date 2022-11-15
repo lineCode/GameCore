@@ -273,7 +273,7 @@ void UGCBlueprintFunctionLibrary_CollisionQueries::ChangeHitsResponseData(TArray
 	}
 }
 
-FVector UGCBlueprintFunctionLibrary_CollisionQueries::DetermineBackwardsSceneCastStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FHitResult* InHitStoppedAt, const bool bOptimizeBackwardsSceneCastLength, const float SweepShapeBoundingSphereRadius)
+FVector UGCBlueprintFunctionLibrary_CollisionQueries::DetermineBackwardsSceneCastStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FHitResult* InHitStoppedAt, const bool bOptimizeBackwardsSceneCastLength, const float InSweepShapeBoundingSphereRadius)
 {
 	const FVector ForwardDir = (InForwardsEnd - InForwardsStart).GetSafeNormal();
 	
@@ -319,7 +319,7 @@ FVector UGCBlueprintFunctionLibrary_CollisionQueries::DetermineBackwardsSceneCas
 	// The optimal backwards start gives a minimal scene cast distance that can still cover the furthest possible exit location
 	FVector OptimizedBackwardsSceneCastStart = TheFurthestPossibleExitLocation;
 	// Bump us forwards to ensure a potential exit at the furthest possible exit location can get hit properly
-	OptimizedBackwardsSceneCastStart += (ForwardDir * SweepShapeBoundingSphereRadius); // bump us forwards by any sweep shapes' bounding sphere radius so that the sweep geometry starts past TheFurthestPossibleExitLocation
+	OptimizedBackwardsSceneCastStart += (ForwardDir * InSweepShapeBoundingSphereRadius); // bump us forwards by any sweep shapes' bounding sphere radius so that the sweep geometry starts past TheFurthestPossibleExitLocation
 	OptimizedBackwardsSceneCastStart += (ForwardDir * SceneCastStartWallAvoidancePadding); // bump us forwards by the SceneCastStartWallAvoidancePadding so that backwards scene cast does not start on top of TheFurthestPossibleExitLocation
 
 	// Edge case: Our optimization turned out to make our backwards scene cast distance larger. Cap it.
