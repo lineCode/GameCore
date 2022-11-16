@@ -16,18 +16,6 @@ struct GAMECORE_API FGCFloatPropertyWrapper : public FGCPropertyWrapperBase
 
 	GC_PROPERTY_WRAPPER_BODY(float, Float, 0.f);
 
-	virtual bool Serialize(FArchive& InOutArchive) override
-	{
-		InOutArchive << Value;
-		return true;
-	}
-
-	virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) override
-	{
-		Ar << Value;
-		return true;
-	}
-
 	virtual FString ToString() const override { return FString::SanitizeFloat(Value); }
 
 private:
@@ -53,18 +41,6 @@ struct GAMECORE_API FGCInt32PropertyWrapper : public FGCPropertyWrapperBase
 	GENERATED_BODY()
 
 	GC_PROPERTY_WRAPPER_BODY(int32, Int32, 0);
-
-	virtual bool Serialize(FArchive& InOutArchive) override
-	{
-		InOutArchive << Value;
-		return true;
-	}
-
-	virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) override
-	{
-		Ar << Value;
-		return true;
-	}
 
 	virtual FString ToString() const override { return FString::FromInt(Value); }
 

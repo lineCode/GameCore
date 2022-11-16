@@ -43,9 +43,9 @@ public:
 	/** Marks the property dirty */
 	void MarkNetDirty();
 
-	FProperty* GetProperty() const { return Property.Get(); }
-	UObject* GetPropertyOwner() const { return PropertyOwner.Get(); }
-	FName GetPropertyName() const { return Property->GetFName(); }
+	FProperty* GetSelfPropertyPointer() const { return SelfPropertyPointer.Get(); }
+	UObject* GetOwner() const { return PropertyOwner.Get(); }
+	FName GetPropertyName() const { return SelfPropertyPointer->GetFName(); }
 
 	/**
 	 * Our custom serialization for this struct
@@ -62,11 +62,16 @@ public:
 protected:
 	/** The pointer to the FProperty on our outer's UClass */
 	UPROPERTY(Transient)
-		TFieldPath<FProperty> Property;
+		TFieldPath<FProperty> SelfPropertyPointer;
 
 	/** The pointer to our outer - needed for replication */
 	UPROPERTY(Transient)
 		TWeakObjectPtr<UObject> PropertyOwner;
+
+
+	/** The pointer to the Value FProperty on our subclass */
+	UPROPERTY(Transient)
+		TFieldPath<FProperty> ValueProperty;
 };
 
 
@@ -83,16 +88,23 @@ private:\
 typedef FGC##ValueTypeName##PropertyWrapper TPropertyWrapperType;\
 typedef ValueType TValueType;\
 \
-public:\
+void InitializeValueProperty()\
+{\
+	ValueProperty = FindFProperty<FProperty>(StaticStruct(), GET_MEMBER_NAME_CHECKED(TPropertyWrapperType, Value));\
+}\
 \
+public:\
 TPropertyWrapperType()\
 	: Value(DefaultValue)\
-{ }\
+{\
+	InitializeValueProperty();\
+}\
 TPropertyWrapperType(UObject* InPropertyOwner, const FName& InPropertyName, const TValueType& InValue = DefaultValue)\
 	: FGCPropertyWrapperBase(InPropertyOwner, InPropertyName, GetScriptStruct())\
 	, Value(InValue)\
-{ }\
-\
+{\
+	InitializeValueProperty();\
+}\
 \
 /** Broadcasted whenever Value changes */\
 TMulticastDelegate<void(const TValueType&, const TValueType&)> ValueChangeDelegate;\
@@ -131,13 +143,49 @@ friend FArchive& operator<<(FArchive& InOutArchive, TPropertyWrapperType& InOutP
 	return InOutArchive;\
 }\
 \
-/** Debug string displaying the property name and value */\
+virtual bool Serialize(FArchive& Ar) override\
+{\
+	if (Ar.IsSaving())\
+	{\
+		ValueProperty->SerializeItem(FStructuredArchiveFromArchive(Ar).GetSlot(), &Value);\
+	}\
+\
+	if (Ar.IsLoading())\
+	{\
+		TValueType NewValue;\
+		ValueProperty->SerializeItem(FStructuredArchiveFromArchive(Ar).GetSlot(), &NewValue);\
+		operator=(NewValue);\
+	}\
+\
+	return true;\
+}\
+\
+virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) override\
+{\
+	bool bSuccess = true;\
+\
+	if (Ar.IsSaving())\
+	{\
+		bSuccess = ValueProperty->NetSerializeItem(Ar, Map, &Value);\
+	}\
+\
+	if (Ar.IsLoading())\
+	{\
+		TValueType NewValue;\
+		bSuccess = ValueProperty->NetSerializeItem(Ar, Map, &NewValue);\
+		operator=(NewValue);\
+	}\
+\
+	return bSuccess;\
+}\
+\
+/** Debug string displaying our name and value */\
 FString GetDebugString(bool bDetailedDebugString = false) const\
 {\
 	if (bDetailedDebugString)\
 	{\
-		return PropertyOwner->GetPathName(PropertyOwner->GetTypedOuter<ULevel>()) + TEXT(".") + Property->GetName() + TEXT(": ") + ToString();\
+		return PropertyOwner->GetPathName(PropertyOwner->GetTypedOuter<ULevel>()) + TEXT(".") + SelfPropertyPointer->GetName() + TEXT(": ") + ToString();\
 	}\
 \
-	return Property->GetName() + TEXT(": ") + ToString();\
+	return SelfPropertyPointer->GetName() + TEXT(": ") + ToString();\
 }
