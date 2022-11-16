@@ -83,23 +83,20 @@ protected:
  * Assumes you have the WithSerializer type trait.
  * Assumes you have the WithNetSerializer type trait.
  */
-#define GC_PROPERTY_WRAPPER_BODY(ValueType, ValueTypeName, DefaultValue) \
+#define GC_PROPERTY_WRAPPER_BODY(PropertyWrapperType, ValueType, DefaultValue) \
 private:\
-typedef FGC##ValueTypeName##PropertyWrapper TPropertyWrapperType;\
-typedef ValueType TValueType;\
-\
 void InitializeValueProperty()\
 {\
-	ValueProperty = FindFProperty<FProperty>(StaticStruct(), GET_MEMBER_NAME_CHECKED(TPropertyWrapperType, Value));\
+	ValueProperty = FindFProperty<FProperty>(StaticStruct(), GET_MEMBER_NAME_CHECKED(PropertyWrapperType, Value));\
 }\
 \
 public:\
-TPropertyWrapperType()\
+PropertyWrapperType()\
 	: Value(DefaultValue)\
 {\
 	InitializeValueProperty();\
 }\
-TPropertyWrapperType(UObject* InPropertyOwner, const FName& InPropertyName, const TValueType& InValue = DefaultValue)\
+PropertyWrapperType(UObject* InPropertyOwner, const FName& InPropertyName, const ValueType& InValue = DefaultValue)\
 	: FGCPropertyWrapperBase(InPropertyOwner, InPropertyName, GetScriptStruct())\
 	, Value(InValue)\
 {\
@@ -107,20 +104,20 @@ TPropertyWrapperType(UObject* InPropertyOwner, const FName& InPropertyName, cons
 }\
 \
 /** Broadcasted whenever Value changes */\
-TMulticastDelegate<void(const TValueType&, const TValueType&)> ValueChangeDelegate;\
+TMulticastDelegate<void(const ValueType&, const ValueType&)> ValueChangeDelegate;\
 \
 virtual UScriptStruct* GetScriptStruct() const { return StaticStruct(); }\
 \
 /** Implements implicit conversion from this struct to Value's type. Allows you to treat this struct as its Value's type in code */\
-operator TValueType() const\
+operator ValueType() const\
 {\
 	return Value;\
 }\
 \
 /** Broadcasts ValueChangeDelegate and does MARK_PROPERTY_DIRTY() */\
-TValueType operator=(const TValueType& NewValue)\
+ValueType operator=(const ValueType& NewValue)\
 {\
-	const TValueType OldValue = Value;\
+	const ValueType OldValue = Value;\
 	Value = NewValue;\
 \
 	if (NewValue != OldValue)\
@@ -137,7 +134,7 @@ TValueType operator=(const TValueType& NewValue)\
 }\
 \
 /** Uses our custom serialization */\
-friend FArchive& operator<<(FArchive& InOutArchive, TPropertyWrapperType& InOutPropertyWrapper)\
+friend FArchive& operator<<(FArchive& InOutArchive, PropertyWrapperType& InOutPropertyWrapper)\
 {\
 	InOutPropertyWrapper.Serialize(InOutArchive);\
 	return InOutArchive;\
@@ -152,7 +149,7 @@ virtual bool Serialize(FArchive& Ar) override\
 \
 	if (Ar.IsLoading())\
 	{\
-		TValueType NewValue;\
+		ValueType NewValue;\
 		ValueProperty->SerializeItem(FStructuredArchiveFromArchive(Ar).GetSlot(), &NewValue);\
 		operator=(NewValue);\
 	}\
@@ -171,7 +168,7 @@ virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) ove
 \
 	if (Ar.IsLoading())\
 	{\
-		TValueType NewValue;\
+		ValueType NewValue;\
 		bSuccess = ValueProperty->NetSerializeItem(Ar, Map, &NewValue);\
 		operator=(NewValue);\
 	}\
