@@ -18,9 +18,9 @@ struct GAMECORE_API FGCFloatPropertyWrapper : public FGCPropertyWrapperBase
 
 	virtual FString ToString() const override { return FString::SanitizeFloat(Value); }
 
-private:
+protected:
 	/** The actual value of this float property */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float Value;
 };
 
@@ -44,8 +44,8 @@ struct GAMECORE_API FGCInt32PropertyWrapper : public FGCPropertyWrapperBase
 
 	virtual FString ToString() const override { return FString::FromInt(Value); }
 
-private:
-	UPROPERTY(EditAnywhere)
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		int32 Value;
 };
 
