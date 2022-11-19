@@ -6,8 +6,7 @@
 
 
 FGCPropertyWrapperBase::FGCPropertyWrapperBase()
-	: bMarkNetDirtyOnChange(false)
-	, SelfPropertyPointer(nullptr)
+	: SelfPropertyPointer(nullptr)
 	, PropertyOwner(nullptr)
 {
 }

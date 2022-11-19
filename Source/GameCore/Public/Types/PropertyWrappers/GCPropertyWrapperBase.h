@@ -5,8 +5,10 @@
 #include "CoreMinimal.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "GameCore/Private/Utilities/GCLogCategories.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 #include "GCPropertyWrapperBase.generated.h"
+
 
 
 
@@ -36,10 +38,6 @@ public:
 protected:
 	FGCPropertyWrapperBase(UObject* InPropertyOwner, const FName& InPropertyName, const UScriptStruct* InChildScriptStruct); // initialization is intended only for child structs
 public:
-
-	/** If true, will MARK_PROPERTY_DIRTY() when Value is set */
-	uint8 bMarkNetDirtyOnChange : 1;
-
 	/** Marks the property dirty */
 	void MarkNetDirty();
 
@@ -107,7 +105,7 @@ PropertyWrapperType(UObject* InPropertyOwner, const FName& InPropertyName, const
 }\
 \
 /** Broadcasted whenever Value changes */\
-TMulticastDelegate<void(const ValueType&, const ValueType&)> ValueChangeDelegate;\
+TMulticastDelegate<void(PropertyWrapperType&, const ValueType&, const ValueType&)> ValueChangeDelegate;\
 \
 virtual UScriptStruct* GetScriptStruct() const { return StaticStruct(); }\
 \
@@ -125,12 +123,7 @@ ValueType operator=(const ValueType& NewValue)\
 \
 	if (NewValue != OldValue)\
 	{\
-		ValueChangeDelegate.Broadcast(OldValue, NewValue);\
-		\
-		if (bMarkNetDirtyOnChange)\
-		{\
-			MarkNetDirty();\
-		}\
+		ValueChangeDelegate.Broadcast(*this, OldValue, NewValue);\
 	}\
 \
 	return Value;\
@@ -179,4 +172,22 @@ virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) ove
 	return bSuccess;\
 }
 
+// BEGIN Property wrapper on change helpers
+template <class TPropertyWrapperType, class TValueType>
+static void GCPropertyWrapperOnChangeMarkNetDirty(TPropertyWrapperType& PropertyWrapper, const TValueType& InOldValue, const TValueType& InNewValue)
+{
+	PropertyWrapper.MarkNetDirty();
+}
 
+template <class TPropertyWrapperType, class TValueType>
+static void GCPropertyWrapperOnChangePrintString(TPropertyWrapperType& PropertyWrapper, const TValueType& InOldValue, const TValueType& InNewValue)
+{
+	UKismetSystemLibrary::PrintString(PropertyWrapper.GetOwner(), PropertyWrapper.GetDebugString(), true, false);
+}
+
+template <class TPropertyWrapperType, class TValueType>
+static void GCPropertyWrapperOnChangeLog(TPropertyWrapperType& PropertyWrapper, const TValueType& InOldValue, const TValueType& InNewValue)
+{
+	UE_LOG(LogGCPropertyWrapper, Log, PropertyWrapper.GetDebugString());
+}
+// END Property wrapper on change helpers
