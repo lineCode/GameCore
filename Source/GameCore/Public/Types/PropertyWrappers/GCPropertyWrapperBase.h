@@ -61,16 +61,15 @@ public:
 	FString GetDebugString(bool bDetailedDebugString = false) const;
 
 protected:
+	/** The pointer to our outer - used for push model's marking net dirty */
+	UPROPERTY(Transient)
+		TWeakObjectPtr<UObject> PropertyOwner;
+
 	/** The pointer to the FProperty on our outer's UClass */
 	UPROPERTY(Transient)
 		TFieldPath<FProperty> SelfPropertyPointer;
 
-	/** The pointer to our outer - needed for replication */
-	UPROPERTY(Transient)
-		TWeakObjectPtr<UObject> PropertyOwner;
-
-
-	/** The pointer to the Value FProperty on our subclass */
+	/** The pointer to the Value FProperty in subclasses. Having FProperty is nice because it allows us to implement Serialize() and NetSerialize() generically */
 	UPROPERTY(Transient)
 		TFieldPath<FProperty> ValueProperty;
 };
@@ -136,6 +135,7 @@ friend FArchive& operator<<(FArchive& InOutArchive, PropertyWrapperType& InOutPr
 	return InOutArchive;\
 }\
 \
+/* Implements a generic Serialize() by making use of FProperty */ \
 virtual bool Serialize(FArchive& Ar) override\
 {\
 	if (Ar.IsSaving())\
@@ -153,6 +153,7 @@ virtual bool Serialize(FArchive& Ar) override\
 	return true;\
 }\
 \
+/* Implements a generic NetSerialize() by making use of FProperty */ \
 virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) override\
 {\
 	bool bSuccess = true;\
