@@ -15,9 +15,7 @@
 /**
  * FGCPropertyWrapperBase
  * 
- * Property wrappers provide 2 main features
- *  - Automatic dirtying for push model
- *  - Automatic delegate broadcasting
+ * Property wrappers give you more control over your variables. It will notify you when the value changes to let you act upon it.
  * 
  * This base struct holds the non-value-type-related members.
  * Subclasses are able control the type by declaring the actual Value property.
@@ -174,20 +172,20 @@ virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) ove
 }
 
 // BEGIN Property wrapper on change helpers
-template <class TPropertyWrapperType, class TValueType>
-static void GCPropertyWrapperOnChangeMarkNetDirty(TPropertyWrapperType& PropertyWrapper, const TValueType& InOldValue, const TValueType& InNewValue)
+template <class TPropertyWrapperType, class TPropertyWrapperValueType>
+static void GCPropertyWrapperOnChangeMarkNetDirty(TPropertyWrapperType& PropertyWrapper, const TPropertyWrapperValueType& InOldValue, const TPropertyWrapperValueType& InNewValue)
 {
 	PropertyWrapper.MarkNetDirty();
 }
 
-template <class TPropertyWrapperType, class TValueType>
-static void GCPropertyWrapperOnChangePrintString(TPropertyWrapperType& PropertyWrapper, const TValueType& InOldValue, const TValueType& InNewValue)
+template <class TPropertyWrapperType, class TPropertyWrapperValueType>
+static void GCPropertyWrapperOnChangePrintString(TPropertyWrapperType& PropertyWrapper, const TPropertyWrapperValueType& InOldValue, const TPropertyWrapperValueType& InNewValue)
 {
 	UKismetSystemLibrary::PrintString(PropertyWrapper.GetOwner(), PropertyWrapper.GetDebugString(), true, false);
 }
 
-template <class TPropertyWrapperType, class TValueType>
-static void GCPropertyWrapperOnChangeLog(TPropertyWrapperType& PropertyWrapper, const TValueType& InOldValue, const TValueType& InNewValue)
+template <class TPropertyWrapperType, class TPropertyWrapperValueType>
+static void GCPropertyWrapperOnChangeLog(TPropertyWrapperType& PropertyWrapper, const TPropertyWrapperValueType& InOldValue, const TPropertyWrapperValueType& InNewValue)
 {
 	UE_LOG(LogGCPropertyWrapper, Log, PropertyWrapper.GetDebugString());
 }
