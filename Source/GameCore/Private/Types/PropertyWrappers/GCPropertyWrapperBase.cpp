@@ -52,3 +52,13 @@ void FGCPropertyWrapperBase::MarkNetDirty()
 
 	MARK_PROPERTY_DIRTY(PropertyOwner, SelfPropertyPointer);
 }
+
+FString FGCPropertyWrapperBase::GetDebugString(bool bDetailedDebugString) const
+{
+	if (bDetailedDebugString)
+	{
+		return PropertyOwner->GetPathName(PropertyOwner->GetTypedOuter<ULevel>()) + TEXT(".") + SelfPropertyPointer->GetName() + TEXT(": ") + ToString();
+	}
+
+	return SelfPropertyPointer->GetName() + TEXT(": ") + ToString();
+}

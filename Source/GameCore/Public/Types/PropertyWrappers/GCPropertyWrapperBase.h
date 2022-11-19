@@ -59,6 +59,9 @@ public:
 	/** Return the ToString() of Value. */
 	virtual FString ToString() const PURE_VIRTUAL(FGCPropertyWrapperBase::ToString, return FString(); );
 
+	/** Debug string displaying our name and value */
+	FString GetDebugString(bool bDetailedDebugString = false) const;
+
 protected:
 	/** The pointer to the FProperty on our outer's UClass */
 	UPROPERTY(Transient)
@@ -174,15 +177,6 @@ virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) ove
 	}\
 \
 	return bSuccess;\
-}\
-\
-/** Debug string displaying our name and value */\
-FString GetDebugString(bool bDetailedDebugString = false) const\
-{\
-	if (bDetailedDebugString)\
-	{\
-		return PropertyOwner->GetPathName(PropertyOwner->GetTypedOuter<ULevel>()) + TEXT(".") + SelfPropertyPointer->GetName() + TEXT(": ") + ToString();\
-	}\
-\
-	return SelfPropertyPointer->GetName() + TEXT(": ") + ToString();\
 }
+
+
