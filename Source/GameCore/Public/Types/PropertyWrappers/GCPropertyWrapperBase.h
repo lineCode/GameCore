@@ -47,7 +47,7 @@ public:
 	 */
 	virtual bool Serialize(FArchive& InOutArchive) PURE_VIRTUAL(FGCPropertyWrapperBase::Serialize, return false; );
 
-	/** Our custom replication for this struct (we only want to replicate Value) */
+	/** Our custom replication for this struct */
 	virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) PURE_VIRTUAL(FGCPropertyWrapperBase::NetSerialize, return false; );
 
 	/** Return the ToString() of Value. */
@@ -102,7 +102,7 @@ operator ValueType() const\
 	return Value;\
 }\
 \
-/** Broadcasts ValueChangeDelegate and does MARK_PROPERTY_DIRTY() */\
+/** Broadcasts ValueChangeDelegate */\
 ValueType operator=(const ValueType& NewValue)\
 {\
 	const ValueType OldValue = Value;\
@@ -123,7 +123,7 @@ friend FArchive& operator<<(FArchive& InOutArchive, PropertyWrapperType& InOutPr
 	return InOutArchive;\
 }\
 \
-/* Implements a generic Serialize() by making use of FProperty */ \
+/* Implements a generic Serialize() by making use of Value's FProperty */ \
 virtual bool Serialize(FArchive& Ar) override\
 {\
 	if (Ar.IsSaving())\
@@ -141,7 +141,7 @@ virtual bool Serialize(FArchive& Ar) override\
 	return true;\
 }\
 \
-/* Implements a generic NetSerialize() by making use of FProperty */ \
+/* Implements a generic NetSerialize() by making use of Value's FProperty */ \
 virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) override\
 {\
 	bool bSuccess = true;\
@@ -155,7 +155,7 @@ virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) ove
 	{\
 		ValueType NewValue;\
 		bSuccess = ValueProperty->NetSerializeItem(Ar, Map, &NewValue);\
-		operator=(NewValue);\
+		operator=(NewValue); /* use our correct path for setting Value */ \
 	}\
 \
 	return bSuccess;\
