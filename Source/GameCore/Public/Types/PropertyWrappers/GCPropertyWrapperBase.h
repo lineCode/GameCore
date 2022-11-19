@@ -15,15 +15,13 @@
 /**
  * FGCPropertyWrapperBase
  * 
- * Property wrappers give you more control over your variables. It will notify you when the value changes to let you act upon it.
+ * Property wrappers give you more control over your variables. It provides a delegate that notifies when the value of the property changes.
+ * For its implementation, since UStructs don't support templates, we are making use of inheritence and a GC_PROPERTY_WRAPPER_CHILD_BODY macro.
  * 
- * This base struct holds the non-value-type-related members.
- * Subclasses are able control the type by declaring the actual Value property.
- * See GC_PROPERTY_WRAPPER_BODY for boilerplate code and subclass requirements.
- * 
- * The reason we need sub-classes to declare the Value member for us is because we want it to be a UPROPERTY and generated code (e.g., custom macros) will not be seen by Unreal Header Tool.
- * 
- * Subclasses implement Serialize(), NetSerialize(), and ToString().
+ * Subclass' responsibilities:
+ *	- Put GC_PROPERTY_WRAPPER_CHILD_BODY() anywhere in the struct body and provide it with the required parameters. This generates the required boilerplate code.
+ *	- Declare the Value member and determine its type. UPROPERTY(EditAnywhere, BlueprintReadOnly) is a requirement for this member. Child classes have to do this since Unreal Header Tool can't see generated code.
+ *	- Implement the pure virtual ToString() * 
  */
 USTRUCT(BlueprintType)
 struct GAMECORE_API FGCPropertyWrapperBase
@@ -73,15 +71,7 @@ protected:
 };
 
 
-/**
- * Using this macro with parameters lets us do generic logic in any child class.
- * Boilerplate code for subclasses of FGCPropertyWrapperBase. Include this anywhere in your struct body.
- * Uses your declared Value member.
- * Uses your defined value change delegate type.
- * Assumes you have the WithSerializer type trait.
- * Assumes you have the WithNetSerializer type trait.
- */
-#define GC_PROPERTY_WRAPPER_BODY(PropertyWrapperType, ValueType, DefaultValue) \
+#define GC_PROPERTY_WRAPPER_CHILD_BODY(PropertyWrapperType, ValueType, DefaultValue) \
 private:\
 void InitializeValueProperty()\
 {\
