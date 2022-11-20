@@ -163,19 +163,19 @@ virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) ove
 
 // BEGIN Property wrapper on change helpers
 template <class TPropertyWrapperType, class TPropertyWrapperValueType>
-static void GCPropertyWrapperOnChangeMarkNetDirty(TPropertyWrapperType& PropertyWrapper, const TPropertyWrapperValueType& InOldValue, const TPropertyWrapperValueType& InNewValue)
+static void GCPropertyWrapperOnChangeMarkNetDirty(TPropertyWrapperType& InPropertyWrapper, const TPropertyWrapperValueType& InOldValue, const TPropertyWrapperValueType& InNewValue)
 {
 	PropertyWrapper.MarkNetDirty();
 }
 
 template <class TPropertyWrapperType, class TPropertyWrapperValueType>
-static void GCPropertyWrapperOnChangePrintString(TPropertyWrapperType& PropertyWrapper, const TPropertyWrapperValueType& InOldValue, const TPropertyWrapperValueType& InNewValue)
+static void GCPropertyWrapperOnChangePrintString(TPropertyWrapperType& InPropertyWrapper, const TPropertyWrapperValueType& InOldValue, const TPropertyWrapperValueType& InNewValue)
 {
 	UKismetSystemLibrary::PrintString(PropertyWrapper.GetOwner(), PropertyWrapper.GetDebugString(), true, false);
 }
 
 template <class TPropertyWrapperType, class TPropertyWrapperValueType>
-static void GCPropertyWrapperOnChangeLog(TPropertyWrapperType& PropertyWrapper, const TPropertyWrapperValueType& InOldValue, const TPropertyWrapperValueType& InNewValue)
+static void GCPropertyWrapperOnChangeLog(TPropertyWrapperType& InPropertyWrapper, const TPropertyWrapperValueType& InOldValue, const TPropertyWrapperValueType& InNewValue)
 {
 	UE_LOG(LogGCPropertyWrapper, Log, PropertyWrapper.GetDebugString());
 }
