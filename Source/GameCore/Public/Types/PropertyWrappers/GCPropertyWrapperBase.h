@@ -165,18 +165,18 @@ virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) ove
 template <class TPropertyWrapperType, class TPropertyWrapperValueType>
 static void GCPropertyWrapperOnChangeMarkNetDirty(TPropertyWrapperType& InPropertyWrapper, const TPropertyWrapperValueType& InOldValue, const TPropertyWrapperValueType& InNewValue)
 {
-	PropertyWrapper.MarkNetDirty();
+	InPropertyWrapper.MarkNetDirty();
 }
 
 template <class TPropertyWrapperType, class TPropertyWrapperValueType>
 static void GCPropertyWrapperOnChangePrintString(TPropertyWrapperType& InPropertyWrapper, const TPropertyWrapperValueType& InOldValue, const TPropertyWrapperValueType& InNewValue)
 {
-	UKismetSystemLibrary::PrintString(PropertyWrapper.GetOwner(), PropertyWrapper.GetDebugString(), true, false);
+	UKismetSystemLibrary::PrintString(InPropertyWrapper.GetOwner(), InPropertyWrapper.GetDebugString(), true, false);
 }
 
 template <class TPropertyWrapperType, class TPropertyWrapperValueType>
 static void GCPropertyWrapperOnChangeLog(TPropertyWrapperType& InPropertyWrapper, const TPropertyWrapperValueType& InOldValue, const TPropertyWrapperValueType& InNewValue)
 {
-	UE_LOG(LogGCPropertyWrapper, Log, PropertyWrapper.GetDebugString());
+	UE_LOG(LogGCPropertyWrapper, Log, InPropertyWrapper.GetDebugString());
 }
 // END Property wrapper on change helpers
