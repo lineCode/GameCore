@@ -15,6 +15,22 @@ const float UGCBlueprintFunctionLibrary_CollisionQueries::SceneCastStartWallAvoi
 const TFunctionRef<bool(const FHitResult&)>& UGCBlueprintFunctionLibrary_CollisionQueries::DefaultIsHitImpenetrable = [](const FHitResult&) { return false; };
 
 
+
+//  BEGIN Custom query
+bool UGCBlueprintFunctionLibrary_CollisionQueries::SceneCastMultiByChannel(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams)
+{
+	// UWorld has SweepMultiByChannel() which already checks for zero extent shapes, but it doesn't explicitly check for ECollisionChannel::LineShape and its name can lead you to think that it doesn't support line traces
+	if (InCollisionShape.IsLine())
+	{
+		return InWorld->LineTraceMultiByChannel(OutHits, InStart, InEnd, InTraceChannel, InCollisionQueryParams, InCollisionResponseParams);
+	}
+	else
+	{
+		return InWorld->SweepMultiByChannel(OutHits, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InCollisionResponseParams);
+	}
+}
+//  END Custom query
+
 //  BEGIN Custom query
 bool UGCBlueprintFunctionLibrary_CollisionQueries::SceneCastMultiWithExitHits(const UWorld* InWorld, TArray<FExitAwareHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams, const bool bOptimizeBackwardsSceneCastLength, const bool bDrawDebugForBackwardsStart)
 {
@@ -177,20 +193,6 @@ FExitAwareHitResult* UGCBlueprintFunctionLibrary_CollisionQueries::PenetrationSw
 }
 //  END Custom query
 
-
-bool UGCBlueprintFunctionLibrary_CollisionQueries::SceneCastMultiByChannel(const UWorld* InWorld, TArray<FHitResult>& OutHits, const FVector& InStart, const FVector& InEnd, const FQuat& InRotation, const ECollisionChannel InTraceChannel, const FCollisionShape& InCollisionShape, const FCollisionQueryParams& InCollisionQueryParams, const FCollisionResponseParams& InCollisionResponseParams)
-{
-	// UWorld has SweepMultiByChannel() which already checks for zero extent shapes, but it doesn't explicitly check for ECollisionChannel::LineShape and its name can lead you to think that it doesn't support line traces
-	if (InCollisionShape.IsLine())
-	{
-		return InWorld->LineTraceMultiByChannel(OutHits, InStart, InEnd, InTraceChannel, InCollisionQueryParams, InCollisionResponseParams);
-	}
-	else
-	{
-		return InWorld->SweepMultiByChannel(OutHits, InStart, InEnd, InRotation, InTraceChannel, InCollisionShape, InCollisionQueryParams, InCollisionResponseParams);
-	}
-}
-
 ECollisionResponse UGCBlueprintFunctionLibrary_CollisionQueries::GetCollisionResponseForQueryOnBodyInstance(const FBodyInstance& InBodyInstance, const ECollisionChannel InQueryCollisionChannel, const FCollisionResponseParams& InQueryCollisionResponseParams)
 {
 	const bool bHasQueryEnabled = CollisionEnabledHasQuery(InBodyInstance.GetCollisionEnabled());
@@ -271,7 +273,7 @@ void UGCBlueprintFunctionLibrary_CollisionQueries::ChangeHitsResponseData(TArray
 	}
 }
 
-FVector UGCBlueprintFunctionLibrary_CollisionQueries::DetermineBackwardsSceneCastStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FHitResult* InHitStoppedAt, const bool bOptimizeBackwardsSceneCastLength, const float SweepShapeBoundingSphereRadius)
+FVector UGCBlueprintFunctionLibrary_CollisionQueries::DetermineBackwardsSceneCastStart(const TArray<FHitResult>& InForwardsHitResults, const FVector& InForwardsStart, const FVector& InForwardsEnd, const FHitResult* InHitStoppedAt, const bool bOptimizeBackwardsSceneCastLength, const float InSweepShapeBoundingSphereRadius)
 {
 	const FVector ForwardDir = (InForwardsEnd - InForwardsStart).GetSafeNormal();
 	
@@ -317,7 +319,7 @@ FVector UGCBlueprintFunctionLibrary_CollisionQueries::DetermineBackwardsSceneCas
 	// The optimal backwards start gives a minimal scene cast distance that can still cover the furthest possible exit location
 	FVector OptimizedBackwardsSceneCastStart = TheFurthestPossibleExitLocation;
 	// Bump us forwards to ensure a potential exit at the furthest possible exit location can get hit properly
-	OptimizedBackwardsSceneCastStart += (ForwardDir * SweepShapeBoundingSphereRadius); // bump us forwards by any sweep shapes' bounding sphere radius so that the sweep geometry starts past TheFurthestPossibleExitLocation
+	OptimizedBackwardsSceneCastStart += (ForwardDir * InSweepShapeBoundingSphereRadius); // bump us forwards by any sweep shapes' bounding sphere radius so that the sweep geometry starts past TheFurthestPossibleExitLocation
 	OptimizedBackwardsSceneCastStart += (ForwardDir * SceneCastStartWallAvoidancePadding); // bump us forwards by the SceneCastStartWallAvoidancePadding so that backwards scene cast does not start on top of TheFurthestPossibleExitLocation
 
 	// Edge case: Our optimization turned out to make our backwards scene cast distance larger. Cap it.
