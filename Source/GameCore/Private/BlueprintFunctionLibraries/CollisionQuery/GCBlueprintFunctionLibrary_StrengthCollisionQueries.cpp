@@ -279,12 +279,13 @@ void UGCBlueprintFunctionLibrary_StrengthCollisionQueries::RicochetingPenetratio
 }
 //  END Custom query
 
-float UGCBlueprintFunctionLibrary_StrengthCollisionQueries::NerfStrengthPerCm(float& InOutStrength, const float InDistanceToTravel, const float InNerfPerCm)
+float UGCBlueprintFunctionLibrary_StrengthCollisionQueries::NerfStrengthPerCm(float& InOutStrength, const float InCentimetersToTravel, const float InNerfPerCm)
 {
-	const float StrengthToTakeAway = (InNerfPerCm * InDistanceToTravel);
-	const float TraveledThroughRatio = (InOutStrength / StrengthToTakeAway);
-	const float TraveledThroughDistance = (TraveledThroughRatio * InDistanceToTravel);
+	const float StrengthToTakeAway = (InCentimetersToTravel * InNerfPerCm);
+	const float OldStrength = InOutStrength;
 	InOutStrength -= StrengthToTakeAway;
 
+	const float TraveledThroughRatio = (OldStrength / StrengthToTakeAway);
+	const float TraveledThroughDistance = (TraveledThroughRatio * InCentimetersToTravel);
 	return TraveledThroughDistance;
 }
