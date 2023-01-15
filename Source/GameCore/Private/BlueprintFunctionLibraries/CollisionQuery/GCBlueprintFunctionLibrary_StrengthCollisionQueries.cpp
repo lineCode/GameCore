@@ -285,6 +285,12 @@ float UGCBlueprintFunctionLibrary_StrengthCollisionQueries::NerfStrengthPerCm(fl
 	const float OldStrength = InOutStrength;
 	InOutStrength -= StrengthToTakeAway;
 
+	if (InOutStrength >= 0) // if we had enough strength to make it through the InCentimetersToTravel distance
+	{
+		return InCentimetersToTravel;
+	}
+
+	// We've been stopped midway through the InCentimetersToTravel distance
 	const float TraveledThroughRatio = (OldStrength / StrengthToTakeAway);
 	const float TraveledThroughDistance = (TraveledThroughRatio * InCentimetersToTravel);
 	return TraveledThroughDistance;
