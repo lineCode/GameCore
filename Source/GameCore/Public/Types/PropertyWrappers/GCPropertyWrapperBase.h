@@ -32,13 +32,13 @@ public:
 	FGCPropertyWrapperBase();
 	virtual ~FGCPropertyWrapperBase() { }
 protected:
-	FGCPropertyWrapperBase(UObject* InPropertyOwner, const FName& InPropertyName, const UScriptStruct* InChildScriptStruct); // initialization is intended only for child structs
+	FGCPropertyWrapperBase(UObject* InOuter, const FName& InPropertyName, const UScriptStruct* InChildScriptStruct); // initialization is intended only for child structs
 public:
 	/** Marks the property dirty */
 	void MarkNetDirty();
 
 	FProperty* GetSelfPropertyPointer() const { return SelfPropertyPointer.Get(); }
-	UObject* GetOwner() const { return PropertyOwner.Get(); }
+	UObject* GetOuter() const { return Outer.Get(); }
 	FName GetPropertyName() const { return SelfPropertyPointer->GetFName(); }
 
 	/**
@@ -59,7 +59,7 @@ public:
 protected:
 	/** The pointer to our outer - used for push model's marking net dirty */
 	UPROPERTY(Transient)
-		TWeakObjectPtr<UObject> PropertyOwner;
+		TWeakObjectPtr<UObject> Outer;
 
 	/** The pointer to the FProperty on our outer's UClass */
 	UPROPERTY(Transient)
@@ -84,8 +84,8 @@ PropertyWrapperType()\
 {\
 	InitializeValueProperty();\
 }\
-PropertyWrapperType(UObject* InPropertyOwner, const FName& InPropertyName, const ValueType& InValue = DefaultValue)\
-	: FGCPropertyWrapperBase(InPropertyOwner, InPropertyName, GetScriptStruct())\
+PropertyWrapperType(UObject* InOuter, const FName& InPropertyName, const ValueType& InValue = DefaultValue)\
+	: FGCPropertyWrapperBase(InOuter, InPropertyName, GetScriptStruct())\
 	, Value(InValue)\
 {\
 	InitializeValueProperty();\
@@ -171,7 +171,7 @@ static void GCPropertyWrapperOnChangeMarkNetDirty(TPropertyWrapperType& InProper
 template <class TPropertyWrapperType, class TPropertyWrapperValueType>
 static void GCPropertyWrapperOnChangePrintString(TPropertyWrapperType& InPropertyWrapper, const TPropertyWrapperValueType& InOldValue, const TPropertyWrapperValueType& InNewValue)
 {
-	UKismetSystemLibrary::PrintString(InPropertyWrapper.GetOwner(), InPropertyWrapper.GetDebugString(), true, false);
+	UKismetSystemLibrary::PrintString(InPropertyWrapper.GetOuter(), InPropertyWrapper.GetDebugString(), true, false);
 }
 
 template <class TPropertyWrapperType, class TPropertyWrapperValueType>
